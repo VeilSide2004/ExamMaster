@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
-import { User, MockTest, Course, Attempt, XPTransaction } from '@/lib/models';
+import { User, MockTest, Course, Attempt, XPTransaction, Question } from '@/lib/models';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 
@@ -123,10 +123,17 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: 'No course locked' }, { status: 400 });
     }
 
-    const test = await MockTest.findById(params.id).populate('question_ids');
+    const test = await MockTest.findById(params.id);
     if (!test) {
       return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
+
+    const rawQIds = (test.question_ids || []).map((q: any) => q._id?.toString() || q.toString());
+    const populatedQs = await Question.find({ _id: { $in: rawQIds } });
+
+    const qList = rawQIds
+      .map((qId: string) => populatedQs.find((q: any) => q._id.toString() === qId || String(q._id) === qId))
+      .filter(Boolean);
 
     const course = await Course.findById(user.locked_course_id);
     const marksPerCorrect = course?.marking_scheme?.marks_per_correct || 4;
@@ -139,13 +146,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     let xpEarned = 0;
     const processedResponses: any[] = [];
 
-    const qList = test.question_ids as any[];
-
     for (const q of qList) {
-      const qId = q._id?.toString() || q.toString();
+      if (!q) continue;
+      const qId = (q._id as any)?.toString() || q.toString();
       const uAns = userAnswers[qId];
       if (uAns && uAns.selectedOption !== null && uAns.selectedOption !== undefined && uAns.selectedOption >= 0) {
-        const isCorrect = uAns.selectedOption === q.correct_option;
+        const isCorrect = Number(uAns.selectedOption) === Number(q.correct_option);
         if (isCorrect) {
           correctCount++;
           totalScore += marksPerCorrect;

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
-import { User, MockTest, Course } from '@/lib/models';
+import { User, MockTest, Course, Question } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getEquivalentCourseIds } from '@/lib/courseMatcher';
@@ -44,10 +44,21 @@ export async function GET() {
     const allCourses = await Course.find({});
     const validCourseIds = getEquivalentCourseIds(user.locked_course_id.toString(), allCourses);
 
-    const tests = await MockTest.find({
+    const rawTests = await MockTest.find({
       course_id: { $in: validCourseIds },
       is_active: true,
-    }).populate('question_ids');
+    });
+
+    const tests = await Promise.all(
+      rawTests.map(async (m) => {
+        const rawQIds = (m.question_ids || []).map((q: any) => q._id?.toString() || q.toString());
+        const qs = await Question.find({ _id: { $in: rawQIds } });
+        return {
+          ...m.toObject(),
+          question_ids: qs,
+        };
+      })
+    );
 
     return NextResponse.json({ tests });
   } catch (error: any) {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
-import { User, MockTest, Course } from '@/lib/models';
+import { User, MockTest, Course, Question } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getEquivalentCourseIds } from '@/lib/courseMatcher';
@@ -50,18 +50,32 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return NextResponse.json({ error: 'No course locked' }, { status: 400 });
     }
 
-    const test = await MockTest.findById(params.id).populate('question_ids').populate('course_id');
-    if (!test) {
+    const rawTest = await MockTest.findById(params.id);
+    if (!rawTest) {
       return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
     const allCourses = await Course.find({});
     const validCourseIds = getEquivalentCourseIds(user.locked_course_id.toString(), allCourses);
-    const testCourseId = (test.course_id as any)?._id?.toString() || test.course_id.toString();
+    const testCourseId = String(typeof rawTest.course_id === 'object' ? (rawTest.course_id as any)?._id : rawTest.course_id);
 
     if (!validCourseIds.includes(testCourseId)) {
       return NextResponse.json({ error: 'RULE-02 Violation: That test is not part of your locked course' }, { status: 403 });
     }
+
+    const courseObj = allCourses.find((c) => c._id.toString() === testCourseId);
+    const rawQIds = (rawTest.question_ids || []).map((q: any) => q._id?.toString() || q.toString());
+    const populatedQs = await Question.find({ _id: { $in: rawQIds } });
+
+    const orderedQs = rawQIds
+      .map((qId: string) => populatedQs.find((q: any) => q._id.toString() === qId || String(q._id) === qId))
+      .filter(Boolean);
+
+    const test = {
+      ...rawTest.toObject(),
+      course_id: courseObj ? { _id: courseObj._id.toString(), name: courseObj.name, subjects: courseObj.subjects } : { name: 'Locked Course' },
+      question_ids: orderedQs,
+    };
 
     return NextResponse.json({ test });
   } catch (error: any) {
