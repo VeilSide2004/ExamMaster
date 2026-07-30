@@ -457,7 +457,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                       </p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-                        {q.options.map((opt: string, optIdx: number) => {
+                        {(q.options || []).map((opt: string, optIdx: number) => {
                           const isCorrectKey = optIdx === q.correct_option;
                           const isUserSelection = userChoice === optIdx;
 
@@ -492,42 +492,43 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           ) : (
             /* Active Question Screen (FR-15) */
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between h-full min-h-[420px]">
-              <div>
-                <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-black bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800 uppercase tracking-wider">
-                      Section: {currentQInfo.subject}
-                    </span>
-                    {currentQInfo.topic && (
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                        {currentQInfo.topic}
+              {currentQ ? (
+                <div>
+                  <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-md text-[11px] font-black bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800 uppercase tracking-wider">
+                        Section: {currentQInfo.subject}
                       </span>
-                    )}
-                    <span className="text-xs font-bold text-slate-400 ml-1">
-                      • Question {currentIdx + 1} of {questions.length}
-                    </span>
+                      {currentQInfo.topic && (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                          {currentQInfo.topic}
+                        </span>
+                      )}
+                      <span className="text-xs font-bold text-slate-400 ml-1">
+                        • Question {currentIdx + 1} of {questions.length}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleToggleMFR}
+                      type="button"
+                      className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition-colors ${
+                        userState[currentQ._id]?.isMFR
+                          ? 'bg-amber-100 border-amber-400 text-amber-900 dark:bg-amber-950 dark:border-amber-700 dark:text-amber-300'
+                          : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      <Bookmark className="w-3.5 h-3.5" />
+                      {userState[currentQ._id]?.isMFR ? 'Marked for Review' : 'Mark for Review'}
+                    </button>
                   </div>
-                  <button
-                    onClick={handleToggleMFR}
-                    type="button"
-                    className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition-colors ${
-                      userState[currentQ._id]?.isMFR
-                        ? 'bg-amber-100 border-amber-400 text-amber-900 dark:bg-amber-950 dark:border-amber-700 dark:text-amber-300'
-                        : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <Bookmark className="w-3.5 h-3.5" />
-                    {userState[currentQ._id]?.isMFR ? 'Marked for Review' : 'Mark for Review'}
-                  </button>
-                </div>
 
-                <h2 className="text-base font-bold text-slate-900 dark:text-white mb-6 leading-relaxed">
-                  {currentQ.question_text}
-                </h2>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white mb-6 leading-relaxed">
+                    {currentQ.question_text}
+                  </h2>
 
-                <div className="space-y-3">
-                  {currentQ.options.map((opt: string, optIdx: number) => {
-                    const isSelected = userState[currentQ._id]?.selectedOption === optIdx;
+                  <div className="space-y-3">
+                    {(currentQ.options || []).map((opt: string, optIdx: number) => {
+                      const isSelected = userState[currentQ._id]?.selectedOption === optIdx;
                     return (
                       <button
                         key={optIdx}
@@ -554,6 +555,9 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                   })}
                 </div>
               </div>
+              ) : (
+                <div className="p-8 text-center text-slate-500 text-xs">No active question available.</div>
+              )}
 
               {/* Bottom Controls */}
               <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-4 mt-6">
