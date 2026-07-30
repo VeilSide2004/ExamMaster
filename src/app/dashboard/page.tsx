@@ -16,8 +16,19 @@ export default function StudentDashboardPage() {
 
   useEffect(() => {
     fetch('/api/dashboard')
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          router.push('/login');
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
+        if (!data) return;
+        if (data.error === 'Unauthorized') {
+          router.push('/login');
+          return;
+        }
         if (data.needsCourseSelection) {
           router.push('/course-selection');
           return;
@@ -26,7 +37,7 @@ export default function StudentDashboardPage() {
         if (data.mockTests) setMockTests(data.mockTests);
         if (data.topLeaderboard) setLeaderboard(data.topLeaderboard);
       })
-      .catch(console.error)
+      .catch(() => router.push('/login'))
       .finally(() => setLoading(false));
   }, [router]);
 
