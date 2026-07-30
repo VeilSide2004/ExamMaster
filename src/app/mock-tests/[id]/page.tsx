@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { Clock, Bookmark, ChevronLeft, ChevronRight, CheckCircle2, Award, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
 
 export default function MockTestExecutionPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const routeParams = useParams();
+  const testId = (params?.id || routeParams?.id) as string;
+
   const [test, setTest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -25,7 +28,9 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [result, setResult] = useState<any>(null);
 
   useEffect(() => {
-    fetch(`/api/mock-tests/${params.id}`)
+    if (!testId) return;
+
+    fetch(`/api/mock-tests/${testId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {
@@ -33,21 +38,52 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           router.push('/dashboard');
           return;
         }
-        setTest(data.test);
+
+        const rawQuestions = Array.isArray(data.test?.question_ids) ? data.test.question_ids : [];
+        const normalizedQuestions = rawQuestions.map((q: any, idx: number) => {
+          if (typeof q === 'string') {
+            return {
+              _id: q,
+              question_text: `Question ${idx + 1}`,
+              options: ['Option A', 'Option B', 'Option C', 'Option D'],
+              correct_option: 0,
+              topic_tag: 'General',
+            };
+          }
+          return {
+            ...q,
+            _id: q._id || q.id || `q_${idx}`,
+            question_text: q.question_text || `Question ${idx + 1}`,
+            options: Array.isArray(q.options) && q.options.length > 0 ? q.options : ['Option A', 'Option B', 'Option C', 'Option D'],
+            correct_option: typeof q.correct_option === 'number' ? q.correct_option : 0,
+            topic_tag: q.topic_tag || 'General',
+          };
+        }).filter(Boolean);
+
+        const testData = {
+          ...data.test,
+          question_ids: normalizedQuestions,
+        };
+
+        setTest(testData);
 
         // Initialize state for each question
         const initial: Record<string, any> = {};
-        data.test?.question_ids?.forEach((q: any, i: number) => {
-          initial[q._id] = { selectedOption: null, isMFR: false, isVisited: i === 0 };
+        normalizedQuestions.forEach((q: any, i: number) => {
+          if (q && q._id) {
+            initial[q._id] = { selectedOption: null, isMFR: false, isVisited: i === 0 };
+          }
         });
         setUserState(initial);
 
         // Set timer (duration in minutes * 60)
         setTimeLeft((data.test?.duration_minutes || 60) * 60);
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error(err);
+      })
       .finally(() => setLoading(false));
-  }, [params.id, router]);
+  }, [testId, router]);
 
   // Fullscreen Lockdown State
   const [isFullscreen, setIsFullscreen] = useState(true);
@@ -59,9 +95,9 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
       if (docEl.requestFullscreen) {
         docEl.requestFullscreen().catch(() => {});
       } else if ((docEl as any).webkitRequestFullscreen) {
-        (docEl as any).webkitRequestFullscreen();
+        try { (docEl as any).webkitRequestFullscreen(); } catch (e) {}
       } else if ((docEl as any).msRequestFullscreen) {
-        (docEl as any).msRequestFullscreen();
+        try { (docEl as any).msRequestFullscreen(); } catch (e) {}
       }
     } catch (e) {
       console.error(e);
@@ -74,7 +110,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         if (document.exitFullscreen) {
           document.exitFullscreen().catch(() => {});
         } else if ((document as any).webkitExitFullscreen) {
-          (document as any).webkitExitFullscreen();
+          try { (document as any).webkitExitFullscreen(); } catch (e) {}
         }
       }
     } catch (e) {
@@ -135,7 +171,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   }, [test, result]);
 
   const questions: any[] = test?.question_ids || [];
-  const currentQ = questions[currentIdx];
+  const currentQ = questions[currentIdx] || null;
 
   const courseSubjects: string[] = test?.course_id?.subjects || ['Physics', 'Chemistry', 'Mathematics', 'Biology'];
 
@@ -146,10 +182,15 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     let topic = tag;
 
     for (const s of courseSubjects) {
-      if (tag.toLowerCase().includes(s.toLowerCase())) {
+      if (s && tag.toLowerCase().includes(s.toLowerCase())) {
         subject = s;
-        const rest = tag.replace(new RegExp(s, 'i'), '').replace(/^[\s\-:]+/, '').trim();
-        topic = rest || tag;
+        try {
+          const escapedS = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const rest = tag.replace(new RegExp(escapedS, 'i'), '').replace(/^[\s\-:]+/, '').trim();
+          topic = rest || tag;
+        } catch (e) {
+          topic = tag;
+        }
         break;
       }
     }
@@ -186,6 +227,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
   // Helper function to update question state
   const updateQuestionState = (qId: string, updates: Partial<{ selectedOption: number | null; isMFR: boolean; isVisited: boolean }>) => {
+    if (!qId) return;
     setUserState((prev) => ({
       ...prev,
       [qId]: { ...prev[qId], ...updates, isVisited: true },
@@ -193,17 +235,17 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   };
 
   const handleSelectOption = (optIdx: number) => {
-    if (result) return;
+    if (result || !currentQ) return;
     updateQuestionState(currentQ._id, { selectedOption: optIdx });
   };
 
   const handleClearResponse = () => {
-    if (result) return;
+    if (result || !currentQ) return;
     updateQuestionState(currentQ._id, { selectedOption: null });
   };
 
   const handleToggleMFR = () => {
-    if (result) return;
+    if (result || !currentQ) return;
     const curr = userState[currentQ._id]?.isMFR || false;
     updateQuestionState(currentQ._id, { isMFR: !curr });
   };
@@ -211,7 +253,9 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const navigateTo = (idx: number) => {
     if (idx >= 0 && idx < questions.length) {
       setCurrentIdx(idx);
-      updateQuestionState(questions[idx]._id, { isVisited: true });
+      if (questions[idx]?._id) {
+        updateQuestionState(questions[idx]._id, { isVisited: true });
+      }
     }
   };
 
