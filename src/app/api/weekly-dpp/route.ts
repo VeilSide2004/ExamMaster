@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
-import { WeeklyDPP, User } from '@/lib/models';
+import { WeeklyDPP, User, Course } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getEquivalentCourseIds } from '@/lib/courseMatcher';
 
 export async function GET() {
   try {
@@ -19,8 +20,11 @@ export async function GET() {
         return NextResponse.json({ weeklyDpps: [] });
       }
 
-      const courseId = user.locked_course_id;
-      const dpps = (db.weeklyDpps || []).filter((d) => d.course_id === courseId && d.is_active !== false);
+      const validCourseIds = getEquivalentCourseIds(String(user.locked_course_id), db.courses || []);
+      const dpps = (db.weeklyDpps || []).filter((d) => {
+        const dppCourseId = String(typeof d.course_id === 'object' ? d.course_id?._id : d.course_id);
+        return validCourseIds.includes(dppCourseId) && d.is_active !== false;
+      });
 
       const populated = dpps.map((d) => {
         const dppQuestions = (db.questions || []).filter((q) => (d.question_ids || []).includes(q._id));
@@ -39,8 +43,11 @@ export async function GET() {
       return NextResponse.json({ weeklyDpps: [] });
     }
 
+    const allCourses = await Course.find({});
+    const validCourseIds = getEquivalentCourseIds(user.locked_course_id.toString(), allCourses);
+
     const dpps = await WeeklyDPP.find({
-      course_id: user.locked_course_id,
+      course_id: { $in: validCourseIds },
       is_active: true,
     }).populate('question_ids');
 
@@ -59,3 +66,4 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+

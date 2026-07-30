@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
-import { User, MockTest } from '@/lib/models';
+import { User, MockTest, Course } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getEquivalentCourseIds } from '@/lib/courseMatcher';
 
 export async function GET() {
   try {
@@ -19,12 +20,12 @@ export async function GET() {
         return NextResponse.json({ error: 'No course locked' }, { status: 400 });
       }
 
-      const userLockedCourseId = String(user.locked_course_id);
+      const validCourseIds = getEquivalentCourseIds(String(user.locked_course_id), db.courses || []);
 
       const tests = (db.mockTests || [])
         .filter((m) => {
           const testCourseId = String(typeof m.course_id === 'object' ? m.course_id?._id : m.course_id);
-          return testCourseId === userLockedCourseId && m.is_active !== false;
+          return validCourseIds.includes(testCourseId) && m.is_active !== false;
         })
         .map((m) => {
           const qList = (m.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId)).filter(Boolean);
@@ -40,8 +41,11 @@ export async function GET() {
       return NextResponse.json({ error: 'No course locked' }, { status: 400 });
     }
 
+    const allCourses = await Course.find({});
+    const validCourseIds = getEquivalentCourseIds(user.locked_course_id.toString(), allCourses);
+
     const tests = await MockTest.find({
-      course_id: user.locked_course_id,
+      course_id: { $in: validCourseIds },
       is_active: true,
     }).populate('question_ids');
 
@@ -50,3 +54,4 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+

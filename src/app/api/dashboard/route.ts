@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
-import { User, Question, MockTest, Attempt } from '@/lib/models';
+import { User, Question, MockTest, Attempt, Course } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getEquivalentCourseIds } from '@/lib/courseMatcher';
 
 export async function GET() {
   try {
@@ -59,7 +60,12 @@ export async function GET() {
         ? Math.min(100, Math.max(0, Math.round((totalTopicCompletionSum / topicsList.length) * 100)))
         : 0;
 
-      const mockTests = (db.mockTests || []).filter((m) => m.course_id === courseId && m.is_active).slice(0, 2);
+      const validCourseIds = getEquivalentCourseIds(String(courseId), db.courses || []);
+
+      const mockTests = (db.mockTests || []).filter((m) => {
+        const testCourseId = String(typeof m.course_id === 'object' ? m.course_id?._id : m.course_id);
+        return validCourseIds.includes(testCourseId) && m.is_active;
+      }).slice(0, 2);
 
       const leaderboardStudents = (db.users || [])
         .filter((u) => u.locked_course_id === courseId && u.status === 'Active')
@@ -132,7 +138,9 @@ export async function GET() {
       ? Math.min(100, Math.max(0, Math.round((totalTopicCompletionSum / topicsList.length) * 100)))
       : 0;
 
-    const mockTests = await MockTest.find({ course_id: courseId, is_active: true }).limit(2);
+    const allCourses = await Course.find({});
+    const validCourseIds = getEquivalentCourseIds(courseId, allCourses);
+    const mockTests = await MockTest.find({ course_id: { $in: validCourseIds }, is_active: true }).limit(2);
 
     const leaderboardStudents = await User.find({
       locked_course_id: courseId,

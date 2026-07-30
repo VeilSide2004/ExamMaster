@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
-import { User, MockTest } from '@/lib/models';
+import { User, MockTest, Course } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getEquivalentCourseIds } from '@/lib/courseMatcher';
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -24,7 +25,10 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         return NextResponse.json({ error: 'Test not found' }, { status: 404 });
       }
 
-      if (rawTest.course_id !== user.locked_course_id) {
+      const validCourseIds = getEquivalentCourseIds(String(user.locked_course_id), db.courses || []);
+      const testCourseId = String(typeof rawTest.course_id === 'object' ? rawTest.course_id?._id : rawTest.course_id);
+
+      if (!validCourseIds.includes(testCourseId)) {
         return NextResponse.json({ error: 'RULE-02 Violation: That test is not part of your locked course' }, { status: 403 });
       }
 
@@ -51,8 +55,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
+    const allCourses = await Course.find({});
+    const validCourseIds = getEquivalentCourseIds(user.locked_course_id.toString(), allCourses);
     const testCourseId = (test.course_id as any)?._id?.toString() || test.course_id.toString();
-    if (testCourseId !== user.locked_course_id.toString()) {
+
+    if (!validCourseIds.includes(testCourseId)) {
       return NextResponse.json({ error: 'RULE-02 Violation: That test is not part of your locked course' }, { status: 403 });
     }
 
@@ -61,3 +68,4 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
