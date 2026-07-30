@@ -1,0 +1,63 @@
+import { NextResponse } from 'next/server';
+import { dbConnect } from '@/lib/db';
+import { User, MockTest } from '@/lib/models';
+import { readSharedDb } from '@/lib/sharedDb';
+import { getAuthenticatedUser } from '@/lib/auth';
+
+export async function GET(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const { isMemoryMode } = await dbConnect();
+    const auth = getAuthenticatedUser();
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (isMemoryMode) {
+      const db = readSharedDb();
+      const user = (db.users || []).find((u) => u._id === auth.userId);
+      if (!user || !user.locked_course_id) {
+        return NextResponse.json({ error: 'No course locked' }, { status: 400 });
+      }
+
+      const rawTest = (db.mockTests || []).find((m) => m._id === params.id);
+      if (!rawTest) {
+        return NextResponse.json({ error: 'Test not found' }, { status: 404 });
+      }
+
+      if (rawTest.course_id !== user.locked_course_id) {
+        return NextResponse.json({ error: 'RULE-02 Violation: That test is not part of your locked course' }, { status: 403 });
+      }
+
+      const course = (db.courses || []).find((c) => c._id === rawTest.course_id);
+      const question_ids = (rawTest.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId)).filter(Boolean);
+
+      const test = {
+        ...rawTest,
+        course_id: course ? { _id: course._id, name: course.name } : { name: 'Locked Course' },
+        question_ids,
+      };
+
+      return NextResponse.json({ test });
+    }
+
+    // Mongoose mode
+    const user = await User.findById(auth.userId);
+    if (!user || !user.locked_course_id) {
+      return NextResponse.json({ error: 'No course locked' }, { status: 400 });
+    }
+
+    const test = await MockTest.findById(params.id).populate('question_ids').populate('course_id');
+    if (!test) {
+      return NextResponse.json({ error: 'Test not found' }, { status: 404 });
+    }
+
+    const testCourseId = (test.course_id as any)?._id?.toString() || test.course_id.toString();
+    if (testCourseId !== user.locked_course_id.toString()) {
+      return NextResponse.json({ error: 'RULE-02 Violation: That test is not part of your locked course' }, { status: 403 });
+    }
+
+    return NextResponse.json({ test });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
