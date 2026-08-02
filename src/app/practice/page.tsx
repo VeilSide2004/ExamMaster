@@ -60,6 +60,8 @@ export default function PracticeSetsPage() {
 
   const [completedTopics, setCompletedTopics] = useState<string[]>([]);
   const [publishedWeeklyDpp, setPublishedWeeklyDpp] = useState<any | null>(null);
+  const [userAttempts, setUserAttempts] = useState<any[]>([]);
+  const [sessionQuestions, setSessionQuestions] = useState<any[]>([]);
 
   const fetchQuestions = async () => {
     setLoading(true);
@@ -74,6 +76,7 @@ export default function PracticeSetsPage() {
       setQuestions(data.questions || []);
       setTopicCounts(data.topicCounts || {});
       if (data.completedTopics) setCompletedTopics(data.completedTopics);
+      if (data.userAttempts) setUserAttempts(data.userAttempts);
       if (data.courseName) setCourseName(data.courseName);
       if (data.courseSubjects && data.courseSubjects.length > 0) {
         setCourseSubjects(data.courseSubjects);
@@ -156,10 +159,7 @@ export default function PracticeSetsPage() {
       }
     }
 
-    // 2. Fallback: Auto-generate from completed topics
-    const seed = new Date().getFullYear() * 100 + getWeekNumber();
-    const resultQs: any[] = [];
-
+    // 2. Auto-generate candidate pool from completed topics or course questions
     let candidatePool = questions;
     if (completedTopics.length > 0) {
       const completedQs = questions.filter((q) =>
@@ -172,34 +172,88 @@ export default function PracticeSetsPage() {
       }
     }
 
-    courseSubjects.forEach((sub) => {
-      const subQs = candidatePool.filter(
-        (q) => (q.topic_tag || '').toLowerCase().includes(sub.toLowerCase())
-      );
-      const pool = subQs.length > 0 ? subQs : questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(sub.toLowerCase()));
-      const shuffled = shuffleArrayWithSeed(pool, seed);
-      resultQs.push(...shuffled.slice(0, 10));
+    return candidatePool.length > 0 ? candidatePool : questions;
+  };
+
+  // Smart 10-Question Selection Algorithm
+  // 1. Capped at 10 questions at max per session
+  // 2. Prioritizes questions the user answered INCORRECTLY in earlier sets
+  // 3. Fills remaining slots with fresh UNATTEMPTED questions (shuffled randomly)
+  // 4. Applies across every course, subject, and topic
+  const getSmartPracticeSet = (rawCandidateQs: any[]): any[] => {
+    if (!rawCandidateQs || rawCandidateQs.length === 0) return [];
+
+    const questionAttemptMap: Record<string, boolean> = {};
+
+    const sortedAttempts = [...userAttempts].sort(
+      (a, b) => new Date(a.created_at || a.started_at || 0).getTime() - new Date(b.created_at || b.started_at || 0).getTime()
+    );
+
+    sortedAttempts.forEach((att) => {
+      if (Array.isArray(att.responses)) {
+        att.responses.forEach((resp: any) => {
+          if (resp.question_id) {
+            questionAttemptMap[String(resp.question_id)] = Boolean(resp.is_correct);
+          }
+        });
+      }
     });
 
-    if (resultQs.length > 0) return resultQs;
+    const wrongQs = rawCandidateQs.filter(
+      (q) => questionAttemptMap[String(q._id)] === false
+    );
 
-    // 3. Ultimate Fallback: Return all available questions
-    return questions;
+    const unattemptedQs = rawCandidateQs.filter(
+      (q) => questionAttemptMap[String(q._id)] === undefined
+    );
+
+    const correctQs = rawCandidateQs.filter(
+      (q) => questionAttemptMap[String(q._id)] === true
+    );
+
+    const randomShuffle = (arr: any[]) => {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    };
+
+    const orderedPool = [
+      ...randomShuffle(wrongQs),
+      ...randomShuffle(unattemptedQs),
+      ...randomShuffle(correctQs),
+    ];
+
+    const result: any[] = [];
+    const seenIds = new Set<string>();
+    for (const q of orderedPool) {
+      const qId = String(q._id);
+      if (!seenIds.has(qId)) {
+        seenIds.add(qId);
+        result.push(q);
+      }
+    }
+
+    return result.slice(0, 10);
   };
 
   const handleOpenWeeklyChallenge = () => {
-    const weeklyQs = getWeeklyQuestions();
-    if (weeklyQs.length === 0) {
+    const rawWeeklyQs = getWeeklyQuestions();
+    if (rawWeeklyQs.length === 0) {
       alert('No questions uploaded for Weekly DPP Test yet.');
       return;
     }
 
+    const smartSet = getSmartPracticeSet(rawWeeklyQs);
+    setSessionQuestions(smartSet);
+
     const testTitle = publishedWeeklyDpp?.title || `${getCurrentWeekLabel()} - Weekly Test Paper`;
     const testDurationSecs = publishedWeeklyDpp?.duration_minutes
       ? publishedWeeklyDpp.duration_minutes * 60
-      : Math.max(600, weeklyQs.length * 60);
+      : Math.max(300, smartSet.length * 60);
 
-    // Direct Launch as Timed Test
     setIsWeeklySession(true);
     setSelectedSubject('Weekly DPP');
     setSelectedTopic(testTitle);
@@ -224,6 +278,21 @@ export default function PracticeSetsPage() {
   const handleStartSession = (mode: 'practice' | 'quiz') => {
     setSelectedMode(mode);
     setShowModeModal(false);
+
+    let rawList: any[] = [];
+    if (isWeeklySession) {
+      rawList = getWeeklyQuestions();
+    } else if (selectedTopic) {
+      rawList = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedTopic.toLowerCase()));
+    } else if (selectedSubject) {
+      rawList = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedSubject.toLowerCase()));
+    } else {
+      rawList = questions;
+    }
+
+    const smartSet = getSmartPracticeSet(rawList);
+    setSessionQuestions(smartSet);
+
     setActiveSession(mode);
     setCurrentLevel('questions');
     setCurrentIdx(0);
@@ -231,19 +300,8 @@ export default function PracticeSetsPage() {
     setCheckedQuestions({});
     setSubmittedResult(null);
 
-    let activeList: any[] = [];
-    if (isWeeklySession) {
-      activeList = getWeeklyQuestions();
-    } else if (selectedTopic) {
-      activeList = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedTopic.toLowerCase()));
-    } else if (selectedSubject) {
-      activeList = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedSubject.toLowerCase()));
-    } else {
-      activeList = questions;
-    }
-
     if (mode === 'quiz') {
-      const totalSecs = Math.max(300, activeList.length * 60);
+      const totalSecs = Math.max(300, smartSet.length * 60);
       setTimerSeconds(totalSecs);
     } else {
       setTimerSeconds(0);
@@ -286,6 +344,7 @@ export default function PracticeSetsPage() {
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('xpUpdated'));
         }
+        fetchQuestions();
       }
     } catch (err) {
       console.error(err);
@@ -308,10 +367,12 @@ export default function PracticeSetsPage() {
   const handleResetSession = () => {
     setIsWeeklySession(false);
     setActiveSession(null);
+    setSessionQuestions([]);
     setUserAnswers({});
     setCheckedQuestions({});
     setSubmittedResult(null);
     setCurrentLevel('topics');
+    fetchQuestions();
   };
 
   const handleHeaderBack = () => {
@@ -355,7 +416,9 @@ export default function PracticeSetsPage() {
     topicModulesMap[tName].push(q);
   });
 
-  const filteredQuestions = isWeeklySession
+  const filteredQuestions = activeSession && sessionQuestions.length > 0
+    ? sessionQuestions
+    : isWeeklySession
     ? getWeeklyQuestions()
     : selectedTopic
     ? activeSubjectQuestions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedTopic.toLowerCase()))
@@ -413,7 +476,7 @@ export default function PracticeSetsPage() {
                       : 'bg-white border border-slate-200 text-slate-600 dark:bg-slate-900 dark:text-slate-400'
                   }`}
                 >
-                  <BookOpen className="w-3.5 h-3.5 inline mr-1" /> All Questions ({questions.length})
+                  <BookOpen className="w-3.5 h-3.5 inline mr-1" /> Practice Set (10 Qs / Set)
                 </button>
               </div>
             </div>
@@ -805,7 +868,7 @@ export default function PracticeSetsPage() {
                             <h4 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors mb-1">
                               {sName}
                             </h4>
-                            <p className="text-xs text-slate-500 font-semibold">{qList.length} Questions Available</p>
+                            <p className="text-xs text-slate-500 font-semibold">{Math.min(10, qList.length)} Questions per Set (Smart Reshuffled)</p>
                           </div>
 
                           <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex justify-between items-center text-xs font-black text-slate-900 dark:text-white group-hover:text-emerald-600">
@@ -820,7 +883,7 @@ export default function PracticeSetsPage() {
                   {/* WEEKLY MEGA DPP CHALLENGE SECTION */}
                   {(() => {
                     const weeklyQs = getWeeklyQuestions();
-                    const totalWeeklyCount = weeklyQs.length;
+                    const totalWeeklyCount = Math.min(10, weeklyQs.length);
                     return (
                       <div className="bg-[#044B3B] dark:bg-[#064E3B] text-white rounded-3xl p-7 shadow-xl space-y-6">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 border-b border-emerald-600/30 pb-5">
@@ -917,7 +980,7 @@ export default function PracticeSetsPage() {
                                 <Folder className="w-5 h-5" />
                               </div>
                               <h4 className="text-base font-extrabold text-slate-900 dark:text-white mb-1">{tName}</h4>
-                              <p className="text-xs text-slate-500">{tQList.length} Questions</p>
+                              <p className="text-xs text-slate-500">{Math.min(10, tQList.length)} Questions per Set</p>
                             </div>
 
                             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs font-bold text-[#0B192C] dark:text-blue-400">

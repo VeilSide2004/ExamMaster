@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
+import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
-    await dbConnect();
+    const { isMemoryMode } = await dbConnect();
     const { name, email, password, confirmPassword } = await req.json();
 
     if (!name || !email || !password) {
@@ -23,6 +24,57 @@ export async function POST(req: Request) {
 
     const lowerEmail = email.toLowerCase().trim();
 
+    if (isMemoryMode) {
+      const db = readSharedDb();
+      const existing = db.users.find((u) => u.email.toLowerCase() === lowerEmail);
+      if (existing) {
+        return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
+      }
+
+      const password_hash = await bcrypt.hash(password, 10);
+      const newUserId = generateId();
+      const newUser = {
+        _id: newUserId,
+        name,
+        email: lowerEmail,
+        password_hash,
+        status: 'Active',
+        xp_total: 0,
+        locked_course_id: null,
+        created_at: new Date().toISOString(),
+      };
+
+      db.users.push(newUser);
+      writeSharedDb(db);
+
+      const token = signUserToken({
+        userId: newUser._id,
+        email: newUser.email,
+        name: newUser.name,
+        lockedCourseId: null,
+      });
+
+      const response = NextResponse.json({
+        success: true,
+        user: {
+          id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          lockedCourseId: null,
+        },
+      });
+
+      response.cookies.set('student_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60,
+        path: '/',
+      });
+
+      return response;
+    }
+
+    // Atlas Mongoose mode
     const existing = await User.findOne({ email: lowerEmail });
     if (existing) {
       return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });

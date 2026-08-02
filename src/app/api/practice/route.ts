@@ -50,13 +50,14 @@ export async function GET(req: Request) {
         questions = questions.filter((q) => q.topic_tag === topic || (q.topic_tag || '').toLowerCase().includes(topic.toLowerCase()));
       }
 
-      const userAttempts = (db.attempts || []).filter((a) => a.student_id === user._id);
+      const userAttempts = (db.attempts || []).filter((a) => String(a.student_id) === String(user._id));
       const completedTopics = Array.from(new Set(userAttempts.map((a) => a.topic_tag).filter(Boolean)));
 
       return NextResponse.json({
         questions,
         topicCounts,
         completedTopics,
+        userAttempts,
         courseName: courseObj?.name || 'Selected Track',
         courseSubjects,
       });
@@ -100,6 +101,7 @@ export async function GET(req: Request) {
       questions,
       topicCounts,
       completedTopics,
+      userAttempts,
       courseName: courseObj?.name || 'Selected Track',
       courseSubjects,
     });
