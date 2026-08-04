@@ -15,15 +15,17 @@ import {
   Menu,
   LogOut,
   User,
-  BookOpen
+  BookOpen,
+  ArrowLeft
 } from 'lucide-react';
 
 interface StudentHeaderProps {
   userName?: string;
   onBack?: () => void;
+  hideNav?: boolean;
 }
 
-export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUserName, onBack }) => {
+export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUserName, onBack, hideNav }) => {
   const router = useRouter();
   const pathname = usePathname();
   const [userName, setUserName] = useState<string>(propsUserName || '');
@@ -74,8 +76,19 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 sm:px-10 sticky top-0 z-40 shadow-xs w-full">
       <div className="w-full flex items-center justify-between h-16 relative">
         
-        {/* Far Left: Brand Logo */}
-        <div className="flex items-center gap-3">
+        {/* Far Left: Brand Logo + Back Button */}
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="px-3.5 py-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-all flex items-center gap-2 text-xs font-extrabold shadow-xs group"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white group-hover:-translate-x-0.5 transition-transform" />
+              <span>Exit Practice / Back</span>
+            </button>
+          )}
+
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
               <BookOpen className="w-5 h-5 fill-current stroke-[1.5]" />
@@ -86,28 +99,30 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           </Link>
         </div>
 
-        {/* Center: Centered Navigation Bar */}
-        <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full">
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
-            
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-4 h-full text-xs font-bold flex items-center gap-2 transition-all relative border-b-2 ${
-                  isActive
-                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
-                    : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
-                <span>{link.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        {/* Center: Centered Navigation Bar (Hidden when hideNav is true) */}
+        {!hideNav && (
+          <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
+              
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`px-4 h-full text-xs font-bold flex items-center gap-2 transition-all relative border-b-2 ${
+                    isActive
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
+                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        )}
 
         {/* Far Right Actions */}
         <div className="flex items-center gap-3">

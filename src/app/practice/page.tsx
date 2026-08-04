@@ -436,7 +436,10 @@ export default function PracticeSetsPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
-      <StudentHeader onBack={currentLevel !== 'subjects' || activeSession ? handleHeaderBack : undefined} />
+      <StudentHeader
+        hideNav={Boolean(activeSession)}
+        onBack={currentLevel !== 'subjects' || activeSession ? handleHeaderBack : undefined}
+      />
 
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1">
           {/* Header Title Bar (when not in active session) */}
