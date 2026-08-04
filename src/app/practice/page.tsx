@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { StudentSidebar } from '@/components/layout/StudentSidebar';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import {
   HelpCircle,
@@ -436,13 +435,10 @@ export default function PracticeSetsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 font-sans">
-      <StudentSidebar />
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+      <StudentHeader onBack={currentLevel !== 'subjects' || activeSession ? handleHeaderBack : undefined} />
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <StudentHeader onBack={currentLevel !== 'subjects' || activeSession ? handleHeaderBack : undefined} />
-
-        <main className="p-4 sm:p-6 lg:p-8 space-y-6 flex-1 overflow-y-auto">
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1">
           {/* Header Title Bar (when not in active session) */}
           {!activeSession && (
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1058,7 +1054,6 @@ export default function PracticeSetsPage() {
             </div>
           )}
         </main>
-      </div>
 
       {/* MODE SELECTION MODAL */}
       {showModeModal && (
