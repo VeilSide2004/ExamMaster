@@ -24,14 +24,26 @@ export async function GET(req: Request) {
       }
 
       const courseObj = (db.courses || []).find((c) => c._id === user.locked_course_id || c.name === user.locked_course_id);
-      const courseSubjects = courseObj?.subjects && courseObj.subjects.length > 0
-        ? courseObj.subjects
-        : ['Physics', 'Chemistry', 'Mathematics'];
 
       let questions = (db.questions || []).filter((q) => {
         if (q.is_active === false) return false;
         return String(q.course_id) === String(user.locked_course_id) || String(q.course_id) === String(courseObj?._id);
       });
+
+      let courseSubjects = courseObj?.subjects && Array.isArray(courseObj.subjects) && courseObj.subjects.length > 0
+        ? courseObj.subjects
+        : [];
+
+      if (courseSubjects.length === 0) {
+        const subSet = new Set<string>();
+        questions.forEach((q) => {
+          if (q.topic_tag) {
+            const sName = q.topic_tag.includes('-') ? q.topic_tag.split('-')[0].trim() : q.topic_tag.trim();
+            if (sName) subSet.add(sName);
+          }
+        });
+        courseSubjects = Array.from(subSet);
+      }
 
       const allQuestionsInCourse = questions;
       const topicCounts: Record<string, number> = {};
@@ -70,10 +82,6 @@ export async function GET(req: Request) {
     }
 
     const courseObj = await Course.findById(user.locked_course_id);
-    const courseSubjects = courseObj?.subjects && courseObj.subjects.length > 0
-      ? courseObj.subjects
-      : ['Physics', 'Chemistry', 'Mathematics'];
-
     const query: any = { is_active: true };
     if (subject) {
       query.topic_tag = { $regex: subject, $options: 'i' };
@@ -86,6 +94,21 @@ export async function GET(req: Request) {
     const questions = allDbQuestions.filter((q: any) => {
       return String(q.course_id) === String(user.locked_course_id) || String(q.course_id) === String(courseObj?._id);
     });
+
+    let courseSubjects = courseObj?.subjects && Array.isArray(courseObj.subjects) && courseObj.subjects.length > 0
+      ? courseObj.subjects
+      : [];
+
+    if (courseSubjects.length === 0) {
+      const subSet = new Set<string>();
+      questions.forEach((q: any) => {
+        if (q.topic_tag) {
+          const sName = q.topic_tag.includes('-') ? q.topic_tag.split('-')[0].trim() : q.topic_tag.trim();
+          if (sName) subSet.add(sName);
+        }
+      });
+      courseSubjects = Array.from(subSet);
+    }
 
     const topicCounts: Record<string, number> = {};
     questions.forEach((q) => {

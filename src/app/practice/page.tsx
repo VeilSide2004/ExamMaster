@@ -27,8 +27,8 @@ import {
 export default function PracticeSetsPage() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
-  const [courseName, setCourseName] = useState<string>('JEE MAINS 2027');
-  const [courseSubjects, setCourseSubjects] = useState<string[]>(['Physics', 'Chemistry', 'Mathematics']);
+  const [courseName, setCourseName] = useState<string>('');
+  const [courseSubjects, setCourseSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Hierarchy Navigation State
