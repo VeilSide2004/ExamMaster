@@ -47,6 +47,7 @@ export default function PracticeSetsPage() {
   const [activeSession, setActiveSession] = useState<'practice' | 'quiz' | null>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<string, number | null>>({});
+  const [userTextAnswers, setUserTextAnswers] = useState<Record<string, string>>({});
   const [checkedQuestions, setCheckedQuestions] = useState<Record<string, boolean>>({});
 
   // Timer State (Stopwatch for Practice, Countdown for Quiz)
@@ -626,9 +627,24 @@ export default function PracticeSetsPage() {
                   <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex flex-col justify-between min-h-[420px]">
                     <div>
                       <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-                        <span className="text-xs font-bold text-slate-500">
-                          Question {currentIdx + 1} of {filteredQuestions.length}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-500">
+                            Question {currentIdx + 1} of {filteredQuestions.length}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                            currentQ.question_type === 'Long Answer'
+                              ? 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300'
+                              : currentQ.question_type === 'Short Answer'
+                              ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                              : 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300'
+                          }`}>
+                            {currentQ.question_type === 'Long Answer' ? '📄 Long Answer' : currentQ.question_type === 'Short Answer' ? '📝 Short Answer' : '🔘 MCQ'}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 font-extrabold text-[10px]">
+                            {currentQ.marks || (currentQ.question_type === 'Long Answer' ? 5 : currentQ.question_type === 'Short Answer' ? 2 : 1)} Mark(s)
+                          </span>
+                        </div>
+
                         <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                           {selectedTopic || selectedSubject}
                         </span>
@@ -638,60 +654,83 @@ export default function PracticeSetsPage() {
                         {currentQ.question_text}
                       </h2>
 
-                      {/* Options Grid */}
-                      <div className="space-y-3">
-                        {currentQ.options.map((opt: string, optIdx: number) => {
-                          const isSelected = userAnswers[currentQ._id] === optIdx;
-                          const isChecked = activeSession === 'practice' && checkedQuestions[currentQ._id];
-                          const isCorrect = optIdx === currentQ.correct_option;
+                      {(!currentQ.question_type || currentQ.question_type === 'MCQ') && currentQ.options && currentQ.options.length > 0 ? (
+                        /* MCQ Options Grid */
+                        <div className="space-y-3">
+                          {currentQ.options.map((opt: string, optIdx: number) => {
+                            const isSelected = userAnswers[currentQ._id] === optIdx;
+                            const isChecked = activeSession === 'practice' && checkedQuestions[currentQ._id];
+                            const isCorrect = optIdx === currentQ.correct_option;
 
-                          let style = 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300';
+                            let style = 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300';
 
-                          if (isChecked) {
-                            if (isCorrect) {
-                              style = 'bg-emerald-50 border-emerald-500 text-emerald-950 font-bold dark:bg-emerald-950 dark:border-emerald-700 dark:text-emerald-300';
-                            } else if (isSelected && !isCorrect) {
-                              style = 'bg-rose-50 border-rose-500 text-rose-950 font-bold dark:bg-rose-950 dark:border-rose-700 dark:text-rose-300';
+                            if (isChecked) {
+                              if (isCorrect) {
+                                style = 'bg-emerald-50 border-emerald-500 text-emerald-950 font-bold dark:bg-emerald-950 dark:border-emerald-700 dark:text-emerald-300';
+                              } else if (isSelected && !isCorrect) {
+                                style = 'bg-rose-50 border-rose-500 text-rose-950 font-bold dark:bg-rose-950 dark:border-rose-700 dark:text-rose-300';
+                              }
+                            } else if (isSelected) {
+                              style = 'bg-brand-50 border-brand-800 text-brand-900 dark:bg-brand-950 dark:border-brand-500 dark:text-brand-300 font-bold shadow-xs';
                             }
-                          } else if (isSelected) {
-                            style = 'bg-brand-50 border-brand-800 text-brand-900 dark:bg-brand-950 dark:border-brand-500 dark:text-brand-300 font-bold shadow-xs';
-                          }
 
-                          return (
-                            <button
-                              key={optIdx}
-                              type="button"
-                              onClick={() => handleSelectOption(currentQ._id, optIdx)}
-                              className={`w-full p-3.5 rounded-xl border text-xs text-left font-medium transition-all flex items-center justify-between gap-3 ${style}`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <span
-                                  className={`w-6 h-6 rounded-full text-[11px] flex items-center justify-center font-bold shrink-0 ${
-                                    isSelected
-                                      ? 'bg-brand-800 text-white'
-                                      : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
-                                  }`}
-                                >
-                                  {String.fromCharCode(65 + optIdx)}
-                                </span>
-                                <span>{opt}</span>
-                              </div>
+                            return (
+                              <button
+                                key={optIdx}
+                                type="button"
+                                onClick={() => handleSelectOption(currentQ._id, optIdx)}
+                                className={`w-full p-3.5 rounded-xl border text-xs text-left font-medium transition-all flex items-center justify-between gap-3 ${style}`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span
+                                    className={`w-6 h-6 rounded-full text-[11px] flex items-center justify-center font-bold shrink-0 ${
+                                      isSelected
+                                        ? 'bg-brand-800 text-white'
+                                        : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                                    }`}
+                                  >
+                                    {String.fromCharCode(65 + optIdx)}
+                                  </span>
+                                  <span>{opt}</span>
+                                </div>
 
-                              {isChecked && isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
-                              {isChecked && isSelected && !isCorrect && <XCircle className="w-4 h-4 text-rose-600 shrink-0" />}
-                            </button>
-                          );
-                        })}
-                      </div>
+                                {isChecked && isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+                                {isChecked && isSelected && !isCorrect && <XCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        /* Short / Long Answer Text Response Field */
+                        <div className="space-y-3">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                            Draft Your Response / Key Answer Steps:
+                          </label>
+                          <textarea
+                            rows={currentQ.question_type === 'Long Answer' ? 6 : 3}
+                            value={userTextAnswers[currentQ._id] || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setUserTextAnswers((prev) => ({ ...prev, [currentQ._id]: val }));
+                              // Mark as answered
+                              if (val.trim()) {
+                                setUserAnswers((prev) => ({ ...prev, [currentQ._id]: 1 }));
+                              }
+                            }}
+                            placeholder="Write your answer, key steps, or formulas here..."
+                            className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white"
+                          />
+                        </div>
+                      )}
 
-                      {/* Immediate Solution Reveal in Practice Mode */}
+                      {/* Solution / Model Answer Reveal */}
                       {activeSession === 'practice' && checkedQuestions[currentQ._id] && (
                         <div className="mt-5 p-4 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 rounded-xl space-y-1 text-xs">
                           <span className="font-extrabold text-emerald-950 dark:text-emerald-300 flex items-center gap-1.5">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Explanation & Solution
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Model Answer & Official Key
                           </span>
-                          <p className="text-emerald-900 dark:text-emerald-200 leading-relaxed">
-                            {currentQ.explanation || `Correct option is ${String.fromCharCode(65 + currentQ.correct_option)}.`}
+                          <p className="text-emerald-900 dark:text-emerald-200 leading-relaxed whitespace-pre-line font-medium">
+                            {currentQ.sample_answer || currentQ.explanation || (currentQ.correct_option !== undefined ? `Correct option is ${String.fromCharCode(65 + currentQ.correct_option)}.` : 'Refer to textbook model answer.')}
                           </p>
                         </div>
                       )}
@@ -702,12 +741,16 @@ export default function PracticeSetsPage() {
                       {activeSession === 'practice' ? (
                         <button
                           type="button"
-                          disabled={userAnswers[currentQ._id] === undefined || userAnswers[currentQ._id] === null}
+                          disabled={
+                            (!currentQ.question_type || currentQ.question_type === 'MCQ')
+                              ? userAnswers[currentQ._id] === undefined || userAnswers[currentQ._id] === null
+                              : false
+                          }
                           onClick={() => handleCheckSingleQuestion(currentQ._id)}
                           className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-40 flex items-center gap-1.5 shadow-xs"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          {checkedQuestions[currentQ._id] ? 'Re-check Answer' : 'Check Answer'}
+                          {checkedQuestions[currentQ._id] ? 'Re-check / View Model Answer' : 'Check / Reveal Model Answer'}
                         </button>
                       ) : (
                         <div />
