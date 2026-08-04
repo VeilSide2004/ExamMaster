@@ -20,7 +20,7 @@ export async function GET() {
         return NextResponse.json({ authenticated: false }, { status: 401 });
       }
 
-      const lockedCourse = (db.courses || []).find((c) => c._id === user.locked_course_id) || null;
+      const lockedCourse = (db.courses || []).find((c) => String(c._id) === String(user.locked_course_id)) || null;
 
       return NextResponse.json({
         authenticated: true,

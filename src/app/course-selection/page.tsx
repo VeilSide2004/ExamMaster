@@ -36,9 +36,9 @@ export default function CourseSelectionPage() {
         return fetch('/api/courses')
           .then((res) => res.json())
           .then((data) => {
-            const active = (data.courses || []).filter((c: any) => c.is_active);
+            const active = (data.courses || []).filter((c: any) => c.is_active !== false);
             setCourses(active);
-            if (active.length > 0) setSelectedCourseId(active[0]._id);
+            if (active.length > 0) setSelectedCourseId(String(active[0]._id));
           });
       })
       .catch(console.error)
@@ -72,12 +72,17 @@ export default function CourseSelectionPage() {
     }
   };
 
-  const selectedCourse = courses.find((c) => c._id === selectedCourseId);
+  const selectedCourse = courses.find((c) => String(c._id) === String(selectedCourseId));
 
-  const competitiveCourses = courses.filter(
-    (c) => !c.category || c.category === 'Competitive Exams'
-  );
-  const schoolCourses = courses.filter((c) => c.category === 'School Exams');
+  const isSchoolCategory = (c: any) => {
+    const cat = String(c?.category || '').toLowerCase().trim();
+    const name = String(c?.name || '').toLowerCase().trim();
+    const str = `${cat} ${name}`;
+    return str.includes('school') || str.includes('class') || str.includes('6-12') || str.includes('board') || str.includes('grade');
+  };
+
+  const schoolCourses = courses.filter((c) => isSchoolCategory(c));
+  const competitiveCourses = courses.filter((c) => !isSchoolCategory(c));
 
   const displayedCourses =
     activeTab === 'competitive'
@@ -85,6 +90,15 @@ export default function CourseSelectionPage() {
       : activeTab === 'school'
       ? schoolCourses
       : courses;
+
+  useEffect(() => {
+    if (displayedCourses.length > 0) {
+      const existsInTab = displayedCourses.some((c) => String(c._id) === String(selectedCourseId));
+      if (!existsInTab) {
+        setSelectedCourseId(String(displayedCourses[0]._id));
+      }
+    }
+  }, [activeTab, displayedCourses, selectedCourseId]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 md:p-6">
@@ -173,11 +187,11 @@ export default function CourseSelectionPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {competitiveCourses.map((course) => {
-                    const isSelected = selectedCourseId === course._id;
+                    const isSelected = String(selectedCourseId) === String(course._id);
                     return (
                       <div
-                        key={course._id}
-                        onClick={() => setSelectedCourseId(course._id)}
+                        key={String(course._id)}
+                        onClick={() => setSelectedCourseId(String(course._id))}
                         className={`cursor-pointer rounded-2xl p-5 border-2 transition-all flex flex-col justify-between ${
                           isSelected
                             ? 'border-amber-500 bg-amber-50/40 dark:border-amber-500 dark:bg-amber-950/20 shadow-md ring-2 ring-amber-500/20'
@@ -231,11 +245,11 @@ export default function CourseSelectionPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {schoolCourses.map((course) => {
-                    const isSelected = selectedCourseId === course._id;
+                    const isSelected = String(selectedCourseId) === String(course._id);
                     return (
                       <div
-                        key={course._id}
-                        onClick={() => setSelectedCourseId(course._id)}
+                        key={String(course._id)}
+                        onClick={() => setSelectedCourseId(String(course._id))}
                         className={`cursor-pointer rounded-2xl p-5 border-2 transition-all flex flex-col justify-between ${
                           isSelected
                             ? 'border-emerald-600 bg-emerald-50/40 dark:border-emerald-500 dark:bg-emerald-950/20 shadow-md ring-2 ring-emerald-500/20'

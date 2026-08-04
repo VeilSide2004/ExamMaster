@@ -24,10 +24,24 @@ export function getEquivalentCourseIds(lockedCourseId: string, courses: any[]): 
     const cName = (c.name || '').toLowerCase().trim();
     const cId = String(c._id || c.id);
 
+    const isSchoolTarget = targetName.includes('class') || targetName.includes('school') || targetName.includes('board');
+    const isSchoolC = cName.includes('class') || cName.includes('school') || cName.includes('board');
+
+    // Extract grade numbers if present (e.g. "class 10" -> "10")
+    const getGrade = (str: string) => {
+      const match = str.match(/class\s*(\d+)/i) || str.match(/grade\s*(\d+)/i) || str.match(/(\d+)(th|st|nd|rd)/i);
+      return match ? match[1] : null;
+    };
+
+    const targetGrade = getGrade(targetName);
+    const cGrade = getGrade(cName);
+
     if (
       cName === targetName ||
       (targetName.includes('neet') && cName.includes('neet')) ||
-      (targetName.includes('jee') && cName.includes('jee'))
+      (targetName.includes('jee') && cName.includes('jee')) ||
+      (targetGrade && cGrade && targetGrade === cGrade) ||
+      (isSchoolTarget && isSchoolC && !targetGrade && !cGrade)
     ) {
       matchedIds.add(cId);
     }

@@ -9,11 +9,11 @@ export async function GET() {
 
     if (isMemoryMode) {
       const db = readSharedDb();
-      const courses = (db.courses || []).filter((c) => c.is_active);
+      const courses = (db.courses || []).filter((c) => c.is_active !== false);
       return NextResponse.json({ courses });
     }
 
-    const courses = await Course.find({ is_active: true });
+    const courses = await Course.find({ is_active: { $ne: false } });
     return NextResponse.json({ courses });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
