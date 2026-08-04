@@ -455,25 +455,25 @@ export default function PracticeSetsPage() {
                 <button
                   type="button"
                   onClick={() => setViewMode('hierarchy')}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all ${
                     viewMode === 'hierarchy'
-                      ? 'bg-[#0B192C] text-white'
-                      : 'bg-white border border-slate-200 text-slate-600 dark:bg-slate-900 dark:text-slate-400'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-white border border-slate-200/80 text-slate-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
-                  <Layers className="w-3.5 h-3.5 inline mr-1" /> Subject Hierarchy
+                  <Layers className="w-3.5 h-3.5 inline mr-1.5" /> Subject Hierarchy
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setViewMode('all')}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all ${
                     viewMode === 'all'
-                      ? 'bg-[#0B192C] text-white'
-                      : 'bg-white border border-slate-200 text-slate-600 dark:bg-slate-900 dark:text-slate-400'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-white border border-slate-200/80 text-slate-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
-                  <BookOpen className="w-3.5 h-3.5 inline mr-1" /> Practice Set (10 Qs / Set)
+                  <BookOpen className="w-3.5 h-3.5 inline mr-1.5" /> Practice Set (10 Qs / Set)
                 </button>
               </div>
             </div>
@@ -483,9 +483,9 @@ export default function PracticeSetsPage() {
           {activeSession && currentQ && (
             <div className="space-y-6">
               {/* Session Top Header Sub-Bar */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <span className="px-3 py-1 rounded-lg text-xs font-black bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                  <span className="px-3 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
                     {selectedSubject || 'General'} ➔ {selectedTopic || 'Practice Set'}
                   </span>
                   <span className="text-xs font-bold text-slate-500">
@@ -496,7 +496,7 @@ export default function PracticeSetsPage() {
                 {/* Timer Badge */}
                 {!submittedResult && (
                   <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-1.5 rounded-xl text-slate-900 dark:text-slate-100">
-                    <Clock className={`w-4 h-4 ${activeSession === 'quiz' ? 'text-amber-500 animate-pulse' : 'text-emerald-500'}`} />
+                    <Clock className={`w-4 h-4 ${activeSession === 'quiz' ? 'text-amber-500 animate-pulse' : 'text-blue-500'}`} />
                     <span className="font-mono text-sm font-bold">{formatTime(timerSeconds)}</span>
                     <span className="text-[10px] text-slate-400 font-semibold uppercase">
                       {activeSession === 'quiz' ? 'Remaining' : 'Elapsed'}
@@ -508,7 +508,7 @@ export default function PracticeSetsPage() {
                   <button
                     onClick={() => setShowConfirmModal(true)}
                     type="button"
-                    className="px-4 py-2 bg-brand-800 hover:bg-brand-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
                   >
                     {activeSession === 'quiz' ? 'Submit Quiz' : 'Finish Practice Set'}
                   </button>
@@ -828,7 +828,7 @@ export default function PracticeSetsPage() {
               <button
                 type="button"
                 onClick={handleResetSession}
-                className="mt-2 px-5 py-2.5 bg-[#0B192C] hover:bg-[#060E18] text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+                className="mt-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
               >
                 Return to Dashboard
               </button>
@@ -839,7 +839,7 @@ export default function PracticeSetsPage() {
           {!activeSession && viewMode === 'hierarchy' && (
             <div className="space-y-6">
               {/* Breadcrumb Navigation Trail */}
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
                 <button
                   onClick={() => {
                     setCurrentLevel('subjects');
@@ -847,10 +847,10 @@ export default function PracticeSetsPage() {
                     setSelectedTopic('');
                   }}
                   className={`hover:underline flex items-center gap-1.5 ${
-                    currentLevel === 'subjects' ? 'text-[#0B192C] dark:text-blue-400 font-extrabold' : ''
+                    currentLevel === 'subjects' ? 'text-blue-600 dark:text-blue-400 font-extrabold' : ''
                   }`}
                 >
-                  <BookOpen className="w-4 h-4 text-emerald-600" /> {courseName}
+                  <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" /> {courseName}
                 </button>
 
                 {selectedSubject && (
@@ -862,7 +862,7 @@ export default function PracticeSetsPage() {
                         setSelectedTopic('');
                       }}
                       className={`hover:underline flex items-center gap-1 ${
-                        currentLevel === 'topics' ? 'text-[#0B192C] dark:text-blue-400 font-extrabold' : ''
+                        currentLevel === 'topics' ? 'text-blue-600 dark:text-blue-400 font-extrabold' : ''
                       }`}
                     >
                       <Folder className="w-4 h-4 text-slate-700 dark:text-slate-300" /> {selectedSubject}
@@ -873,7 +873,7 @@ export default function PracticeSetsPage() {
                 {selectedTopic && (
                   <>
                     <ChevronRight className="w-4 h-4 text-slate-400" />
-                    <span className="text-[#0B192C] dark:text-blue-400 font-extrabold flex items-center gap-1">
+                    <span className="text-blue-600 dark:text-blue-400 font-extrabold flex items-center gap-1">
                       <FileText className="w-4 h-4 text-slate-700 dark:text-slate-300" /> {selectedTopic}
                     </span>
                   </>
@@ -898,51 +898,51 @@ export default function PracticeSetsPage() {
                             setSelectedSubject(sName);
                             setCurrentLevel('topics');
                           }}
-                          className="bg-white dark:bg-[#0B131F] border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500/60 rounded-2xl p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                          className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
                         >
                           <div>
-                            <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-[#064E3B]/40 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/60 flex items-center justify-center mb-4">
+                            <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 flex items-center justify-center mb-4">
                               <BookOpen className="w-5 h-5" />
                             </div>
-                            <h4 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors mb-1">
+                            <h4 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
                               {sName}
                             </h4>
                             <p className="text-xs text-slate-500 font-semibold">{Math.min(10, qList.length)} Questions per Set (Smart Reshuffled)</p>
                           </div>
 
-                          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex justify-between items-center text-xs font-black text-slate-900 dark:text-white group-hover:text-emerald-600">
+                          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-600">
                             <span>Browse Topics</span>
-                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-slate-400 group-hover:text-emerald-600" />
+                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-slate-400 group-hover:text-blue-600" />
                           </div>
                         </div>
                       );
                     })}
                   </div>
 
-                  {/* WEEKLY MEGA DPP CHALLENGE SECTION */}
+                  {/* WEEKLY MEGA DPP CHALLENGE SECTION (Royal Blue & Deep Indigo Theme) */}
                   {(() => {
                     const weeklyQs = getWeeklyQuestions();
                     const totalWeeklyCount = Math.min(10, weeklyQs.length);
                     return (
-                      <div className="bg-[#044B3B] dark:bg-[#064E3B] text-white rounded-3xl p-7 shadow-xl space-y-6">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 border-b border-emerald-600/30 pb-5">
+                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-950 via-indigo-950 to-blue-900 text-white p-7 shadow-md space-y-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 border-b border-white/10 pb-5">
                           <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-[#065F46] text-[#34D399] flex items-center justify-center shrink-0 border border-emerald-500/30">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-900/60 text-blue-300 flex items-center justify-center shrink-0 border border-blue-500/30">
                               <Calendar className="w-6 h-6" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2 mb-1.5">
-                                <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#065F46] text-[#34D399] tracking-wider border border-emerald-500/30">
+                                <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-800/60 text-blue-200 tracking-wider border border-blue-400/30">
                                   {getCurrentWeekLabel()}
                                 </span>
-                                <span className="text-xs font-bold text-emerald-200/80">
+                                <span className="text-xs font-bold text-blue-200/80">
                                   Completed Topics Revision Test
                                 </span>
                               </div>
                               <h3 className="text-xl font-black tracking-tight text-white">
                                 {publishedWeeklyDpp?.title || 'Weekly DPP Test'}
                               </h3>
-                              <p className="text-xs text-emerald-100/90 leading-relaxed mt-1 max-w-xl">
+                              <p className="text-xs text-blue-100/90 leading-relaxed mt-1 max-w-xl">
                                 A timed revision test configured for your course track. Duration: {publishedWeeklyDpp?.duration_minutes || 30} Mins.
                               </p>
                             </div>
@@ -951,28 +951,28 @@ export default function PracticeSetsPage() {
                           <button
                             type="button"
                             onClick={handleOpenWeeklyChallenge}
-                            className="px-6 py-3.5 bg-[#34D399] hover:bg-[#10B981] text-slate-950 font-black text-xs rounded-2xl shadow-lg hover:scale-[1.02] transition-all flex items-center gap-2 shrink-0"
+                            className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center gap-2 shrink-0"
                           >
-                            <Zap className="w-4 h-4 fill-slate-950" /> Start Weekly Test
+                            <Zap className="w-4 h-4 fill-current" /> Start Weekly Test
                           </button>
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                          <div className="p-4 bg-[#065F46]/50 rounded-2xl border border-emerald-500/20">
-                            <span className="text-[10px] text-emerald-200/80 font-black block uppercase tracking-wider mb-1">TEST DURATION</span>
+                          <div className="p-4 bg-blue-900/40 rounded-xl border border-blue-500/20">
+                            <span className="text-[10px] text-blue-200/80 font-black block uppercase tracking-wider mb-1">TEST DURATION</span>
                             <span className="text-base font-black text-white">{publishedWeeklyDpp?.duration_minutes || 30} Mins</span>
                           </div>
-                          <div className="p-4 bg-[#065F46]/50 rounded-2xl border border-emerald-500/20">
-                            <span className="text-[10px] text-emerald-200/80 font-black block uppercase tracking-wider mb-1">CONFIGURED QUESTIONS</span>
-                            <span className="text-base font-black text-[#34D399]">{totalWeeklyCount} Questions</span>
+                          <div className="p-4 bg-blue-900/40 rounded-xl border border-blue-500/20">
+                            <span className="text-[10px] text-blue-200/80 font-black block uppercase tracking-wider mb-1">CONFIGURED QUESTIONS</span>
+                            <span className="text-base font-black text-blue-400">{totalWeeklyCount} Questions</span>
                           </div>
-                          <div className="p-4 bg-[#065F46]/50 rounded-2xl border border-emerald-500/20">
-                            <span className="text-[10px] text-emerald-200/80 font-black block uppercase tracking-wider mb-1">WEEKLY TOTAL QS</span>
+                          <div className="p-4 bg-blue-900/40 rounded-xl border border-blue-500/20">
+                            <span className="text-[10px] text-blue-200/80 font-black block uppercase tracking-wider mb-1">WEEKLY TOTAL QS</span>
                             <span className="text-base font-black text-white">{totalWeeklyCount} Questions</span>
                           </div>
-                          <div className="p-4 bg-[#065F46]/50 rounded-2xl border border-emerald-500/20">
-                            <span className="text-[10px] text-emerald-200/80 font-black block uppercase tracking-wider mb-1">MAX XP BONUS</span>
-                            <span className="text-base font-black text-[#34D399]">+{totalWeeklyCount * 27} XP</span>
+                          <div className="p-4 bg-blue-900/40 rounded-xl border border-blue-500/20">
+                            <span className="text-[10px] text-blue-200/80 font-black block uppercase tracking-wider mb-1">MAX XP BONUS</span>
+                            <span className="text-base font-black text-blue-400">+{totalWeeklyCount * 27} XP</span>
                           </div>
                         </div>
                       </div>

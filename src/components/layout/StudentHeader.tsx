@@ -66,11 +66,11 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   ];
 
   return (
-    <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 sm:px-8 sticky top-0 z-40 shadow-xs">
-      <div className="max-w-7xl mx-auto flex items-center justify-between h-16">
+    <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 sm:px-10 sticky top-0 z-40 shadow-xs w-full">
+      <div className="w-full flex items-center justify-between h-16 relative">
         
-        {/* Left: Brand Logo */}
-        <div className="flex items-center gap-6">
+        {/* Far Left: Brand Logo */}
+        <div className="flex items-center gap-3">
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
               <BookOpen className="w-5 h-5 fill-current stroke-[1.5]" />
@@ -79,32 +79,32 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               ExamMaster
             </span>
           </Link>
-
-          {/* Navigation Links - Centered/Left Desktop Navbar */}
-          <nav className="hidden lg:flex items-center gap-1 ml-4">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
-              
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`px-3.5 py-4 text-xs font-bold flex items-center gap-2 transition-all relative border-b-2 ${
-                    isActive
-                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
-                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
         </div>
 
-        {/* Right Actions */}
+        {/* Center: Centered Navigation Bar */}
+        <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full">
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
+            
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-4 h-full text-xs font-bold flex items-center gap-2 transition-all relative border-b-2 ${
+                  isActive
+                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
+                    : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300'
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Far Right Actions */}
         <div className="flex items-center gap-3">
           <ThemeToggle />
 
