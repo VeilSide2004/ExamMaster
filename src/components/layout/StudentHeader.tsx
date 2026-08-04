@@ -35,14 +35,19 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       return;
     }
 
-    fetch('/api/dashboard')
+    fetch('/api/auth/me')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.user?.name) {
           setUserName(data.user.name);
         } else if (data?.user?.email) {
-          const emailPrefix = data.user.email.split('@')[0];
-          setUserName(emailPrefix);
+          setUserName(data.user.email.split('@')[0]);
+        } else {
+          return fetch('/api/dashboard')
+            .then((res) => (res.ok ? res.json() : null))
+            .then((d) => {
+              if (d?.user?.name) setUserName(d.user.name);
+            });
         }
       })
       .catch(console.error);
@@ -139,13 +144,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{displayName}</p>
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Student Account</p>
                 </div>
-                <Link
-                  href="/course-selection"
-                  onClick={() => setShowProfileMenu(false)}
-                  className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  <BookOpen className="w-4 h-4 text-blue-500" /> Switch Course
-                </Link>
                 <Link
                   href="/profile"
                   onClick={() => setShowProfileMenu(false)}
