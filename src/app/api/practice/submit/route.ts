@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     if (isMemoryMode) {
       const db = readSharedDb();
-      const user = (db.users || []).find((u) => u._id === auth.userId);
+      const user = (db.users || []).find((u) => String(u._id) === String(auth.userId));
       if (!user || !user.locked_course_id) {
         return NextResponse.json({ error: 'No course locked' }, { status: 400 });
       }
@@ -25,10 +25,10 @@ export async function POST(req: Request) {
       let xpEarned = 0;
       const processedResponses: any[] = [];
 
-      for (const ans of answers) {
-        const q = (db.questions || []).find((item) => item._id === ans.questionId);
+      for (const ans of (answers || [])) {
+        const q = (db.questions || []).find((item) => String(item._id) === String(ans.questionId));
         if (q) {
-          const isCorrect = ans.selectedOption === q.correct_option;
+          const isCorrect = Number(ans.selectedOption) === Number(q.correct_option);
           if (isCorrect) {
             correctCount++;
             xpEarned += 27;
@@ -96,10 +96,15 @@ export async function POST(req: Request) {
     let xpEarned = 0;
     const processedResponses: any[] = [];
 
-    for (const ans of answers) {
-      const q = await Question.findById(ans.questionId);
+    for (const ans of (answers || [])) {
+      let q: any = null;
+      try {
+        q = await Question.findById(ans.questionId);
+      } catch (e) {
+        q = null;
+      }
       if (q) {
-        const isCorrect = ans.selectedOption === q.correct_option;
+        const isCorrect = Number(ans.selectedOption) === Number(q.correct_option);
         if (isCorrect) {
           correctCount++;
           xpEarned += 27;

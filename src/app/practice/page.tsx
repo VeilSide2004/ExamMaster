@@ -403,15 +403,23 @@ export default function PracticeSetsPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setSubmittedResult({ ...data, mode: activeSession, timeSpent: timerSeconds });
+        setSubmittedResult({
+          ...data,
+          totalQuestions: data.totalQuestions || filteredQuestions.length,
+          mode: activeSession,
+          timeSpent: timerSeconds,
+        });
         setShowConfirmModal(false);
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('xpUpdated'));
         }
         fetchQuestions();
+      } else {
+        alert(data.error || 'Submission failed. Please try again.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert('Error submitting test: ' + (err?.message || 'Network error'));
     } finally {
       setSubmitting(false);
     }
