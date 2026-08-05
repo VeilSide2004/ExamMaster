@@ -109,7 +109,7 @@ export interface IAttempt extends Document {
   student_id: any;
   course_id: any;
   test_id?: any;
-  type: 'practice' | 'mock';
+  type: 'practice' | 'mock' | 'weekly';
   topic_tag?: string;
   responses: Array<{
     question_id: any;
@@ -127,7 +127,7 @@ const AttemptSchema = new Schema<IAttempt>({
   student_id: { type: Schema.Types.Mixed, required: true },
   course_id: { type: Schema.Types.Mixed, required: true },
   test_id: { type: Schema.Types.Mixed, default: null },
-  type: { type: String, enum: ['practice', 'mock'], required: true },
+  type: { type: String, enum: ['practice', 'mock', 'weekly'], required: true },
   topic_tag: { type: String, default: '' },
   responses: [{
     question_id: { type: Schema.Types.Mixed },
