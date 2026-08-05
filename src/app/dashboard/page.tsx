@@ -207,8 +207,8 @@ export default function StudentDashboardPage() {
               </Link>
             </div>
 
-            {/* Deep Navy Gradient Rank Banner Card */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-950 via-indigo-950 to-blue-900 p-5 text-white shadow-md">
+            {/* Deep Purple Gradient Rank Banner Card */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-950 via-[#220E3D] to-purple-950 p-5 text-white border border-purple-800/50 shadow-md">
               {/* Subtle wave SVG overlay background */}
               <div className="absolute inset-0 opacity-20 pointer-events-none">
                 <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -218,7 +218,7 @@ export default function StudentDashboardPage() {
 
               <div className="relative z-10 flex justify-between items-end">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-200/70 block">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-200/80 block">
                     YOUR CURRENT RANK
                   </span>
                   <span className="text-4xl font-black tracking-tight text-white mt-1 block">
@@ -227,10 +227,10 @@ export default function StudentDashboardPage() {
                 </div>
 
                 <div className="text-right max-w-[140px]">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-200/70 block">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-200/80 block">
                     TRACK
                   </span>
-                  <span className="text-xs font-bold text-blue-100 truncate block mt-1">
+                  <span className="text-xs font-bold text-purple-100 truncate block mt-1">
                     {courseName}
                   </span>
                 </div>
@@ -278,8 +278,8 @@ export default function StudentDashboardPage() {
             </Link>
           </div>
 
-          {/* Interactive Topic Practice Soft Blue/Purple Banner */}
-          <div className="bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/80 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-purple-950/40 border border-blue-100 dark:border-blue-900/40 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          {/* Interactive Topic Practice Soft Purple Banner */}
+          <div className="bg-gradient-to-r from-purple-50/80 via-purple-50/60 to-purple-100/80 dark:from-purple-950/60 dark:via-[#1D0C33] dark:to-purple-950/60 border border-purple-100 dark:border-purple-800/50 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                 <Target className="w-6 h-6 stroke-[1.8]" />
