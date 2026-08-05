@@ -108,7 +108,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   }, [router]);
 
   return (
-    <header className="border-b border-slate-200/90 dark:border-slate-800/90 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md backdrop-saturate-150 px-6 sm:px-10 sticky top-0 z-40 shadow-md shadow-slate-200/70 dark:shadow-black/60 transition-all w-full">
+    <header className="border-b border-slate-200/90 dark:border-slate-800/90 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md backdrop-saturate-150 px-6 sm:px-10 sticky top-0 z-40 shadow-xl shadow-slate-300/60 dark:shadow-black/90 transition-all w-full">
       <div className="w-full flex items-center justify-between h-16 relative">
         
         {/* Far Left: Brand Logo + Back Button */}
