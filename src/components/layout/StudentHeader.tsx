@@ -72,6 +72,15 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   ];
 
+  useEffect(() => {
+    // Prefetch all key student portal routes for instant navigation speed
+    navLinks.forEach((link) => {
+      try {
+        router.prefetch(link.href);
+      } catch (e) {}
+    });
+  }, [router]);
+
   return (
     <header className="border-b border-slate-200/90 dark:border-slate-800/90 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md backdrop-saturate-150 px-6 sm:px-10 sticky top-0 z-40 shadow-md shadow-slate-200/70 dark:shadow-black/60 transition-all w-full">
       <div className="w-full flex items-center justify-between h-16 relative">
@@ -89,7 +98,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             </button>
           )}
 
-          <Link href="/dashboard" className="flex items-center gap-2.5 group">
+          <Link href="/dashboard" prefetch={true} className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
               <BookOpen className="w-5 h-5 fill-current stroke-[1.5]" />
             </div>
@@ -110,6 +119,10 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 <Link
                   key={link.href}
                   href={link.href}
+                  prefetch={true}
+                  onMouseEnter={() => {
+                    try { router.prefetch(link.href); } catch (e) {}
+                  }}
                   className={`px-4 h-full text-xs font-bold flex items-center gap-2 transition-all relative border-b-2 ${
                     isActive
                       ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
