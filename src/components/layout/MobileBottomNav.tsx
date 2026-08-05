@@ -47,74 +47,99 @@ export const MobileBottomNav: React.FC = () => {
     return null;
   }
 
+  // Determine active tab index for sliding indicator animation
+  const activeIndex = tabs.findIndex(({ href }) =>
+    pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+  );
+
   return (
     <nav
       className="lg:hidden fixed bottom-0 left-0 right-0 z-50
         bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl
         border-t border-slate-200/80 dark:border-slate-800/80
         shadow-[0_-4px_24px_rgba(0,0,0,0.10)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.40)]
-        flex items-end justify-around px-2"
+        px-2"
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
     >
-      {tabs.map(({ label, href, icon: Icon, isFab }) => {
-        const isActive =
-          pathname === href ||
-          (href !== '/dashboard' && pathname.startsWith(href));
+      <div className="relative grid grid-cols-5 items-center h-14">
+        {/* Animated Sliding Background Pill for tabs */}
+        {activeIndex !== -1 && activeIndex !== 2 && (
+          <div
+            className="absolute top-1 bottom-1 rounded-2xl bg-blue-50 dark:bg-blue-950/60 transition-all duration-300 ease-out pointer-events-none"
+            style={{
+              width: '20%',
+              left: `${activeIndex * 20}%`,
+            }}
+          />
+        )}
 
-        if (isFab) {
+        {tabs.map(({ label, href, icon: Icon, isFab }, index) => {
+          const isActive = activeIndex === index;
+
+          if (isFab) {
+            return (
+              <div key={href} className="relative flex justify-center items-center h-full">
+                <Link
+                  href={href}
+                  className="absolute -top-5 flex flex-col items-center group"
+                >
+                  {/* Completely Round Floating Action Button */}
+                  <span
+                    className={`w-14 h-14 rounded-full flex items-center justify-center
+                      shadow-lg shadow-blue-500/35 border-4 border-slate-50 dark:border-slate-950
+                      transition-all duration-300 ease-out active:scale-90 group-hover:scale-105
+                      ${
+                        isActive
+                          ? 'bg-blue-600 scale-105 shadow-blue-600/50 ring-4 ring-blue-500/20'
+                          : 'bg-blue-600 hover:bg-blue-700'
+                      }`}
+                  >
+                    <Icon
+                      className={`w-6 h-6 text-white transition-transform duration-300 ${
+                        isActive ? 'scale-110' : ''
+                      }`}
+                      strokeWidth={2.2}
+                    />
+                  </span>
+                  <span
+                    className={`text-[10px] font-extrabold mt-1 transition-colors duration-200 ${
+                      isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              </div>
+            );
+          }
+
           return (
             <Link
               key={href}
               href={href}
-              className="relative flex flex-col items-center -top-4"
+              className="relative z-10 flex flex-col items-center justify-center h-full py-1 transition-all duration-200 active:scale-95 select-none"
             >
-              {/* Floating Action Button */}
+              <Icon
+                className={`w-5 h-5 transition-all duration-300 ${
+                  isActive
+                    ? 'text-blue-600 dark:text-blue-400 scale-110'
+                    : 'text-slate-400 dark:text-slate-500'
+                }`}
+                strokeWidth={isActive ? 2.5 : 2}
+              />
               <span
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 transition-all duration-200
-                  ${isActive
-                    ? 'bg-blue-700 scale-105 shadow-blue-600/50'
-                    : 'bg-blue-600 hover:bg-blue-700 active:scale-95'
-                  }`}
+                className={`text-[10px] font-bold mt-0.5 transition-colors duration-200 ${
+                  isActive
+                    ? 'text-blue-600 dark:text-blue-400 font-extrabold'
+                    : 'text-slate-400 dark:text-slate-500'
+                }`}
               >
-                <Icon className="w-6 h-6 text-white" strokeWidth={2} />
-              </span>
-              <span className={`text-[10px] font-bold mt-1 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>
                 {label}
               </span>
             </Link>
           );
-        }
-
-        return (
-          <Link
-            key={href}
-            href={href}
-            className="flex flex-col items-center gap-0.5 py-2 px-3 min-w-[52px] transition-all duration-150 active:scale-90"
-          >
-            <span
-              className={`w-10 h-8 rounded-xl flex items-center justify-center transition-all duration-200
-                ${isActive
-                  ? 'bg-blue-50 dark:bg-blue-950/60'
-                  : 'bg-transparent'
-                }`}
-            >
-              <Icon
-                className={`w-5 h-5 transition-colors duration-200 ${
-                  isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'
-                }`}
-                strokeWidth={isActive ? 2.5 : 2}
-              />
-            </span>
-            <span
-              className={`text-[10px] font-bold leading-none transition-colors duration-200 ${
-                isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'
-              }`}
-            >
-              {label}
-            </span>
-          </Link>
-        );
-      })}
+        })}
+      </div>
     </nav>
   );
 };
