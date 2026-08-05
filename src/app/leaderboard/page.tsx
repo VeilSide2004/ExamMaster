@@ -4,17 +4,25 @@ import React, { useEffect, useState } from 'react';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import { Trophy, Star, Award, ShieldCheck, Crown } from 'lucide-react';
 
+let cachedLeaderboard: { leaderboard: any[]; userRank: any } | null = null;
+
 export default function LeaderboardPage() {
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [userRank, setUserRank] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [leaderboard, setLeaderboard] = useState<any[]>(cachedLeaderboard?.leaderboard || []);
+  const [userRank, setUserRank] = useState<any>(cachedLeaderboard?.userRank || null);
+  const [loading, setLoading] = useState(!cachedLeaderboard);
 
   useEffect(() => {
     fetch('/api/leaderboard')
       .then((res) => res.json())
       .then((data) => {
-        setLeaderboard(data.leaderboard || []);
-        setUserRank(data.userRank || null);
+        if (data) {
+          cachedLeaderboard = {
+            leaderboard: data.leaderboard || [],
+            userRank: data.userRank || null,
+          };
+          setLeaderboard(data.leaderboard || []);
+          setUserRank(data.userRank || null);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));

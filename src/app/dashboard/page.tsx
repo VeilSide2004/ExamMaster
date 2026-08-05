@@ -17,14 +17,18 @@ import {
   BookOpen
 } from 'lucide-react';
 
+// Global client cache for instant zero-latency dashboard page transitions
+let cachedDashboard: { user: any; mockTests: any[]; leaderboard: any[] } | null = null;
+
 export default function StudentDashboardPage() {
   const router = useRouter();
-  const [userData, setUserData] = useState<any>(null);
-  const [mockTests, setMockTests] = useState<any[]>([]);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState<any>(cachedDashboard?.user || null);
+  const [mockTests, setMockTests] = useState<any[]>(cachedDashboard?.mockTests || []);
+  const [leaderboard, setLeaderboard] = useState<any[]>(cachedDashboard?.leaderboard || []);
+  const [loading, setLoading] = useState(!cachedDashboard);
 
   useEffect(() => {
+    let isMounted = true;
     fetch('/api/dashboard')
       .then((res) => {
         if (res.status === 401) {
@@ -34,7 +38,7 @@ export default function StudentDashboardPage() {
         return res.json();
       })
       .then((data) => {
-        if (!data) return;
+        if (!data || !isMounted) return;
         if (data.error === 'Unauthorized') {
           router.push('/login');
           return;
@@ -43,18 +47,47 @@ export default function StudentDashboardPage() {
           router.push('/course-selection');
           return;
         }
+
+        const newCache = {
+          user: data.user || null,
+          mockTests: data.mockTests || [],
+          leaderboard: data.topLeaderboard || [],
+        };
+        cachedDashboard = newCache;
+
         if (data.user) setUserData(data.user);
         if (data.mockTests) setMockTests(data.mockTests);
         if (data.topLeaderboard) setLeaderboard(data.topLeaderboard);
       })
-      .catch(() => router.push('/login'))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!cachedDashboard) router.push('/login');
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [router]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-xs font-bold text-slate-400">
-        Loading ExamMaster Dashboard...
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+        <StudentHeader />
+        <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-pulse">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="space-y-2">
+              <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+              <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+            </div>
+            <div className="h-16 w-56 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-8 h-80 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+            <div className="lg:col-span-4 h-80 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+          </div>
+        </main>
       </div>
     );
   }
