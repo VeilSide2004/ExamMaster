@@ -5,15 +5,21 @@ import Link from 'next/link';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import { FileText, Clock, Award, PlayCircle, Filter, Sparkles, CheckCircle2 } from 'lucide-react';
 
+let cachedMockTests: any[] | null = null;
+
 export default function MockTestsListPage() {
-  const [tests, setTests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tests, setTests] = useState<any[]>(cachedMockTests || []);
+  const [loading, setLoading] = useState(!cachedMockTests);
   const [filterType, setFilterType] = useState<'all' | 'full' | 'sectional'>('all');
 
   useEffect(() => {
     fetch('/api/mock-tests')
       .then((res) => res.json())
-      .then((data) => setTests(data.tests || []))
+      .then((data) => {
+        const list = data.tests || [];
+        cachedMockTests = list;
+        setTests(list);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -83,9 +89,20 @@ export default function MockTestsListPage() {
         {/* Tests Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {loading ? (
-            <div className="col-span-full py-16 text-center text-xs font-bold text-slate-400">
-              Loading available mock tests...
-            </div>
+            <>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 h-52 animate-pulse space-y-4 shadow-xs">
+                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                <div className="h-10 w-full bg-slate-200 dark:bg-slate-800 rounded-xl pt-4" />
+              </div>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 h-52 animate-pulse space-y-4 shadow-xs">
+                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                <div className="h-10 w-full bg-slate-200 dark:bg-slate-800 rounded-xl pt-4" />
+              </div>
+            </>
           ) : filteredTests.length === 0 ? (
             <div className="col-span-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-3 shadow-xs">
               <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-500 flex items-center justify-center">

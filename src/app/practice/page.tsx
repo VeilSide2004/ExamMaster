@@ -25,12 +25,25 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
+let cachedPracticeData: {
+  questions: any[];
+  topicCounts: Record<string, number>;
+  courseName: string;
+  courseSubjects: string[];
+  completedTopics: string[];
+  userAttempts: any[];
+  publishedWeeklyDpp: any | null;
+} | null = null;
+
 export default function PracticeSetsPage() {
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
-  const [courseName, setCourseName] = useState<string>('');
-  const [courseSubjects, setCourseSubjects] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [questions, setQuestions] = useState<any[]>(cachedPracticeData?.questions || []);
+  const [topicCounts, setTopicCounts] = useState<Record<string, number>>(cachedPracticeData?.topicCounts || {});
+  const [courseName, setCourseName] = useState<string>(cachedPracticeData?.courseName || '');
+  const [courseSubjects, setCourseSubjects] = useState<string[]>(cachedPracticeData?.courseSubjects || []);
+  const [completedTopics, setCompletedTopics] = useState<string[]>(cachedPracticeData?.completedTopics || []);
+  const [publishedWeeklyDpp, setPublishedWeeklyDpp] = useState<any | null>(cachedPracticeData?.publishedWeeklyDpp || null);
+  const [userAttempts, setUserAttempts] = useState<any[]>(cachedPracticeData?.userAttempts || []);
+  const [loading, setLoading] = useState(!cachedPracticeData);
 
   // Hierarchy Navigation State
   const [currentLevel, setCurrentLevel] = useState<'subjects' | 'topics' | 'questions'>('subjects');
@@ -59,13 +72,10 @@ export default function PracticeSetsPage() {
   const [submittedResult, setSubmittedResult] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const [completedTopics, setCompletedTopics] = useState<string[]>([]);
-  const [publishedWeeklyDpp, setPublishedWeeklyDpp] = useState<any | null>(null);
-  const [userAttempts, setUserAttempts] = useState<any[]>([]);
   const [sessionQuestions, setSessionQuestions] = useState<any[]>([]);
 
   const fetchQuestions = async () => {
-    setLoading(true);
+    if (!cachedPracticeData) setLoading(true);
     try {
       const [res, dppRes] = await Promise.all([
         fetch('/api/practice'),
@@ -73,6 +83,18 @@ export default function PracticeSetsPage() {
       ]);
       const data = await res.json();
       const dppData = await dppRes.json();
+
+      const newWeeklyDpp = dppData.weeklyDpps && dppData.weeklyDpps.length > 0 ? dppData.weeklyDpps[0] : null;
+
+      cachedPracticeData = {
+        questions: data.questions || [],
+        topicCounts: data.topicCounts || {},
+        courseName: data.courseName || '',
+        courseSubjects: data.courseSubjects || [],
+        completedTopics: data.completedTopics || [],
+        userAttempts: data.userAttempts || [],
+        publishedWeeklyDpp: newWeeklyDpp,
+      };
 
       setQuestions(data.questions || []);
       setTopicCounts(data.topicCounts || {});
@@ -82,10 +104,7 @@ export default function PracticeSetsPage() {
       if (data.courseSubjects && data.courseSubjects.length > 0) {
         setCourseSubjects(data.courseSubjects);
       }
-
-      if (dppData.weeklyDpps && dppData.weeklyDpps.length > 0) {
-        setPublishedWeeklyDpp(dppData.weeklyDpps[0]);
-      }
+      setPublishedWeeklyDpp(newWeeklyDpp);
     } catch (err) {
       console.error(err);
     } finally {
