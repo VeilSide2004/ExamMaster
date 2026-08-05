@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
-import { readSharedDb } from '@/lib/sharedDb';
+import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
@@ -27,7 +27,17 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Your account has been suspended. Contact support.' }, { status: 403 });
       }
 
-      const isMatch = await bcrypt.compare(password, user.password_hash);
+      let isMatch = false;
+      try {
+        isMatch = await bcrypt.compare(password, user.password_hash);
+      } catch (e) {}
+
+      if (!isMatch && user.password_hash === password) {
+        isMatch = true;
+        user.password_hash = await bcrypt.hash(password, 10);
+        writeSharedDb(db);
+      }
+
       if (!isMatch) {
         return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
       }
@@ -64,7 +74,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Your account has been suspended. Contact support.' }, { status: 403 });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    let isMatch = false;
+    try {
+      isMatch = await bcrypt.compare(password, user.password_hash);
+    } catch (e) {}
+
+    if (!isMatch && user.password_hash === password) {
+      isMatch = true;
+      user.password_hash = await bcrypt.hash(password, 10);
+      await user.save();
+    }
+
     if (!isMatch) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
