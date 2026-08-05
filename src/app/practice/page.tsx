@@ -1158,8 +1158,20 @@ export default function PracticeSetsPage() {
 
       {/* MODE SELECTION MODAL */}
       {showModeModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-6">
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 animate-in fade-in duration-200
+            flex items-end sm:items-center justify-center sm:p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowModeModal(false); }}
+        >
+          {/* Modal panel — bottom sheet on mobile, centered card on sm+ */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800
+            rounded-t-3xl sm:rounded-2xl
+            p-6 w-full sm:max-w-lg shadow-2xl space-y-5
+            pb-28 sm:pb-6
+            animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
+
+            <div className="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-2" />
+
             <div className="text-center space-y-1">
               <h3 className="text-lg font-black text-slate-900 dark:text-white">Choose Practice Mode</h3>
               <p className="text-xs text-slate-500">
@@ -1167,17 +1179,17 @@ export default function PracticeSetsPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Practice Mode Option */}
               <div
                 onClick={() => setSelectedMode('practice')}
-                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all space-y-3 ${
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex sm:flex-col items-start sm:items-start gap-4 sm:gap-3 ${
                   selectedMode === 'practice'
                     ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/40 shadow-sm'
                     : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 bg-white dark:bg-slate-900'
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black shrink-0">
                   <Brain className="w-5 h-5" />
                 </div>
                 <div>
@@ -1193,13 +1205,13 @@ export default function PracticeSetsPage() {
               {/* Quiz Mode Option */}
               <div
                 onClick={() => setSelectedMode('quiz')}
-                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all space-y-3 ${
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex sm:flex-col items-start sm:items-start gap-4 sm:gap-3 ${
                   selectedMode === 'quiz'
                     ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/40 shadow-sm'
                     : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 bg-white dark:bg-slate-900'
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shrink-0">
                   <Zap className="w-5 h-5" />
                 </div>
                 <div>
@@ -1213,18 +1225,18 @@ export default function PracticeSetsPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex gap-3 pt-1">
               <button
                 type="button"
                 onClick={() => setShowModeModal(false)}
-                className="px-4 py-2 border border-slate-300 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-300"
+                className="flex-1 sm:flex-none px-4 py-2.5 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handleStartSession(selectedMode)}
-                className="px-6 py-2 bg-[#0B192C] hover:bg-[#060E18] text-white text-xs font-extrabold rounded-lg transition-colors shadow-xs"
+                className="flex-1 sm:flex-none px-6 py-2.5 bg-[#0B192C] hover:bg-[#060E18] text-white text-xs font-extrabold rounded-xl transition-colors shadow-xs"
               >
                 Start {selectedMode === 'practice' ? 'Practice' : 'Quiz'}
               </button>
