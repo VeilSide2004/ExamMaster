@@ -84,35 +84,50 @@ body, div, header, nav, main, section, article, button, input, select, textarea,
   box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.65), 0 4px 12px -4px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Custom Deep Pitch Black & Electric Purple Dark Mode Palette Overrides:
-   Background: #050508 (Pure Deep Pitch Black)
-   Card:       #0F0D16 (Obsidian Card with Purple Undertone)
-   Sub-card:   #181524 (Elevated Dark Purple Panel)
-   Primary:    #9333EA (Vibrant Electric Purple)
-   Secondary:  #A855F7 (Neon Purple Accent)
-   Text:       #F8FAFC (Crisp Pure White Text)
-   Border:     #28213D (Deep Purple Dark Border)
+/* Custom 100% Pure Black & Electric Purple Dark Mode Palette Overrides:
+   Page Outer Background: #000000 (Pure Pitch Black)
+   Card Panel Background:  #0D0D12 (Pure Obsidian Black Card)
+   Sub-card / Badge:      #181622 (Elevated Dark Purple Panel)
+   Primary Accent:        #9333EA (Vibrant Electric Purple)
+   Secondary Accent:      #C084FC (Neon Purple Accent)
+   Text:                  #F8FAFC (Crisp Pure White Text)
+   Border:                #242033 (Deep Dark Purple Border)
 */
 :root {
-  --bg-dark: #050508;
-  --card-dark: #0F0D16;
+  --bg-dark: #000000;
+  --card-dark: #0D0D12;
   --primary-dark: #9333EA;
-  --secondary-dark: #A855F7;
+  --secondary-dark: #C084FC;
   --text-dark: #F8FAFC;
-  --border-dark: #28213D;
+  --border-dark: #242033;
+}
+
+.dark,
+.dark body,
+.dark html,
+.dark div,
+.dark main,
+.dark section,
+.dark header,
+.dark nav,
+.dark aside,
+.dark footer {
+  color-scheme: dark;
 }
 
 .dark {
-  background-color: #050508 !important;
+  background-color: #000000 !important;
   color: #F8FAFC !important;
 }
 
-.dark body {
-  background-color: #050508 !important;
+.dark body,
+.dark .min-h-screen,
+.dark main {
+  background-color: #000000 !important;
   color: #F8FAFC !important;
 }
 
-/* Dark Mode Card Background Override (#0F0D16) */
+/* Dark Mode Card Background Override (#0D0D12 - Pure Obsidian Black Card) */
 .dark .bg-slate-900,
 .dark .bg-slate-950,
 .dark .bg-[#0B132B],
@@ -129,10 +144,10 @@ body, div, header, nav, main, section, article, button, input, select, textarea,
 .dark .bg-slate-800\/60,
 .dark .bg-slate-800\/50,
 .dark .bg-slate-800\/40 {
-  background-color: #0F0D16 !important;
+  background-color: #0D0D12 !important;
 }
 
-/* Dark Mode Sub-panels / Inner Elements (#181524 & #28213D) */
+/* Dark Mode Sub-panels / Inner Elements (#181622 & #242033) */
 .dark .bg-slate-800\/90,
 .dark .bg-slate-800\/70,
 .dark .bg-slate-800\/30,
@@ -143,10 +158,11 @@ body, div, header, nav, main, section, article, button, input, select, textarea,
 .dark .bg-blue-950\/50,
 .dark .bg-blue-950\/40,
 .dark .bg-blue-950 {
-  background-color: #181524 !important;
+  background-color: #181622 !important;
 }
 
-/* Override Dark Mode Gradients from Blue/Indigo to Electric Purple & Deep Black */
+/* Absolute Override for All Dark Gradients to Pure Purple & Black */
+.dark [class*="bg-gradient-to"],
 .dark .from-blue-950,
 .dark .from-blue-900,
 .dark .from-indigo-950,
@@ -155,7 +171,23 @@ body, div, header, nav, main, section, article, button, input, select, textarea,
 .dark .via-indigo-900,
 .dark .to-blue-900,
 .dark .to-blue-950 {
-  background-image: linear-gradient(to right, #3B1B6A, #211040, #120924) !important;
+  background-image: linear-gradient(to right, #2E1254, #1B0B33, #090412) !important;
+}
+
+/* All Dark Mode Borders to Deep Purple / Dark Neutral #242033 */
+.dark [class*="border-slate"],
+.dark [class*="border-blue"],
+.dark .border-slate-800,
+.dark .border-slate-800\/90,
+.dark .border-slate-800\/80,
+.dark .border-slate-800\/60,
+.dark .border-slate-700,
+.dark .border-slate-700\/80,
+.dark .border-slate-700\/60,
+.dark .border-blue-900,
+.dark .border-blue-900\/40,
+.dark .border-blue-800 {
+  border-color: #242033 !important;
 }
 
 /* Dark Mode Text Colors (#F8FAFC & Electric Purple Highlights) */
@@ -175,21 +207,7 @@ body, div, header, nav, main, section, article, button, input, select, textarea,
   color: #E9D5FF !important;
 }
 
-/* Dark Mode Border Colors (#28213D) */
-.dark .border-slate-800,
-.dark .border-slate-800\/90,
-.dark .border-slate-800\/80,
-.dark .border-slate-800\/60,
-.dark .border-slate-700,
-.dark .border-slate-700\/80,
-.dark .border-slate-700\/60,
-.dark .border-blue-900,
-.dark .border-blue-900\/40,
-.dark .border-blue-800 {
-  border-color: #28213D !important;
-}
-
-/* Dark Mode Electric Purple Primary Accents (#9333EA & #A855F7) */
+/* Primary Accents & Active Text Colors in Dark Mode -> ELECTRIC PURPLE */
 .dark .text-blue-400,
 .dark .text-blue-500,
 .dark .text-blue-600 {
