@@ -194,12 +194,16 @@ export default function PracticeSetsPage() {
   const getWeeklyQuestions = () => {
     // 1. If admin published an explicit Weekly DPP with selected questions
     if (publishedWeeklyDpp) {
-      if (publishedWeeklyDpp.questions && publishedWeeklyDpp.questions.length > 0) {
-        return publishedWeeklyDpp.questions;
+      if (Array.isArray(publishedWeeklyDpp.questions) && publishedWeeklyDpp.questions.length > 0) {
+        // Must check if items are valid question objects containing question_text
+        const validObjects = publishedWeeklyDpp.questions.filter(
+          (q: any) => typeof q === 'object' && q !== null && Boolean(q.question_text)
+        );
+        if (validObjects.length > 0) return validObjects;
       }
       if (publishedWeeklyDpp.question_ids && publishedWeeklyDpp.question_ids.length > 0) {
         const qList = questions.filter((q) =>
-          publishedWeeklyDpp.question_ids.some((id: any) => String(id) === String(q._id))
+          publishedWeeklyDpp.question_ids.some((id: any) => String(id?._id || id) === String(q._id))
         );
         if (qList.length > 0) return qList;
       }
@@ -693,7 +697,7 @@ export default function PracticeSetsPage() {
                         {currentQ.question_text}
                       </h2>
 
-                      {(!currentQ.question_type || currentQ.question_type === 'MCQ') && currentQ.options && currentQ.options.length > 0 ? (
+                      {Array.isArray(currentQ?.options) && currentQ.options.length > 0 ? (
                         /* MCQ Options Grid */
                         <div className="space-y-3">
                           {currentQ.options.map((opt: string, optIdx: number) => {
