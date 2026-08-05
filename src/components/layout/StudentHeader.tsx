@@ -241,27 +241,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         </div>
       </div>
 
-      {/* Mobile Sub-Navigation Bar */}
-      <div className="lg:hidden flex items-center overflow-x-auto gap-2 border-t border-slate-100 dark:border-slate-800/80 py-2 scrollbar-none">
-        {navLinks.map((link) => {
-          const Icon = link.icon;
-          const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors ${
-                isActive
-                  ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{link.label}</span>
-            </Link>
-          );
-        })}
-      </div>
     </header>
   );
 };

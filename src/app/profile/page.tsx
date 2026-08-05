@@ -52,7 +52,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       <StudentHeader />
 
-      <main className="max-w-4xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1">
+      <main className="max-w-4xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 pb-24 lg:pb-0">
         <div className="border-b border-slate-200/80 dark:border-slate-800 pb-6">
           <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Account Settings & Profile</h1>
           <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
