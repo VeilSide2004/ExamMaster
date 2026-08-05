@@ -31,6 +31,32 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const [userName, setUserName] = useState<string>(propsUserName || '');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
+  const [textSize, setTextSize] = useState<number>(100);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('exammaster_text_scale');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (parsed >= 80 && parsed <= 130) {
+          setTextSize(parsed);
+          document.documentElement.style.fontSize = `${(parsed / 100) * 16}px`;
+        }
+      }
+    } catch (e) {}
+  }, []);
+
+  const changeTextSize = (delta: number) => {
+    setTextSize((prev) => {
+      const next = Math.min(130, Math.max(80, prev + delta));
+      try {
+        localStorage.setItem('exammaster_text_scale', String(next));
+        document.documentElement.style.fontSize = `${(next / 100) * 16}px`;
+      } catch (e) {}
+      return next;
+    });
+  };
+
   useEffect(() => {
     if (propsUserName) {
       setUserName(propsUserName);
@@ -138,18 +164,35 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         )}
 
         {/* Far Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Text Size Increase / Decrease Controller */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => changeTextSize(-5)}
+              disabled={textSize <= 80}
+              className="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] font-black border border-slate-200/60 dark:border-slate-700 shadow-2xs transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Decrease Text Size (A-)"
+            >
+              A-
+            </button>
+            <span className="text-[10px] font-extrabold text-slate-600 dark:text-slate-300 px-1 font-mono min-w-[32px] text-center select-none">
+              {textSize}%
+            </span>
+            <button
+              type="button"
+              onClick={() => changeTextSize(5)}
+              disabled={textSize >= 130}
+              className="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] font-black border border-slate-200/60 dark:border-slate-700 shadow-2xs transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Increase Text Size (A+)"
+            >
+              A+
+            </button>
+          </div>
+
           <ThemeToggle />
 
-          <button
-            type="button"
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="Help & Support"
-          >
-            <HelpCircle className="w-4.5 h-4.5" />
-          </button>
-
-          <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block" />
+          <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
 
           {/* Profile User Dropdown Pill */}
           <div className="relative">
