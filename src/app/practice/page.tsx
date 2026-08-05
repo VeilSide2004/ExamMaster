@@ -446,7 +446,7 @@ export default function PracticeSetsPage() {
           {!activeSession && (
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                   Subject & Topic Daily Practice Papers
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -891,36 +891,48 @@ export default function PracticeSetsPage() {
                     <p className="text-xs text-slate-500">Select a subject to explore its specific topic practice modules.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {courseSubjects.map((sName) => {
-                      const qList = subjectQuestionMap[sName] || [];
-                      return (
-                        <div
-                          key={sName}
-                          onClick={() => {
-                            setSelectedSubject(sName);
-                            setCurrentLevel('topics');
-                          }}
-                          className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
-                        >
-                          <div>
-                            <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 flex items-center justify-center mb-4">
-                              <BookOpen className="w-5 h-5" />
+                  {courseSubjects.length === 0 ? (
+                    <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center flex flex-col items-center justify-center space-y-3">
+                      <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center">
+                        <BookOpen className="w-6 h-6 stroke-[1.5]" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">No practice questions available for this course yet</h4>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Please check back later or log into Admin Portal to add questions!</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {courseSubjects.map((sName) => {
+                        const qList = subjectQuestionMap[sName] || [];
+                        return (
+                          <div
+                            key={sName}
+                            onClick={() => {
+                              setSelectedSubject(sName);
+                              setCurrentLevel('topics');
+                            }}
+                            className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                          >
+                            <div>
+                              <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 flex items-center justify-center mb-4">
+                                <BookOpen className="w-5 h-5" />
+                              </div>
+                              <h4 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
+                                {sName}
+                              </h4>
+                              <p className="text-xs text-slate-500 font-semibold">{Math.min(10, qList.length)} Questions per Set (Smart Reshuffled)</p>
                             </div>
-                            <h4 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
-                              {sName}
-                            </h4>
-                            <p className="text-xs text-slate-500 font-semibold">{Math.min(10, qList.length)} Questions per Set (Smart Reshuffled)</p>
-                          </div>
 
-                          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-600">
-                            <span>Browse Topics</span>
-                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-slate-400 group-hover:text-blue-600" />
+                            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600">
+                              <span>Browse Topics</span>
+                              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-slate-400 group-hover:text-blue-600" />
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {/* WEEKLY MEGA DPP CHALLENGE SECTION (Royal Blue & Deep Indigo Theme) */}
                   {(() => {

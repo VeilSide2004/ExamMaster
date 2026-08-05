@@ -18,16 +18,18 @@ export async function GET(req: Request) {
 
     if (isMemoryMode) {
       const db = readSharedDb();
-      const user = (db.users || []).find((u) => u._id === auth.userId);
+      const user = (db.users || []).find((u) => String(u._id) === String(auth.userId));
       if (!user || !user.locked_course_id) {
         return NextResponse.json({ error: 'No course locked' }, { status: 400 });
       }
 
-      const courseObj = (db.courses || []).find((c) => c._id === user.locked_course_id || c.name === user.locked_course_id);
+      const rawCourseId = user.locked_course_id;
+      const courseId = typeof rawCourseId === 'object' && rawCourseId?._id ? String(rawCourseId._id) : String(rawCourseId);
+      const courseObj = (db.courses || []).find((c) => String(c._id) === courseId || c.name === courseId) || (typeof rawCourseId === 'object' ? rawCourseId : null);
 
       let questions = (db.questions || []).filter((q) => {
         if (q.is_active === false) return false;
-        return String(q.course_id) === String(user.locked_course_id) || String(q.course_id) === String(courseObj?._id);
+        return String(q.course_id) === courseId || String(q.course_id) === String(courseObj?._id);
       });
 
       let courseSubjects = courseObj?.subjects && Array.isArray(courseObj.subjects) && courseObj.subjects.length > 0
@@ -81,7 +83,20 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'No course locked' }, { status: 400 });
     }
 
-    const courseObj = await Course.findById(user.locked_course_id);
+    const rawCourseId = user.locked_course_id;
+    const courseId = typeof rawCourseId === 'object' && rawCourseId?._id ? rawCourseId._id.toString() : rawCourseId.toString();
+
+    let courseObj: any = null;
+    if (typeof rawCourseId === 'object' && rawCourseId?.name) {
+      courseObj = rawCourseId;
+    } else {
+      try {
+        courseObj = await Course.findById(courseId);
+      } catch (e) {
+        courseObj = null;
+      }
+    }
+
     const query: any = { is_active: true };
     if (subject) {
       query.topic_tag = { $regex: subject, $options: 'i' };
@@ -92,7 +107,7 @@ export async function GET(req: Request) {
 
     const allDbQuestions = await Question.find(query);
     const questions = allDbQuestions.filter((q: any) => {
-      return String(q.course_id) === String(user.locked_course_id) || String(q.course_id) === String(courseObj?._id);
+      return String(q.course_id) === courseId || String(q.course_id) === String(courseObj?._id);
     });
 
     let courseSubjects = courseObj?.subjects && Array.isArray(courseObj.subjects) && courseObj.subjects.length > 0
