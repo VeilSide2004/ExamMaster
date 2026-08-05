@@ -455,29 +455,9 @@ export default function PracticeSetsPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('hierarchy')}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                    viewMode === 'hierarchy'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-white border border-slate-200/80 text-slate-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  <Layers className="w-3.5 h-3.5 inline mr-1.5" /> Subject Hierarchy
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setViewMode('all')}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                    viewMode === 'all'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-white border border-slate-200/80 text-slate-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  <BookOpen className="w-3.5 h-3.5 inline mr-1.5" /> Practice Set (10 Qs / Set)
-                </button>
+                <span className="px-3.5 py-2 rounded-xl text-xs font-extrabold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 flex items-center gap-1.5 shadow-xs">
+                  <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Subject Hierarchy
+                </span>
               </div>
             </div>
           )}
