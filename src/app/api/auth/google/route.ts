@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
-import { createAuthToken } from '@/lib/auth';
+import { signUserToken } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         writeSharedDb(db);
       }
 
-      const token = createAuthToken({
+      const token = signUserToken({
         userId: String(user._id),
         email: user.email,
         name: user.name,
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       });
 
       response.cookies.set({
-        name: 'token',
+        name: 'student_token',
         value: token,
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const token = createAuthToken({
+    const token = signUserToken({
       userId: user._id.toString(),
       email: user.email,
       name: user.name,
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
     });
 
     response.cookies.set({
-      name: 'token',
+      name: 'student_token',
       value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
