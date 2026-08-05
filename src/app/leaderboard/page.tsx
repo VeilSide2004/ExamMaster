@@ -4,22 +4,31 @@ import React, { useEffect, useState } from 'react';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import { Trophy, Star, Award, ShieldCheck, Crown } from 'lucide-react';
 
-let cachedLeaderboard: { leaderboard: any[]; userRank: any } | null = null;
+const getInitialLeaderboardCache = () => {
+  if (typeof window !== 'undefined' && (window as any).__LEADERBOARD_CACHE__) {
+    return (window as any).__LEADERBOARD_CACHE__;
+  }
+  return null;
+};
 
 export default function LeaderboardPage() {
-  const [leaderboard, setLeaderboard] = useState<any[]>(cachedLeaderboard?.leaderboard || []);
-  const [userRank, setUserRank] = useState<any>(cachedLeaderboard?.userRank || null);
-  const [loading, setLoading] = useState(!cachedLeaderboard);
+  const initialCache = getInitialLeaderboardCache();
+  const [leaderboard, setLeaderboard] = useState<any[]>(initialCache?.leaderboard || []);
+  const [userRank, setUserRank] = useState<any>(initialCache?.userRank || null);
+  const [loading, setLoading] = useState(!initialCache);
 
   useEffect(() => {
     fetch('/api/leaderboard')
       .then((res) => res.json())
       .then((data) => {
         if (data) {
-          cachedLeaderboard = {
+          const cacheObj = {
             leaderboard: data.leaderboard || [],
             userRank: data.userRank || null,
           };
+          if (typeof window !== 'undefined') {
+            (window as any).__LEADERBOARD_CACHE__ = cacheObj;
+          }
           setLeaderboard(data.leaderboard || []);
           setUserRank(data.userRank || null);
         }

@@ -17,15 +17,20 @@ import {
   BookOpen
 } from 'lucide-react';
 
-// Global client cache for instant zero-latency dashboard page transitions
-let cachedDashboard: { user: any; mockTests: any[]; leaderboard: any[] } | null = null;
+const getInitialDashboardCache = () => {
+  if (typeof window !== 'undefined' && (window as any).__DASHBOARD_CACHE__) {
+    return (window as any).__DASHBOARD_CACHE__;
+  }
+  return null;
+};
 
 export default function StudentDashboardPage() {
   const router = useRouter();
-  const [userData, setUserData] = useState<any>(cachedDashboard?.user || null);
-  const [mockTests, setMockTests] = useState<any[]>(cachedDashboard?.mockTests || []);
-  const [leaderboard, setLeaderboard] = useState<any[]>(cachedDashboard?.leaderboard || []);
-  const [loading, setLoading] = useState(!cachedDashboard);
+  const initialCache = getInitialDashboardCache();
+  const [userData, setUserData] = useState<any>(initialCache?.user || null);
+  const [mockTests, setMockTests] = useState<any[]>(initialCache?.mockTests || []);
+  const [leaderboard, setLeaderboard] = useState<any[]>(initialCache?.leaderboard || []);
+  const [loading, setLoading] = useState(!initialCache);
 
   useEffect(() => {
     let isMounted = true;
@@ -53,14 +58,16 @@ export default function StudentDashboardPage() {
           mockTests: data.mockTests || [],
           leaderboard: data.topLeaderboard || [],
         };
-        cachedDashboard = newCache;
+        if (typeof window !== 'undefined') {
+          (window as any).__DASHBOARD_CACHE__ = newCache;
+        }
 
         if (data.user) setUserData(data.user);
         if (data.mockTests) setMockTests(data.mockTests);
         if (data.topLeaderboard) setLeaderboard(data.topLeaderboard);
       })
       .catch(() => {
-        if (!cachedDashboard) router.push('/login');
+        if (!initialCache) router.push('/login');
       })
       .finally(() => {
         if (isMounted) setLoading(false);

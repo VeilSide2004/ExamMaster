@@ -25,25 +25,23 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
-let cachedPracticeData: {
-  questions: any[];
-  topicCounts: Record<string, number>;
-  courseName: string;
-  courseSubjects: string[];
-  completedTopics: string[];
-  userAttempts: any[];
-  publishedWeeklyDpp: any | null;
-} | null = null;
+const getInitialPracticeCache = () => {
+  if (typeof window !== 'undefined' && (window as any).__PRACTICE_CACHE__) {
+    return (window as any).__PRACTICE_CACHE__;
+  }
+  return null;
+};
 
 export default function PracticeSetsPage() {
-  const [questions, setQuestions] = useState<any[]>(cachedPracticeData?.questions || []);
-  const [topicCounts, setTopicCounts] = useState<Record<string, number>>(cachedPracticeData?.topicCounts || {});
-  const [courseName, setCourseName] = useState<string>(cachedPracticeData?.courseName || '');
-  const [courseSubjects, setCourseSubjects] = useState<string[]>(cachedPracticeData?.courseSubjects || []);
-  const [completedTopics, setCompletedTopics] = useState<string[]>(cachedPracticeData?.completedTopics || []);
-  const [publishedWeeklyDpp, setPublishedWeeklyDpp] = useState<any | null>(cachedPracticeData?.publishedWeeklyDpp || null);
-  const [userAttempts, setUserAttempts] = useState<any[]>(cachedPracticeData?.userAttempts || []);
-  const [loading, setLoading] = useState(!cachedPracticeData);
+  const initialCache = getInitialPracticeCache();
+  const [questions, setQuestions] = useState<any[]>(initialCache?.questions || []);
+  const [topicCounts, setTopicCounts] = useState<Record<string, number>>(initialCache?.topicCounts || {});
+  const [courseName, setCourseName] = useState<string>(initialCache?.courseName || '');
+  const [courseSubjects, setCourseSubjects] = useState<string[]>(initialCache?.courseSubjects || []);
+  const [completedTopics, setCompletedTopics] = useState<string[]>(initialCache?.completedTopics || []);
+  const [publishedWeeklyDpp, setPublishedWeeklyDpp] = useState<any | null>(initialCache?.publishedWeeklyDpp || null);
+  const [userAttempts, setUserAttempts] = useState<any[]>(initialCache?.userAttempts || []);
+  const [loading, setLoading] = useState(!initialCache);
 
   // Hierarchy Navigation State
   const [currentLevel, setCurrentLevel] = useState<'subjects' | 'topics' | 'questions'>('subjects');
@@ -75,7 +73,9 @@ export default function PracticeSetsPage() {
   const [sessionQuestions, setSessionQuestions] = useState<any[]>([]);
 
   const fetchQuestions = async () => {
-    if (!cachedPracticeData) setLoading(true);
+    if (!initialCache && typeof window !== 'undefined' && !(window as any).__PRACTICE_CACHE__) {
+      setLoading(true);
+    }
     try {
       const [res, dppRes] = await Promise.all([
         fetch('/api/practice'),
@@ -86,7 +86,7 @@ export default function PracticeSetsPage() {
 
       const newWeeklyDpp = dppData.weeklyDpps && dppData.weeklyDpps.length > 0 ? dppData.weeklyDpps[0] : null;
 
-      cachedPracticeData = {
+      const cacheObj = {
         questions: data.questions || [],
         topicCounts: data.topicCounts || {},
         courseName: data.courseName || '',
@@ -95,6 +95,10 @@ export default function PracticeSetsPage() {
         userAttempts: data.userAttempts || [],
         publishedWeeklyDpp: newWeeklyDpp,
       };
+
+      if (typeof window !== 'undefined') {
+        (window as any).__PRACTICE_CACHE__ = cacheObj;
+      }
 
       setQuestions(data.questions || []);
       setTopicCounts(data.topicCounts || {});

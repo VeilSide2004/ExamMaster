@@ -5,11 +5,17 @@ import Link from 'next/link';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import { FileText, Clock, Award, PlayCircle, Filter, Sparkles, CheckCircle2 } from 'lucide-react';
 
-let cachedMockTests: any[] | null = null;
+const getInitialMockTestsCache = () => {
+  if (typeof window !== 'undefined' && (window as any).__MOCK_TESTS_CACHE__) {
+    return (window as any).__MOCK_TESTS_CACHE__;
+  }
+  return null;
+};
 
 export default function MockTestsListPage() {
-  const [tests, setTests] = useState<any[]>(cachedMockTests || []);
-  const [loading, setLoading] = useState(!cachedMockTests);
+  const initialCache = getInitialMockTestsCache();
+  const [tests, setTests] = useState<any[]>(initialCache || []);
+  const [loading, setLoading] = useState(!initialCache);
   const [filterType, setFilterType] = useState<'all' | 'full' | 'sectional'>('all');
 
   useEffect(() => {
@@ -17,7 +23,9 @@ export default function MockTestsListPage() {
       .then((res) => res.json())
       .then((data) => {
         const list = data.tests || [];
-        cachedMockTests = list;
+        if (typeof window !== 'undefined') {
+          (window as any).__MOCK_TESTS_CACHE__ = list;
+        }
         setTests(list);
       })
       .catch(console.error)
