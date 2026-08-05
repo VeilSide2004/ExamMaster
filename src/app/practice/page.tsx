@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   PlayCircle,
   Calendar,
+  RotateCcw,
 } from 'lucide-react';
 
 export default function PracticeSetsPage() {
@@ -290,10 +291,6 @@ export default function PracticeSetsPage() {
   };
 
   const handleOpenWeeklyChallenge = () => {
-    if (isWeeklyAttemptedThisWeek) {
-      alert(`You have already completed this week's revision test!\n\nThe question set is locked for the week and will automatically reshuffle next Monday at 00:00.\nTime remaining until reshuffle: ${weeklyCountdown.days}d ${weeklyCountdown.hours}h ${weeklyCountdown.minutes}m ${weeklyCountdown.seconds}s`);
-      return;
-    }
     const rawWeeklyQs = getWeeklyQuestions();
     if (rawWeeklyQs.length === 0) {
       alert('No questions uploaded for Weekly DPP Test yet.');
@@ -1015,25 +1012,20 @@ export default function PracticeSetsPage() {
                               </h3>
                               <p className="text-xs text-blue-100/90 leading-relaxed mt-1 max-w-xl">
                                 {isWeeklyAttemptedThisWeek
-                                  ? "✓ You have completed this week's revision test! Questions are locked and will reshuffle next Monday at 00:00:00."
-                                  : `A timed revision test configured for your course track. Questions remain fixed for the week and reshuffle next Monday at 00:00. Duration: ${publishedWeeklyDpp?.duration_minutes || 30} Mins.`}
+                                  ? "✓ You completed an attempt this week! You can retake this test anytime. Questions stay fixed for the week and automatically reshuffle next Monday at 00:00."
+                                  : `A timed revision test configured for your course track. Questions stay fixed for the week and automatically reshuffle next Monday at 00:00. Duration: ${publishedWeeklyDpp?.duration_minutes || 30} Mins.`}
                               </p>
                             </div>
                           </div>
 
                           <button
                             type="button"
-                            disabled={isWeeklyAttemptedThisWeek}
                             onClick={handleOpenWeeklyChallenge}
-                            className={`px-6 py-3.5 text-xs font-extrabold rounded-xl transition-all flex items-center gap-2 shrink-0 ${
-                              isWeeklyAttemptedThisWeek
-                                ? 'bg-slate-800/80 text-slate-400 border border-slate-700/60 cursor-not-allowed shadow-none'
-                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 hover:scale-[1.02]'
-                            }`}
+                            className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center gap-2 shrink-0"
                           >
                             {isWeeklyAttemptedThisWeek ? (
                               <>
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Completed This Week
+                                <RotateCcw className="w-4 h-4" /> Retake Weekly Test
                               </>
                             ) : (
                               <>
