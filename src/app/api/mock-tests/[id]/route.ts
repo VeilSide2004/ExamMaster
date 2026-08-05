@@ -25,7 +25,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         return NextResponse.json({ error: 'Test not found' }, { status: 404 });
       }
 
-      const validCourseIds = getEquivalentCourseIds(String(user.locked_course_id), db.courses || []);
+      const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? String(user.locked_course_id._id) : String(user.locked_course_id);
+      const validCourseIds = getEquivalentCourseIds(userCourseId, db.courses || []);
       const testCourseId = String(typeof rawTest.course_id === 'object' ? rawTest.course_id?._id : rawTest.course_id);
 
       if (!validCourseIds.includes(testCourseId)) {
@@ -56,7 +57,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
 
     const allCourses = await Course.find({});
-    const validCourseIds = getEquivalentCourseIds(user.locked_course_id.toString(), allCourses);
+    const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? user.locked_course_id._id.toString() : user.locked_course_id.toString();
+    const validCourseIds = getEquivalentCourseIds(userCourseId, allCourses);
     const testCourseId = String(typeof rawTest.course_id === 'object' ? (rawTest.course_id as any)?._id : rawTest.course_id);
 
     if (!validCourseIds.includes(testCourseId)) {

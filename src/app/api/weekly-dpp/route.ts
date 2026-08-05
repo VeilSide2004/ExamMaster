@@ -20,7 +20,8 @@ export async function GET() {
         return NextResponse.json({ weeklyDpps: [] });
       }
 
-      const validCourseIds = getEquivalentCourseIds(String(user.locked_course_id), db.courses || []);
+      const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? String(user.locked_course_id._id) : String(user.locked_course_id);
+      const validCourseIds = getEquivalentCourseIds(userCourseId, db.courses || []);
       const dpps = (db.weeklyDpps || []).filter((d) => {
         const dppCourseId = String(typeof d.course_id === 'object' ? d.course_id?._id : d.course_id);
         return validCourseIds.includes(dppCourseId) && d.is_active !== false;
@@ -44,7 +45,8 @@ export async function GET() {
     }
 
     const allCourses = await Course.find({});
-    const validCourseIds = getEquivalentCourseIds(user.locked_course_id.toString(), allCourses);
+    const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? user.locked_course_id._id.toString() : user.locked_course_id.toString();
+    const validCourseIds = getEquivalentCourseIds(userCourseId, allCourses);
 
     const dpps = await WeeklyDPP.find({
       course_id: { $in: validCourseIds },

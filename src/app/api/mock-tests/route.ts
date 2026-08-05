@@ -20,7 +20,8 @@ export async function GET() {
         return NextResponse.json({ error: 'No course locked' }, { status: 400 });
       }
 
-      const validCourseIds = getEquivalentCourseIds(String(user.locked_course_id), db.courses || []);
+      const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? String(user.locked_course_id._id) : String(user.locked_course_id);
+      const validCourseIds = getEquivalentCourseIds(userCourseId, db.courses || []);
 
       const tests = (db.mockTests || [])
         .filter((m) => {
@@ -42,7 +43,8 @@ export async function GET() {
     }
 
     const allCourses = await Course.find({});
-    const validCourseIds = getEquivalentCourseIds(user.locked_course_id.toString(), allCourses);
+    const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? user.locked_course_id._id.toString() : user.locked_course_id.toString();
+    const validCourseIds = getEquivalentCourseIds(userCourseId, allCourses);
 
     const rawTests = await MockTest.find({
       course_id: { $in: validCourseIds },

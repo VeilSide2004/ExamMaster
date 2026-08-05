@@ -15,21 +15,22 @@ export async function GET() {
 
     if (isMemoryMode) {
       const db = readSharedDb();
-      const user = (db.users || []).find((u) => u._id === auth.userId);
+      const user = (db.users || []).find((u) => String(u._id) === String(auth.userId));
       if (!user || !user.locked_course_id) {
         return NextResponse.json({ needsCourseSelection: true }, { status: 200 });
       }
 
-      const courseId = user.locked_course_id;
-      const lockedCourse = (db.courses || []).find((c) => c._id === courseId) || null;
+      const rawCourseId = user.locked_course_id;
+      const courseId = typeof rawCourseId === 'object' && rawCourseId?._id ? String(rawCourseId._id) : String(rawCourseId);
+      const lockedCourse = (db.courses || []).find((c) => String(c._id) === courseId) || (typeof rawCourseId === 'object' ? rawCourseId : null);
 
-      const attempts = (db.attempts || []).filter((a) => a.student_id === user._id && a.course_id === courseId);
+      const attempts = (db.attempts || []).filter((a) => String(a.student_id) === String(user._id) && String(a.course_id) === courseId);
       const attemptedQIds = new Set<string>();
       attempts.forEach((a) => {
         (a.responses || []).forEach((r: any) => attemptedQIds.add(String(r.question_id)));
       });
 
-      const courseQs = (db.questions || []).filter((q) => q.course_id === courseId && q.is_active !== false);
+      const courseQs = (db.questions || []).filter((q) => String(q.course_id) === courseId && q.is_active !== false);
       const topicSet = new Set<string>();
       courseQs.forEach((q) => {
         if (q.topic_tag) topicSet.add(q.topic_tag.trim());
@@ -68,12 +69,12 @@ export async function GET() {
       }).slice(0, 2);
 
       const leaderboardStudents = (db.users || [])
-        .filter((u) => u.locked_course_id === courseId && u.status === 'Active')
+        .filter((u) => String(u.locked_course_id) === courseId && u.status === 'Active')
         .sort((a, b) => (b.xp_total || 0) - (a.xp_total || 0));
 
       let rank = 1;
       for (let i = 0; i < leaderboardStudents.length; i++) {
-        if (leaderboardStudents[i]._id === user._id) {
+        if (String(leaderboardStudents[i]._id) === String(user._id)) {
           rank = i + 1;
           break;
         }
@@ -94,12 +95,26 @@ export async function GET() {
     }
 
     // Mongoose mode
-    const user = await User.findById(auth.userId).populate('locked_course_id');
+    const user = await User.findById(auth.userId);
     if (!user || !user.locked_course_id) {
       return NextResponse.json({ needsCourseSelection: true }, { status: 200 });
     }
 
-    const courseId = (user.locked_course_id as any)._id.toString();
+    const rawCourseId = user.locked_course_id;
+    const courseId = typeof rawCourseId === 'object' && rawCourseId?._id 
+      ? rawCourseId._id.toString() 
+      : rawCourseId.toString();
+
+    let lockedCourse: any = null;
+    if (typeof rawCourseId === 'object' && rawCourseId?.name) {
+      lockedCourse = rawCourseId;
+    } else {
+      try {
+        lockedCourse = await Course.findById(courseId);
+      } catch (e) {
+        lockedCourse = null;
+      }
+    }
 
     const courseQs = await Question.find({ course_id: courseId, is_active: true });
     const attempts = await Attempt.find({ student_id: user._id, course_id: courseId });
@@ -162,7 +177,7 @@ export async function GET() {
         name: user.name,
         email: user.email,
         xp_total: user.xp_total,
-        lockedCourse: user.locked_course_id,
+        lockedCourse,
         progressPercent,
         rank: rank || 1,
       },
