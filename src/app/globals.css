@@ -65,10 +65,15 @@ html {
   box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.65), 0 4px 12px -4px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Default Card Containers Elevation */
+/* Sleek Reduced Border Radius across All Cards on Every Page */
 .rounded-2xl {
+  border-radius: 0.75rem !important; /* Reduced from 16px to sleek 12px */
   box-shadow: 0 10px 30px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -4px rgba(15, 23, 42, 0.04);
 }
 .dark .rounded-2xl {
   box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.65), 0 4px 12px -4px rgba(0, 0, 0, 0.4);
+}
+
+.rounded-3xl {
+  border-radius: 1rem !important; /* Reduced from 24px to 16px */
 }
