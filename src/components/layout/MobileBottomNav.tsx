@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, HelpCircle, FileText, Trophy, User } from 'lucide-react';
@@ -15,6 +15,17 @@ const tabs = [
 
 export const MobileBottomNav: React.FC = () => {
   const pathname = usePathname();
+  const [inSession, setInSession] = useState(false);
+
+  // Watch for data-in-session attribute set by practice/DPP pages during active sessions
+  useEffect(() => {
+    const check = () => setInSession(document.body.hasAttribute('data-in-session'));
+    check(); // initial check
+
+    const observer = new MutationObserver(check);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['data-in-session'] });
+    return () => observer.disconnect();
+  }, []);
 
   // Hide on auth / course-selection pages
   if (
@@ -26,13 +37,23 @@ export const MobileBottomNav: React.FC = () => {
     return null;
   }
 
+  // Hide during active mock test session (dynamic /mock-tests/[id] route)
+  if (pathname.startsWith('/mock-tests/') && pathname !== '/mock-tests') {
+    return null;
+  }
+
+  // Hide during active practice / DPP session (signalled via body attribute)
+  if (inSession) {
+    return null;
+  }
+
   return (
     <nav
       className="lg:hidden fixed bottom-0 left-0 right-0 z-50
         bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl
         border-t border-slate-200/80 dark:border-slate-800/80
         shadow-[0_-4px_24px_rgba(0,0,0,0.10)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.40)]
-        flex items-end justify-around px-2 pb-safe"
+        flex items-end justify-around px-2"
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
     >
       {tabs.map(({ label, href, icon: Icon, isFab }) => {

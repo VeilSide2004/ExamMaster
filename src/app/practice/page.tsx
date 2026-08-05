@@ -142,6 +142,16 @@ export default function PracticeSetsPage() {
     return () => clearInterval(interval);
   }, [activeSession, submittedResult]);
 
+  // Signal to MobileBottomNav to hide itself during active sessions
+  useEffect(() => {
+    if (activeSession && !submittedResult) {
+      document.body.setAttribute('data-in-session', 'true');
+    } else {
+      document.body.removeAttribute('data-in-session');
+    }
+    return () => document.body.removeAttribute('data-in-session');
+  }, [activeSession, submittedResult]);
+
   // Live Countdown Timer to Next Reshuffle (Every Monday 00:00:00)
   const [weeklyCountdown, setWeeklyCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
