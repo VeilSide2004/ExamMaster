@@ -117,10 +117,11 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             <button
               type="button"
               onClick={onBack}
-              className="px-3.5 py-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-all flex items-center gap-2 text-xs font-extrabold shadow-xs group"
+              className="w-9 h-9 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center shadow-xs group"
+              title="Back"
+              aria-label="Go Back"
             >
-              <ArrowLeft className="w-4 h-4 text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white group-hover:-translate-x-0.5 transition-transform" />
-              <span>Exit Practice / Back</span>
+              <ArrowLeft className="w-4 h-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white group-hover:-translate-x-0.5 transition-transform" />
             </button>
           )}
 
