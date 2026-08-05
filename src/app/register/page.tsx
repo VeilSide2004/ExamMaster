@@ -120,7 +120,7 @@ export default function StudentRegisterPage() {
               >
                 Sign In
               </Link>
-              <span className="pb-2 border-b-2 border-[#044B3B] dark:border-[#10B981] text-[#044B3B] dark:text-[#10B981]">
+              <span className="pb-2 border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400">
                 Create Account
               </span>
             </div>
@@ -143,7 +143,7 @@ export default function StudentRegisterPage() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-[#044B3B] dark:focus:border-[#10B981] text-slate-900 dark:text-white font-medium placeholder-slate-400"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400"
                     placeholder="e.g. S. Roy"
                   />
                 </div>
@@ -160,7 +160,7 @@ export default function StudentRegisterPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-[#044B3B] dark:focus:border-[#10B981] text-slate-900 dark:text-white font-medium placeholder-slate-400"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400"
                     placeholder="student@example.com"
                   />
                 </div>
@@ -178,7 +178,7 @@ export default function StudentRegisterPage() {
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-[#044B3B] dark:focus:border-[#10B981] text-slate-900 dark:text-white font-medium placeholder-slate-400"
+                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400"
                     placeholder="At least 6 characters"
                   />
                   <button
@@ -203,7 +203,7 @@ export default function StudentRegisterPage() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-[#044B3B] dark:focus:border-[#10B981] text-slate-900 dark:text-white font-medium placeholder-slate-400"
+                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400"
                     placeholder="Re-enter password"
                   />
                   <button
@@ -220,7 +220,7 @@ export default function StudentRegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 bg-[#044B3B] hover:bg-[#065F46] dark:bg-[#10B981] dark:hover:bg-[#059669] text-white dark:text-slate-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
               >
                 {loading ? 'Creating Account...' : 'Complete Registration'}
                 <ArrowRight className="w-4 h-4" />
@@ -253,7 +253,7 @@ export default function StudentRegisterPage() {
             <div className="text-center pt-2">
               <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                 Already registered?{' '}
-                <Link href="/login" className="font-extrabold text-[#044B3B] dark:text-[#10B981] hover:underline">
+                <Link href="/login" className="font-extrabold text-blue-600 dark:text-blue-400 hover:underline">
                   Sign In
                 </Link>
               </p>
@@ -292,7 +292,7 @@ export default function StudentRegisterPage() {
             <p className="text-lg font-black text-white leading-relaxed tracking-tight drop-shadow-md">
               "Precision in preparation leads to excellence in performance."
             </p>
-            <div className="w-12 h-1 bg-[#10B981] rounded-full mx-auto pt-0.5" />
+            <div className="w-12 h-1 bg-blue-500 rounded-full mx-auto pt-0.5" />
           </div>
         </div>
 
