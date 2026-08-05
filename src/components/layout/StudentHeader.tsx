@@ -108,7 +108,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   }, [router]);
 
   return (
-    <header className="border-b border-white/50 dark:border-slate-800/80 bg-white/75 dark:bg-slate-900/80 backdrop-blur-2xl backdrop-saturate-200 px-4 sm:px-10 sticky top-0 z-40 shadow-md shadow-slate-200/50 dark:shadow-black/80 transition-all w-full">
+    <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/92 dark:bg-slate-900/92 backdrop-blur-md px-4 sm:px-10 sticky top-0 z-40 shadow-xs transition-all w-full">
       <div className="w-full flex items-center justify-between h-16 relative">
         
         {/* Far Left: Brand Logo + Back Button */}
@@ -117,7 +117,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             <button
               type="button"
               onClick={onBack}
-              className="w-9 h-9 rounded-xl border border-white/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center shadow-xs group"
+              className="w-9 h-9 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center shadow-xs group"
               title="Back"
               aria-label="Go Back"
             >
@@ -199,7 +199,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           <div className="relative">
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-1.5 sm:gap-2 p-1 pr-1.5 sm:pr-2.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl hover:bg-white dark:hover:bg-slate-700 transition-all border border-white/60 dark:border-slate-700/60 shadow-xs"
+              className="flex items-center gap-1.5 sm:gap-2 p-1 pr-1.5 sm:pr-2.5 rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 transition-all border border-slate-200/80 dark:border-slate-800 shadow-xs"
             >
               <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0">
                 {displayName.charAt(0).toUpperCase()}
@@ -212,7 +212,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
             {/* Dropdown — always mounted, animated via CSS */}
             <div
-              className={`absolute right-0 mt-2 w-52 bg-white/85 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/60 dark:border-slate-700/60 rounded-2xl shadow-2xl py-1 z-50
+              className={`absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xl py-1 z-50
                 transform-gpu transition-all duration-200 ease-out origin-top-right
                 ${
                   showProfileMenu

@@ -55,9 +55,9 @@ export const MobileBottomNav: React.FC = () => {
   return (
     <nav
       className="lg:hidden fixed bottom-0 left-0 right-0 z-50
-        bg-white/75 dark:bg-slate-900/80 backdrop-blur-2xl backdrop-saturate-200
-        border-t border-white/50 dark:border-slate-800/80
-        shadow-[0_-4px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.50)]
+        bg-white/92 dark:bg-slate-900/92 backdrop-blur-md
+        border-t border-slate-200/80 dark:border-slate-800/80
+        shadow-[0_-4px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.40)]
         px-2"
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
     >
