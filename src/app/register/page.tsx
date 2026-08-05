@@ -93,9 +93,9 @@ export default function StudentRegisterPage() {
   };
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-white dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 select-none">
-      {/* Left Form Column */}
-      <div className="lg:col-span-5 xl:col-span-5 p-6 sm:p-10 lg:p-12 flex flex-col justify-between border-r border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 select-none animate-page-in">
+      {/* Left Form Column (Elevated) */}
+      <div className="lg:col-span-5 xl:col-span-5 p-6 sm:p-10 lg:p-12 flex flex-col justify-between border-r border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-400/20 dark:shadow-black/80 z-10">
         <div>
           {/* Top Logo */}
           <div className="pt-2">
@@ -112,21 +112,23 @@ export default function StudentRegisterPage() {
               </p>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex items-center gap-6 border-b border-slate-200 dark:border-slate-800 text-xs font-black">
+            {/* Sliding Pill Navigation Bar */}
+            <div className="relative flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-inner max-w-xs select-none">
               <Link
                 href="/login"
-                className="pb-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                className="flex-1 py-2 text-center text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors z-10"
               >
                 Sign In
               </Link>
-              <span className="pb-2 border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400">
+              <span className="flex-1 py-2 text-center text-xs font-black text-blue-600 dark:text-blue-400 z-10 cursor-default">
                 Create Account
               </span>
+              {/* Sliding Pill Background Knob */}
+              <div className="absolute top-1 bottom-1 left-[calc(50%)] w-[calc(50%-4px)] bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200/80 dark:border-slate-700 transition-all duration-300 ease-out" />
             </div>
 
             {error && (
-              <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs rounded-xl font-bold">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs rounded-xl font-bold shadow-xs">
                 {error}
               </div>
             )}
@@ -143,7 +145,7 @@ export default function StudentRegisterPage() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400 transition-all"
                     placeholder="e.g. S. Roy"
                   />
                 </div>
@@ -160,7 +162,7 @@ export default function StudentRegisterPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400 transition-all"
                     placeholder="student@example.com"
                   />
                 </div>
@@ -178,7 +180,7 @@ export default function StudentRegisterPage() {
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400"
+                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400 transition-all"
                     placeholder="At least 6 characters"
                   />
                   <button
@@ -203,7 +205,7 @@ export default function StudentRegisterPage() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400"
+                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400 transition-all"
                     placeholder="Re-enter password"
                   />
                   <button
@@ -220,7 +222,7 @@ export default function StudentRegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-xs rounded-xl shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
               >
                 {loading ? 'Creating Account...' : 'Complete Registration'}
                 <ArrowRight className="w-4 h-4" />
@@ -229,7 +231,7 @@ export default function StudentRegisterPage() {
 
             <div className="relative flex items-center justify-center my-3">
               <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
-              <span className="bg-white dark:bg-slate-950 px-3 text-[10px] uppercase tracking-wider font-extrabold text-slate-400 shrink-0">
+              <span className="bg-white dark:bg-slate-900 px-3 text-[10px] uppercase tracking-wider font-extrabold text-slate-400 shrink-0">
                 Or continue with
               </span>
             </div>
@@ -239,7 +241,7 @@ export default function StudentRegisterPage() {
               type="button"
               disabled={googleAuthLoading}
               onClick={handleGoogleAuth}
-              className="w-full py-3 px-4 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              className="w-full py-3 px-4 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
             >
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
