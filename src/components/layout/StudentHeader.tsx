@@ -94,7 +94,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     { label: 'Dashboard', href: '/dashboard', icon: Home },
     { label: 'Mock Tests', href: '/mock-tests', icon: FileText },
     { label: 'Daily Practice', href: '/practice', icon: HelpCircle },
-    { label: 'Resources', href: '/practice?tab=resources', icon: Folder },
+    { label: 'Resources', href: '/resources', icon: Folder },
     { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   ];
 

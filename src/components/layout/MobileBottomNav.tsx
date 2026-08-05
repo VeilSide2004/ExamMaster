@@ -3,14 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, HelpCircle, FileText, Trophy, User } from 'lucide-react';
+import { Home, HelpCircle, FileText, Trophy, Folder } from 'lucide-react';
 
 const tabs = [
-  { label: 'Home',     href: '/dashboard',  icon: Home },
-  { label: 'Practice', href: '/practice',   icon: HelpCircle },
-  { label: 'Tests',    href: '/mock-tests', icon: FileText,  isFab: true },
-  { label: 'Ranks',    href: '/leaderboard',icon: Trophy },
-  { label: 'Profile',  href: '/profile',    icon: User },
+  { label: 'Home',      href: '/dashboard',  icon: Home },
+  { label: 'Practice',  href: '/practice',   icon: HelpCircle },
+  { label: 'Tests',     href: '/mock-tests', icon: FileText,  isFab: true },
+  { label: 'Ranks',     href: '/leaderboard',icon: Trophy },
+  { label: 'Resources', href: '/resources',  icon: Folder },
 ];
 
 export const MobileBottomNav: React.FC = () => {
