@@ -175,21 +175,13 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
   };
 
   return (
-    <div className="relative min-h-screen font-sans text-slate-900 dark:text-slate-100 select-none overflow-hidden">
-      {/* Full-screen Hero Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url('/study_hero_bg.png')` }}
-      />
-      {/* Overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/50 to-slate-900/30 dark:from-slate-950/90 dark:via-slate-950/60 dark:to-slate-950/40" />
-
-      {/* Floating Elevated Form Card */}
-      <div className="relative z-20 min-h-screen flex items-stretch lg:items-center lg:justify-start p-4 sm:p-8 lg:p-12">
-      <div className="w-full max-w-lg lg:max-w-md xl:max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-2xl border border-white/60 dark:border-slate-700/60 flex flex-col justify-between
-        shadow-[0_8px_32px_-4px_rgba(0,0,0,0.35),0_32px_80px_-8px_rgba(0,0,0,0.45),0_2px_8px_rgba(0,0,0,0.15)]
-        dark:shadow-[0_8px_32px_-4px_rgba(0,0,0,0.7),0_32px_80px_-8px_rgba(0,0,0,0.85),0_2px_8px_rgba(0,0,0,0.5)]
-        p-6 sm:p-10 my-auto">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 font-sans text-slate-900 dark:text-slate-100 select-none bg-slate-100 dark:bg-slate-950">
+      {/* Left Form Panel — Elevated */}
+      <div className="lg:col-span-5 xl:col-span-5 relative z-10 flex flex-col justify-between
+        bg-white dark:bg-slate-900
+        p-6 sm:p-10 lg:p-12
+        shadow-[8px_0_40px_0_rgba(0,0,0,0.18),16px_0_60px_-8px_rgba(0,0,0,0.14),2px_0_8px_0_rgba(0,0,0,0.10)]
+        dark:shadow-[8px_0_40px_0_rgba(0,0,0,0.60),16px_0_80px_-8px_rgba(0,0,0,0.55),2px_0_8px_0_rgba(0,0,0,0.40)]">
         <div>
           {/* Top Logo */}
           <div className="pt-2">
@@ -590,29 +582,36 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
             <a href="#" className="hover:underline">Terms</a>
           </div>
         </div>
-      </div>{/* end floating card */}
+      </div>{/* end left form panel */}
 
-      {/* Glassmorphic Quote Card — floats on the right side of the background */}
-      <div className="hidden lg:flex absolute right-16 xl:right-24 inset-y-0 items-center justify-center z-10 pointer-events-none">
-        <div className="bg-white/15 backdrop-blur-xl border border-white/25 rounded-3xl p-10 max-w-sm shadow-2xl text-center space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center mx-auto border border-white/30">
-            <Quote className="w-6 h-6 fill-white text-white" />
+      {/* Right Hero Image Column */}
+      <div className="hidden lg:block lg:col-span-7 relative overflow-hidden bg-slate-900">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-90"
+          style={{ backgroundImage: `url('/study_hero_bg.png')` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/60 via-slate-900/30 to-slate-950/50" />
+
+        {/* Glassmorphic Quote Card */}
+        <div className="absolute inset-0 flex items-center justify-center p-12">
+          <div className="bg-white/20 dark:bg-slate-900/50 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-3xl p-10 max-w-md shadow-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 dark:bg-slate-800/40 backdrop-blur-md text-white flex items-center justify-center mx-auto border border-white/30">
+              <Quote className="w-6 h-6 fill-white text-white" />
+            </div>
+            <p className="text-lg font-black text-white leading-relaxed tracking-tight drop-shadow-md">
+              "Precision in preparation leads to excellence in performance."
+            </p>
+            <div className="w-12 h-1 bg-blue-400 rounded-full mx-auto" />
           </div>
-          <p className="text-lg font-black text-white leading-relaxed tracking-tight drop-shadow-md">
-            "Precision in preparation leads to excellence in performance."
-          </p>
-          <div className="w-12 h-1 bg-blue-400 rounded-full mx-auto" />
+        </div>
+
+        {/* Pagination Dots */}
+        <div className="absolute bottom-8 right-8 flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs" />
+          <span className="w-2 h-2 rounded-full bg-white/40" />
+          <span className="w-2 h-2 rounded-full bg-white/40" />
         </div>
       </div>
-
-      {/* Pagination Dots */}
-      <div className="absolute bottom-8 right-8 flex items-center gap-2 z-10">
-        <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs" />
-        <span className="w-2 h-2 rounded-full bg-white/40" />
-        <span className="w-2 h-2 rounded-full bg-white/40" />
-      </div>
-
-      </div>{/* end flex wrapper */}
     </div>
   );
 };
