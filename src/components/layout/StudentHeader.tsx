@@ -165,8 +165,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
         {/* Far Right Actions */}
         <div className="flex items-center gap-2.5">
-          {/* Text Size Increase / Decrease Controller */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+          {/* Text Size Increase / Decrease Controller — hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
             <button
               type="button"
               onClick={() => changeTextSize(-5)}
@@ -190,7 +190,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             </button>
           </div>
 
-          <ThemeToggle />
+          <div className="hidden sm:block"><ThemeToggle /></div>
 
           <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
 
