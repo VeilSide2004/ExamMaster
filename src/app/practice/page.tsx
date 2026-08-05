@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import {
   HelpCircle,
@@ -118,6 +118,33 @@ export default function PracticeSetsPage() {
     return () => clearInterval(interval);
   }, [activeSession, submittedResult]);
 
+  // Live Countdown Timer to Next Reshuffle (Every Monday 00:00:00)
+  const [weeklyCountdown, setWeeklyCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+      const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+
+      const nextMonday = new Date(now);
+      nextMonday.setDate(now.getDate() + daysUntilMonday);
+      nextMonday.setHours(0, 0, 0, 0);
+
+      const diff = Math.max(0, nextMonday.getTime() - now.getTime());
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      setWeeklyCountdown({ days, hours, minutes, seconds });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Weekly Shuffling Helpers
   const getWeekNumber = () => {
     const d = new Date();
@@ -125,6 +152,25 @@ export default function PracticeSetsPage() {
     const days = Math.floor((d.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
     return Math.ceil((days + startOfYear.getDay() + 1) / 7);
   };
+
+  const getWeekNumberForDate = (date: Date) => {
+    const d = new Date(date);
+    const startOfYear = new Date(d.getFullYear(), 0, 1);
+    const days = Math.floor((d.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
+  };
+
+  const isWeeklyAttemptedThisWeek = useMemo(() => {
+    const currentWeek = getWeekNumber();
+    const currentYear = new Date().getFullYear();
+
+    return userAttempts.some((att) => {
+      const isWeeklyType = att.type === 'weekly' || (att.topic_tag || '').toLowerCase().includes('weekly') || (att.topic_tag || '').toLowerCase().includes('revision test');
+      if (!isWeeklyType) return false;
+      const attDate = new Date(att.created_at || att.started_at || Date.now());
+      return getWeekNumberForDate(attDate) === currentWeek && attDate.getFullYear() === currentYear;
+    });
+  }, [userAttempts]);
 
   const getCurrentWeekLabel = () => {
     const d = new Date();
@@ -240,13 +286,19 @@ export default function PracticeSetsPage() {
   };
 
   const handleOpenWeeklyChallenge = () => {
+    if (isWeeklyAttemptedThisWeek) {
+      alert(`You have already completed this week's revision test!\n\nThe question set is locked for the week and will automatically reshuffle next Monday at 00:00.\nTime remaining until reshuffle: ${weeklyCountdown.days}d ${weeklyCountdown.hours}h ${weeklyCountdown.minutes}m ${weeklyCountdown.seconds}s`);
+      return;
+    }
     const rawWeeklyQs = getWeeklyQuestions();
     if (rawWeeklyQs.length === 0) {
       alert('No questions uploaded for Weekly DPP Test yet.');
       return;
     }
 
-    const smartSet = getSmartPracticeSet(rawWeeklyQs);
+    // Deterministically shuffle with seed = weekNumber + year * 100 (never reshuffles until next Monday)
+    const seed = getWeekNumber() + new Date().getFullYear() * 100;
+    const smartSet = shuffleArrayWithSeed(rawWeeklyQs, seed).slice(0, 10);
     setSessionQuestions(smartSet);
 
     const testTitle = publishedWeeklyDpp?.title || `${getCurrentWeekLabel()} - Weekly Test Paper`;
@@ -334,6 +386,7 @@ export default function PracticeSetsPage() {
         body: JSON.stringify({
           answers: answersArray,
           topicTag: selectedTopic ? `${selectedSubject} - ${selectedTopic}` : selectedSubject || 'All Topics',
+          type: isWeeklySession ? 'weekly' : 'practice',
         }),
       });
 
@@ -926,29 +979,48 @@ export default function PracticeSetsPage() {
                               <Calendar className="w-6 h-6" />
                             </div>
                             <div>
-                              <div className="flex items-center gap-2 mb-1.5">
+                              <div className="flex flex-wrap items-center gap-2 mb-1.5">
                                 <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-800/60 text-blue-200 tracking-wider border border-blue-400/30">
                                   {getCurrentWeekLabel()}
                                 </span>
                                 <span className="text-xs font-bold text-blue-200/80">
                                   Completed Topics Revision Test
                                 </span>
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-amber-400" />
+                                  Next Reshuffle: {weeklyCountdown.days}d {weeklyCountdown.hours}h {weeklyCountdown.minutes}m {weeklyCountdown.seconds}s
+                                </span>
                               </div>
                               <h3 className="text-xl font-black tracking-tight text-white">
                                 {publishedWeeklyDpp?.title || 'Weekly DPP Test'}
                               </h3>
                               <p className="text-xs text-blue-100/90 leading-relaxed mt-1 max-w-xl">
-                                A timed revision test configured for your course track. Duration: {publishedWeeklyDpp?.duration_minutes || 30} Mins.
+                                {isWeeklyAttemptedThisWeek
+                                  ? "✓ You have completed this week's revision test! Questions are locked and will reshuffle next Monday at 00:00:00."
+                                  : `A timed revision test configured for your course track. Questions remain fixed for the week and reshuffle next Monday at 00:00. Duration: ${publishedWeeklyDpp?.duration_minutes || 30} Mins.`}
                               </p>
                             </div>
                           </div>
 
                           <button
                             type="button"
+                            disabled={isWeeklyAttemptedThisWeek}
                             onClick={handleOpenWeeklyChallenge}
-                            className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center gap-2 shrink-0"
+                            className={`px-6 py-3.5 text-xs font-extrabold rounded-xl transition-all flex items-center gap-2 shrink-0 ${
+                              isWeeklyAttemptedThisWeek
+                                ? 'bg-slate-800/80 text-slate-400 border border-slate-700/60 cursor-not-allowed shadow-none'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 hover:scale-[1.02]'
+                            }`}
                           >
-                            <Zap className="w-4 h-4 fill-current" /> Start Weekly Test
+                            {isWeeklyAttemptedThisWeek ? (
+                              <>
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Completed This Week
+                              </>
+                            ) : (
+                              <>
+                                <Zap className="w-4 h-4 fill-current" /> Start Weekly Test
+                              </>
+                            )}
                           </button>
                         </div>
 

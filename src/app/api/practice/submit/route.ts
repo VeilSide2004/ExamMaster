@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { answers, topicTag } = await req.json();
+    const { answers, topicTag, type } = await req.json();
 
     if (isMemoryMode) {
       const db = readSharedDb();
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
         _id: generateId(),
         student_id: user._id,
         course_id: user.locked_course_id,
-        type: 'practice',
+        type: type || 'practice',
         topic_tag: topicTag || 'General',
         responses: processedResponses,
         score: correctCount,
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
     const attempt = await Attempt.create({
       student_id: user._id,
       course_id: user.locked_course_id,
-      type: 'practice',
+      type: type || 'practice',
       topic_tag: topicTag || 'General',
       responses: processedResponses,
       score: correctCount,
