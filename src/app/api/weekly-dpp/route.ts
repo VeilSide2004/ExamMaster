@@ -15,7 +15,7 @@ export async function GET() {
 
     if (isMemoryMode) {
       const db = readSharedDb();
-      const user = (db.users || []).find((u) => u._id === auth.userId);
+      const user = (db.users || []).find((u) => String(u._id) === String(auth.userId));
       if (!user || !user.locked_course_id) {
         return NextResponse.json({ weeklyDpps: [] });
       }

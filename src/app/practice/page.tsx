@@ -331,18 +331,23 @@ export default function PracticeSetsPage() {
     setSelectedMode(mode);
     setShowModeModal(false);
 
-    let rawList: any[] = [];
+    let smartSet: any[] = [];
     if (isWeeklySession) {
-      rawList = getWeeklyQuestions();
-    } else if (selectedTopic) {
-      rawList = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedTopic.toLowerCase()));
-    } else if (selectedSubject) {
-      rawList = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedSubject.toLowerCase()));
+      const rawWeeklyQs = getWeeklyQuestions();
+      const seed = getWeekNumber() + new Date().getFullYear() * 100;
+      smartSet = shuffleArrayWithSeed(rawWeeklyQs, seed).slice(0, 10);
     } else {
-      rawList = questions;
+      let rawList: any[] = [];
+      if (selectedTopic) {
+        rawList = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedTopic.toLowerCase()));
+      } else if (selectedSubject) {
+        rawList = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedSubject.toLowerCase()));
+      } else {
+        rawList = questions;
+      }
+      smartSet = getSmartPracticeSet(rawList);
     }
 
-    const smartSet = getSmartPracticeSet(rawList);
     setSessionQuestions(smartSet);
 
     setActiveSession(mode);
@@ -353,7 +358,9 @@ export default function PracticeSetsPage() {
     setSubmittedResult(null);
 
     if (mode === 'quiz') {
-      const totalSecs = Math.max(300, smartSet.length * 60);
+      const totalSecs = publishedWeeklyDpp?.duration_minutes && isWeeklySession
+        ? publishedWeeklyDpp.duration_minutes * 60
+        : Math.max(300, smartSet.length * 60);
       setTimerSeconds(totalSecs);
     } else {
       setTimerSeconds(0);
