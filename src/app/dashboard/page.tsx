@@ -81,7 +81,6 @@ export default function StudentDashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
-        <StudentHeader />
         <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-pulse">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="space-y-2">
@@ -106,9 +105,6 @@ export default function StudentDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
-      {/* Top Header Navigation */}
-      <StudentHeader userName={displayName} />
-
       {/* Main Page Container */}
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-page-in pb-24 lg:pb-0">
         

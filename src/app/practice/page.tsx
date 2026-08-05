@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { StudentHeader } from '@/components/layout/StudentHeader';
+import { useHeader } from '@/context/HeaderContext';
 import {
   HelpCircle,
   CheckCircle2,
@@ -153,6 +153,17 @@ export default function PracticeSetsPage() {
   }, [activeSession, submittedResult]);
 
   // Live Countdown Timer to Next Reshuffle (Every Monday 00:00:00)
+  const { setOnBack, setHideNav } = useHeader();
+
+  useEffect(() => {
+    setHideNav(Boolean(activeSession));
+    setOnBack(currentLevel !== 'subjects' || Boolean(activeSession) ? () => handleHeaderBack() : undefined);
+
+    return () => {
+      setHideNav(false);
+      setOnBack(undefined);
+    };
+  }, [activeSession, currentLevel, submittedResult]);
   const [weeklyCountdown, setWeeklyCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -538,11 +549,6 @@ export default function PracticeSetsPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
-      <StudentHeader
-        hideNav={Boolean(activeSession)}
-        onBack={currentLevel !== 'subjects' || activeSession ? handleHeaderBack : undefined}
-      />
-
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-page-in pb-24 lg:pb-0">
           {/* Header Title Bar (when not in active session) */}
           {!activeSession && (

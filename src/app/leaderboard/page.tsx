@@ -39,8 +39,6 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
-      <StudentHeader />
-
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-page-in pb-24 lg:pb-0">
         
         {/* Page Banner Header */}
