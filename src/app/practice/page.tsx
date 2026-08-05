@@ -695,7 +695,7 @@ export default function PracticeSetsPage() {
                 /* Active Question & Palette Grid */
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Active Question Box */}
-                  <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex flex-col justify-between min-h-[420px]">
+                  <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex flex-col justify-between min-h-[420px] max-h-[calc(100vh-220px)] overflow-y-auto">
                     <div>
                       <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-2">
