@@ -383,10 +383,12 @@ export default function PracticeSetsPage() {
       smartSet = shuffleArrayWithSeed(rawWeeklyQs, seed).slice(0, 10);
     } else {
       let rawList: any[] = [];
-      if (selectedTopic) {
+      if (selectedTopic && topicModulesMap[selectedTopic] && topicModulesMap[selectedTopic].length > 0) {
+        rawList = topicModulesMap[selectedTopic];
+      } else if (selectedTopic) {
         rawList = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedTopic.toLowerCase()));
       } else if (selectedSubject) {
-        rawList = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedSubject.toLowerCase()));
+        rawList = activeSubjectQuestions;
       } else {
         rawList = questions;
       }
@@ -503,36 +505,65 @@ export default function PracticeSetsPage() {
   };
 
   // Derive Subject & Topic questions
-  const subjectQuestionMap: Record<string, any[]> = {};
-  courseSubjects.forEach((s) => {
-    subjectQuestionMap[s] = questions.filter(
-      (q) => (q.topic_tag || '').toLowerCase().includes(s.toLowerCase())
-    );
-  });
+  const subjectQuestionMap: Record<string, any[]> = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    courseSubjects.forEach((s) => {
+      const sLower = s.toLowerCase();
+      map[s] = questions.filter((q) => {
+        if (!q.topic_tag) return false;
+        const tagLower = q.topic_tag.toLowerCase();
+        if (tagLower.includes(sLower)) return true;
+        const firstPart = q.topic_tag.split('-')[0].trim().toLowerCase();
+        if (firstPart === sLower) return true;
+        if (q.subject && String(q.subject).toLowerCase() === sLower) return true;
+        return false;
+      });
+    });
+    return map;
+  }, [courseSubjects, questions]);
 
-  const activeSubjectQuestions = selectedSubject
-    ? questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedSubject.toLowerCase()))
-    : [];
+  const activeSubjectQuestions = useMemo(() => {
+    if (!selectedSubject) return [];
+    const sLower = selectedSubject.toLowerCase();
+    return questions.filter((q) => {
+      if (!q.topic_tag) return false;
+      const tagLower = q.topic_tag.toLowerCase();
+      if (tagLower.includes(sLower)) return true;
+      const firstPart = q.topic_tag.split('-')[0].trim().toLowerCase();
+      if (firstPart === sLower) return true;
+      if (q.subject && String(q.subject).toLowerCase() === sLower) return true;
+      return false;
+    });
+  }, [selectedSubject, questions]);
 
-  const topicModulesMap: Record<string, any[]> = {};
-  activeSubjectQuestions.forEach((q) => {
-    let tName = 'General Module';
-    if (q.topic_tag) {
-      const parts = q.topic_tag.split('-').map((p: string) => p.trim());
-      if (parts.length > 1) {
-        tName = parts.slice(1).join(' - ');
-      } else {
-        tName = parts[0];
+  const topicModulesMap: Record<string, any[]> = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    activeSubjectQuestions.forEach((q) => {
+      let tName = 'General Module';
+      if (q.topic_tag) {
+        const parts = q.topic_tag.split('-').map((p: string) => p.trim());
+        if (parts.length > 1) {
+          if (parts[0].toLowerCase() === selectedSubject.toLowerCase()) {
+            tName = parts.slice(1).join(' - ');
+          } else {
+            tName = q.topic_tag.trim();
+          }
+        } else {
+          tName = parts[0];
+        }
       }
-    }
-    if (!topicModulesMap[tName]) topicModulesMap[tName] = [];
-    topicModulesMap[tName].push(q);
-  });
+      if (!map[tName]) map[tName] = [];
+      map[tName].push(q);
+    });
+    return map;
+  }, [activeSubjectQuestions, selectedSubject]);
 
   const filteredQuestions = activeSession && sessionQuestions.length > 0
     ? sessionQuestions
     : isWeeklySession
     ? getWeeklyQuestions()
+    : selectedTopic && topicModulesMap[selectedTopic]
+    ? topicModulesMap[selectedTopic]
     : selectedTopic
     ? activeSubjectQuestions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedTopic.toLowerCase()))
     : selectedSubject
@@ -998,6 +1029,7 @@ export default function PracticeSetsPage() {
                             key={sName}
                             onClick={() => {
                               setSelectedSubject(sName);
+                              setSelectedTopic('');
                               setCurrentLevel('topics');
                             }}
                             className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
@@ -1012,7 +1044,15 @@ export default function PracticeSetsPage() {
                               <p className="text-xs text-slate-500 font-semibold">{Math.min(10, qList.length)} Questions per Set (Smart Reshuffled)</p>
                             </div>
 
-                            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600">
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSubject(sName);
+                                setSelectedTopic('');
+                                setCurrentLevel('topics');
+                              }}
+                              className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 cursor-pointer"
+                            >
                               <span>Browse Topics</span>
                               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-slate-400 group-hover:text-blue-600" />
                             </div>
