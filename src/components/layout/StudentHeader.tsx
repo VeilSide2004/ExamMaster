@@ -211,7 +211,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
               {/* Dropdown — always mounted, animated via CSS */}
               <div
-                className={`absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] py-1.5 z-50
+                className={`absolute right-0 mt-2 w-52 bg-white/90 backdrop-blur-md border border-slate-200/90 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] py-1 z-50
                   transition-all duration-200 ease-out origin-top-right
                   ${
                     showProfileMenu
@@ -219,82 +219,20 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                       : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
                   }`}
               >
-                <div className="px-4 py-2 border-b border-slate-100">
+                <div className="px-4 py-2.5 border-b border-slate-100">
                   <p className="text-xs font-black text-slate-900 truncate">{displayName}</p>
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mt-0.5">Student Account</p>
                 </div>
-
                 <Link
                   href="/profile"
                   onClick={() => setShowProfileMenu(false)}
-                  className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
                   <User className="w-4 h-4 text-blue-500" /> Profile Settings
                 </Link>
-
-                {/* Color Palette Selector in Profile Menu */}
-                <div className="px-4 py-2 border-t border-b border-slate-100 bg-slate-50/60">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      Color Palette
-                    </span>
-                    <Link
-                      href="/profile"
-                      onClick={() => setShowProfileMenu(false)}
-                      className="text-[10px] text-blue-600 font-extrabold hover:underline"
-                    >
-                      View All
-                    </Link>
-                  </div>
-                  <div className="flex items-center justify-between gap-1.5 pt-0.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        try {
-                          localStorage.setItem('exammaster_color_palette', 'default');
-                          document.documentElement.setAttribute('data-color-palette', 'default');
-                        } catch (e) {}
-                      }}
-                      className="flex-1 py-1 px-1.5 rounded-lg border border-slate-200 bg-white hover:border-blue-400 flex items-center justify-center gap-1 text-[10px] font-extrabold text-slate-700 transition-all shadow-xs"
-                      title="Default Indigo"
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#4F46E5]" />
-                      Indigo
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        try {
-                          localStorage.setItem('exammaster_color_palette', 'emerald');
-                          document.documentElement.setAttribute('data-color-palette', 'emerald');
-                        } catch (e) {}
-                      }}
-                      className="flex-1 py-1 px-1.5 rounded-lg border border-slate-200 bg-white hover:border-emerald-400 flex items-center justify-center gap-1 text-[10px] font-extrabold text-slate-700 transition-all shadow-xs"
-                      title="Palette 2: Emerald Academy"
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#059669]" />
-                      Emerald
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        try {
-                          localStorage.setItem('exammaster_color_palette', 'amethyst');
-                          document.documentElement.setAttribute('data-color-palette', 'amethyst');
-                        } catch (e) {}
-                      }}
-                      className="flex-1 py-1 px-1.5 rounded-lg border border-slate-200 bg-white hover:border-purple-400 flex items-center justify-center gap-1 text-[10px] font-extrabold text-slate-700 transition-all shadow-xs"
-                      title="Palette 3: Royal Amethyst"
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#7C3AED]" />
-                      Violet
-                    </button>
-                  </div>
-                </div>
-
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 border-t border-slate-100 transition-colors"
                 >
                   <LogOut className="w-4 h-4" /> Sign Out
                 </button>
