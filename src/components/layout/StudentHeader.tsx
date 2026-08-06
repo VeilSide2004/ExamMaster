@@ -147,16 +147,15 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         <div className="w-full flex items-center justify-between h-16 relative">
           
           {/* Far Left: Brand Logo + Back Button */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 shrink-0">
             {onBack && (
               <button
                 type="button"
                 onClick={onBack}
-                className="w-9 h-9 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center shadow-xs group"
-                title="Back"
-                aria-label="Go Back"
+                className="p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors shadow-2xs group shrink-0"
+                title="Go Back"
               >
-                <ArrowLeft className="w-4 h-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white group-hover:-translate-x-0.5 transition-transform" />
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
               </button>
             )}
 
@@ -170,9 +169,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             </Link>
           </div>
 
-          {/* Center: Centered Navigation Bar (Hidden when hideNav is true) */}
+          {/* Center: Centered Navigation Bar (Hidden when hideNav is true, active on XL screens 1280px+) */}
           {!hideNav && (
-            <nav ref={navRef} className="relative hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full select-none">
+            <nav ref={navRef} className="relative hidden xl:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full select-none">
               {/* Dynamic Smooth Animated Sliding Underline Bar */}
               {indicatorStyle.ready && (
                 <div
@@ -196,7 +195,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     onMouseEnter={() => {
                       try { router.prefetch(link.href); } catch (e) {}
                     }}
-                    className={`px-3.5 h-full text-xs font-bold flex items-center gap-2 transition-colors duration-300 relative ${
+                    className={`px-3.5 h-full text-xs font-bold flex items-center gap-2 transition-colors duration-300 relative whitespace-nowrap ${
                       isActive
                         ? 'text-blue-600 dark:text-blue-400 font-extrabold'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
@@ -211,7 +210,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           )}
 
           {/* Far Right Actions */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 shrink-0">
             {/* Text Size Increase / Decrease Controller — hidden on mobile */}
             <div className="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
               <button
