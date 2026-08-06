@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '../common/Logo';
@@ -32,6 +32,48 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const [textSize, setTextSize] = useState<number>(100);
+
+  const navRef = useRef<HTMLElement>(null);
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number; ready: boolean }>({
+    left: 0,
+    width: 0,
+    ready: false,
+  });
+
+  const navLinks = [
+    { label: 'Dashboard', href: '/dashboard', icon: Home },
+    { label: 'Mock Tests', href: '/mock-tests', icon: FileText },
+    { label: 'Daily Practice', href: '/practice', icon: HelpCircle },
+    { label: 'Resources', href: '/resources', icon: Folder },
+    { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+  ];
+
+  const activeIndex = navLinks.findIndex((link) =>
+    pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
+  );
+
+  useEffect(() => {
+    const updateIndicator = () => {
+      if (!navRef.current || activeIndex === -1) return;
+      const links = navRef.current.querySelectorAll<HTMLAnchorElement>('a');
+      const activeLink = links[activeIndex];
+      if (activeLink) {
+        setIndicatorStyle({
+          left: activeLink.offsetLeft,
+          width: activeLink.offsetWidth,
+          ready: true,
+        });
+      }
+    };
+
+    updateIndicator();
+    const timer = setTimeout(updateIndicator, 50);
+    window.addEventListener('resize', updateIndicator);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateIndicator);
+    };
+  }, [pathname, activeIndex]);
 
   useEffect(() => {
     try {
@@ -90,14 +132,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     router.push('/login');
   };
 
-  const navLinks = [
-    { label: 'Dashboard', href: '/dashboard', icon: Home },
-    { label: 'Mock Tests', href: '/mock-tests', icon: FileText },
-    { label: 'Daily Practice', href: '/practice', icon: HelpCircle },
-    { label: 'Resources', href: '/resources', icon: Folder },
-    { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
-  ];
-
   useEffect(() => {
     // Prefetch all key student portal routes for instant navigation speed
     navLinks.forEach((link) => {
@@ -138,10 +172,21 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
           {/* Center: Centered Navigation Bar (Hidden when hideNav is true) */}
           {!hideNav && (
-            <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full">
-              {navLinks.map((link) => {
+            <nav ref={navRef} className="relative hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full select-none">
+              {/* Dynamic Smooth Animated Sliding Underline Bar */}
+              {indicatorStyle.ready && (
+                <div
+                  className="absolute bottom-0 h-[2.5px] bg-blue-600 dark:bg-blue-400 rounded-full shadow-xs transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                  style={{
+                    left: `${indicatorStyle.left}px`,
+                    width: `${indicatorStyle.width}px`,
+                  }}
+                />
+              )}
+
+              {navLinks.map((link, index) => {
                 const Icon = link.icon;
-                const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
+                const isActive = activeIndex === index;
                 
                 return (
                   <Link
@@ -151,13 +196,13 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     onMouseEnter={() => {
                       try { router.prefetch(link.href); } catch (e) {}
                     }}
-                    className={`px-3.5 h-full text-xs font-bold flex items-center gap-2 transition-all duration-200 relative border-b-2 ${
+                    className={`px-3.5 h-full text-xs font-bold flex items-center gap-2 transition-colors duration-300 relative ${
                       isActive
-                        ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
-                        : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300'
+                        ? 'text-blue-600 dark:text-blue-400 font-extrabold'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 transition-transform duration-200 ${isActive ? 'text-blue-600 dark:text-blue-400 scale-105' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400 scale-105' : 'text-slate-400'}`} />
                     <span>{link.label}</span>
                   </Link>
                 );
