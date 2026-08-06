@@ -1062,34 +1062,34 @@ export default function PracticeSetsPage() {
                     </div>
                   )}
 
-                  {/* WEEKLY MEGA DPP CHALLENGE SECTION (Royal Blue & Deep Indigo Theme) */}
+                  {/* WEEKLY MEGA DPP CHALLENGE SECTION (Clean Light Theme with Indigo Accent) */}
                   {(() => {
                     const weeklyQs = getWeeklyQuestions();
                     const totalWeeklyCount = Math.min(10, weeklyQs.length);
                     return (
-                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-950 via-indigo-950 to-blue-900 text-white p-7 shadow-md space-y-6">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 border-b border-white/10 pb-5">
+                      <div className="relative overflow-hidden rounded-2xl bg-white border-2 border-blue-100 p-7 shadow-xs space-y-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 border-b border-slate-100 pb-5">
                           <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-900/60 text-blue-300 flex items-center justify-center shrink-0 border border-blue-500/30">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
                               <Calendar className="w-6 h-6" />
                             </div>
                             <div>
                               <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-800/60 text-blue-200 tracking-wider border border-blue-400/30">
+                                <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 tracking-wider border border-blue-200/80">
                                   {getCurrentWeekLabel()}
                                 </span>
-                                <span className="text-xs font-bold text-blue-200/80">
+                                <span className="text-xs font-bold text-slate-500">
                                   Completed Topics Revision Test
                                 </span>
-                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
-                                  <Clock className="w-3 h-3 text-amber-400" />
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-amber-600" />
                                   Next Reshuffle: {weeklyCountdown.days}d {weeklyCountdown.hours}h {weeklyCountdown.minutes}m {weeklyCountdown.seconds}s
                                 </span>
                               </div>
-                              <h3 className="text-xl font-black tracking-tight text-white">
+                              <h3 className="text-xl font-black tracking-tight text-slate-900">
                                 {publishedWeeklyDpp?.title || 'Weekly DPP Test'}
                               </h3>
-                              <p className="text-xs text-blue-100/90 leading-relaxed mt-1 max-w-xl">
+                              <p className="text-xs text-slate-600 leading-relaxed mt-1 max-w-xl">
                                 {isWeeklyAttemptedThisWeek
                                   ? "✓ You completed an attempt this week! You can retake this test anytime. Questions stay fixed for the week and automatically reshuffle next Monday at 00:00."
                                   : `A timed revision test configured for your course track. Questions stay fixed for the week and automatically reshuffle next Monday at 00:00. Duration: ${publishedWeeklyDpp?.duration_minutes || 30} Mins.`}
@@ -1115,21 +1115,21 @@ export default function PracticeSetsPage() {
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                          <div className="p-4 bg-blue-900/40 rounded-xl border border-blue-500/20">
-                            <span className="text-[10px] text-blue-200/80 font-black block uppercase tracking-wider mb-1">TEST DURATION</span>
-                            <span className="text-base font-black text-white">{publishedWeeklyDpp?.duration_minutes || 30} Mins</span>
+                          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80">
+                            <span className="text-[10px] text-slate-500 font-black block uppercase tracking-wider mb-1">TEST DURATION</span>
+                            <span className="text-base font-black text-slate-900">{publishedWeeklyDpp?.duration_minutes || 30} Mins</span>
                           </div>
-                          <div className="p-4 bg-blue-900/40 rounded-xl border border-blue-500/20">
-                            <span className="text-[10px] text-blue-200/80 font-black block uppercase tracking-wider mb-1">CONFIGURED QUESTIONS</span>
-                            <span className="text-base font-black text-blue-400">{totalWeeklyCount} Questions</span>
+                          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80">
+                            <span className="text-[10px] text-slate-500 font-black block uppercase tracking-wider mb-1">CONFIGURED QUESTIONS</span>
+                            <span className="text-base font-black text-blue-600">{totalWeeklyCount} Questions</span>
                           </div>
-                          <div className="p-4 bg-blue-900/40 rounded-xl border border-blue-500/20">
-                            <span className="text-[10px] text-blue-200/80 font-black block uppercase tracking-wider mb-1">WEEKLY TOTAL QS</span>
-                            <span className="text-base font-black text-white">{totalWeeklyCount} Questions</span>
+                          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80">
+                            <span className="text-[10px] text-slate-500 font-black block uppercase tracking-wider mb-1">WEEKLY TOTAL QS</span>
+                            <span className="text-base font-black text-slate-900">{totalWeeklyCount} Questions</span>
                           </div>
-                          <div className="p-4 bg-blue-900/40 rounded-xl border border-blue-500/20">
-                            <span className="text-[10px] text-blue-200/80 font-black block uppercase tracking-wider mb-1">MAX XP BONUS</span>
-                            <span className="text-base font-black text-blue-400">+{totalWeeklyCount * 27} XP</span>
+                          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80">
+                            <span className="text-[10px] text-slate-500 font-black block uppercase tracking-wider mb-1">MAX XP BONUS</span>
+                            <span className="text-base font-black text-emerald-600">+{totalWeeklyCount * 27} XP</span>
                           </div>
                         </div>
                       </div>

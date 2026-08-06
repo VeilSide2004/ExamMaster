@@ -58,28 +58,22 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {/* Pinned Own Rank Header Banner (Deep Navy Gradient) */}
+        {/* Pinned Own Rank Header Banner */}
         {userRank && (
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-950 via-indigo-950 to-blue-900 p-6 text-white shadow-lg">
-            <div className="absolute inset-0 opacity-20 pointer-events-none">
-              <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path d="M0,50 Q25,30 50,50 T100,50 L100,100 L0,100 Z" fill="white" />
-              </svg>
-            </div>
-
+          <div className="relative overflow-hidden rounded-2xl bg-white border-2 border-blue-100 p-6 text-slate-900 shadow-xs">
             <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-amber-400 text-slate-950 font-black text-2xl flex items-center justify-center shadow-md">
                   #{userRank.rank}
                 </div>
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-200/80 block">YOUR OFFICIAL RANKING</span>
-                  <h3 className="text-lg font-black text-white">{userRank.name}</h3>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 block">YOUR OFFICIAL RANKING</span>
+                  <h3 className="text-lg font-black text-slate-900">{userRank.name}</h3>
                 </div>
               </div>
 
-              <div className="px-6 py-3 bg-white/10 backdrop-blur-md rounded-2xl font-black text-xl flex items-center gap-2 border border-white/15">
-                <Star className="w-6 h-6 text-amber-400 fill-amber-400" />
+              <div className="px-6 py-3 bg-blue-50 text-blue-700 rounded-2xl font-black text-xl flex items-center gap-2 border border-blue-200/80">
+                <Star className="w-6 h-6 text-amber-500 fill-amber-500" />
                 {userRank.xp_total?.toLocaleString()} XP
               </div>
             </div>
