@@ -19,7 +19,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`light ${plusJakartaSans.variable}`}>
-      <body className="bg-slate-50 dark:bg-black text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');localStorage.setItem('exammaster_theme','light');localStorage.setItem('exammaster_theme_preference','light');}catch(e){}})()`,
+          }}
+        />
+      </head>
+      <body className="bg-slate-50 text-slate-900 min-h-screen font-sans antialiased">
         <HeaderProvider>
           <GlobalHeader />
           {children}

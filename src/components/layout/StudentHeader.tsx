@@ -192,8 +192,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               </button>
             </div>
 
-            <div className="hidden sm:block"><ThemeToggle /></div>
-
             <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
 
             {/* Profile User Dropdown Pill */}
