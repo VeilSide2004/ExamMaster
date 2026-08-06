@@ -267,3 +267,116 @@ body, div, header, nav, main, section, article, button, input, select, textarea,
 .rounded-3xl {
   border-radius: 1rem !important;
 }
+
+/* ==========================================================================
+   DYNAMIC LIGHT-MODE COLOR PALETTES (SELECTABLE VIA PROFILE MENU)
+   ========================================================================== */
+
+/* --- PALETTE 2: EMERALD ACADEMY & GOLD --- */
+html[data-color-palette="emerald"],
+html[data-color-palette="emerald"] body {
+  background-color: #F8FAF8 !important;
+}
+
+html[data-color-palette="emerald"] .bg-blue-600,
+html[data-color-palette="emerald"] .bg-indigo-600,
+html[data-color-palette="emerald"] .bg-blue-500 {
+  background-color: #059669 !important;
+}
+
+html[data-color-palette="emerald"] .hover\:bg-blue-700:hover,
+html[data-color-palette="emerald"] .hover\:bg-indigo-700:hover,
+html[data-color-palette="emerald"] .hover\:bg-blue-600:hover {
+  background-color: #047857 !important;
+}
+
+html[data-color-palette="emerald"] .text-blue-600,
+html[data-color-palette="emerald"] .text-indigo-600,
+html[data-color-palette="emerald"] .text-blue-500 {
+  color: #059669 !important;
+}
+
+html[data-color-palette="emerald"] .text-blue-700,
+html[data-color-palette="emerald"] .text-indigo-700 {
+  color: #047857 !important;
+}
+
+html[data-color-palette="emerald"] .border-blue-600,
+html[data-color-palette="emerald"] .border-indigo-600,
+html[data-color-palette="emerald"] .border-blue-500 {
+  border-color: #059669 !important;
+}
+
+html[data-color-palette="emerald"] .border-blue-200,
+html[data-color-palette="emerald"] .border-indigo-200 {
+  border-color: #A7F3D0 !important;
+}
+
+html[data-color-palette="emerald"] .bg-blue-50,
+html[data-color-palette="emerald"] .bg-indigo-50 {
+  background-color: #ECFDF5 !important;
+}
+
+html[data-color-palette="emerald"] .bg-blue-100,
+html[data-color-palette="emerald"] .bg-indigo-100 {
+  background-color: #D1FAE5 !important;
+}
+
+html[data-color-palette="emerald"] [class*="shadow-blue-"] {
+  box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.22) !important;
+}
+
+/* --- PALETTE 3: ROYAL AMETHYST & CORAL --- */
+html[data-color-palette="amethyst"],
+html[data-color-palette="amethyst"] body {
+  background-color: #FAF5FF !important;
+}
+
+html[data-color-palette="amethyst"] .bg-blue-600,
+html[data-color-palette="amethyst"] .bg-indigo-600,
+html[data-color-palette="amethyst"] .bg-blue-500 {
+  background-color: #7C3AED !important;
+}
+
+html[data-color-palette="amethyst"] .hover\:bg-blue-700:hover,
+html[data-color-palette="amethyst"] .hover\:bg-indigo-700:hover,
+html[data-color-palette="amethyst"] .hover\:bg-blue-600:hover {
+  background-color: #6D28D9 !important;
+}
+
+html[data-color-palette="amethyst"] .text-blue-600,
+html[data-color-palette="amethyst"] .text-indigo-600,
+html[data-color-palette="amethyst"] .text-blue-500 {
+  color: #7C3AED !important;
+}
+
+html[data-color-palette="amethyst"] .text-blue-700,
+html[data-color-palette="amethyst"] .text-indigo-700 {
+  color: #6D28D9 !important;
+}
+
+html[data-color-palette="amethyst"] .border-blue-600,
+html[data-color-palette="amethyst"] .border-indigo-600,
+html[data-color-palette="amethyst"] .border-blue-500 {
+  border-color: #7C3AED !important;
+}
+
+html[data-color-palette="amethyst"] .border-blue-200,
+html[data-color-palette="amethyst"] .border-indigo-200 {
+  border-color: #DDD6FE !important;
+}
+
+html[data-color-palette="amethyst"] .bg-blue-50,
+html[data-color-palette="amethyst"] .bg-indigo-50 {
+  background-color: #F5F3FF !important;
+}
+
+html[data-color-palette="amethyst"] .bg-blue-100,
+html[data-color-palette="amethyst"] .bg-indigo-100 {
+  background-color: #EDE9FE !important;
+}
+
+html[data-color-palette="amethyst"] [class*="shadow-blue-"] {
+  box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.22) !important;
+}
+
