@@ -211,7 +211,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
               {/* Dropdown — always mounted, animated via CSS */}
               <div
-                className={`absolute right-0 mt-2 w-52 bg-white/80 backdrop-blur-xl backdrop-saturate-150 border border-slate-200/80 rounded-2xl shadow-2xl py-1 z-50
+                className={`absolute right-0 mt-2 w-52 bg-white/90 backdrop-blur-md backdrop-saturate-150 border border-slate-200/90 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] py-1 z-50
                   transition-all duration-200 ease-out origin-top-right
                   ${
                     showProfileMenu
