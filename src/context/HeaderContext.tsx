@@ -17,8 +17,12 @@ const HeaderContext = createContext<HeaderContextType>({
 });
 
 export const HeaderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [onBack, setOnBack] = useState<(() => void) | undefined>(undefined);
+  const [onBack, setOnBackState] = useState<(() => void) | undefined>(undefined);
   const [hideNav, setHideNav] = useState<boolean>(false);
+
+  const setOnBack = (fn: (() => void) | undefined) => {
+    setOnBackState(() => fn);
+  };
 
   return (
     <HeaderContext.Provider value={{ onBack, setOnBack, hideNav, setHideNav }}>

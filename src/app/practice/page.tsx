@@ -157,7 +157,7 @@ export default function PracticeSetsPage() {
 
   useEffect(() => {
     setHideNav(Boolean(activeSession));
-    setOnBack(currentLevel !== 'subjects' || Boolean(activeSession) ? () => handleHeaderBack() : undefined);
+    setOnBack(currentLevel !== 'subjects' || Boolean(activeSession) ? handleHeaderBack : undefined);
 
     return () => {
       setHideNav(false);
