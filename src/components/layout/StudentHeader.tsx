@@ -137,33 +137,51 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           </div>
 
           {/* Center: Centered Navigation Bar (Hidden when hideNav is true) */}
-          {!hideNav && (
-            <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full">
-              {navLinks.map((link) => {
-                const Icon = link.icon;
-                const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
-                
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    prefetch={true}
-                    onMouseEnter={() => {
-                      try { router.prefetch(link.href); } catch (e) {}
+          {/* Center Navigation Links — Desktop (Hidden on Mobile) */}
+          {!hideNav && (() => {
+            const activeIndex = navLinks.findIndex((link) =>
+              pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
+            );
+
+            return (
+              <nav className="relative hidden lg:flex items-center absolute left-1/2 -translate-x-1/2 h-full select-none">
+                {/* Animated Sliding Bottom Indicator Bar */}
+                {activeIndex !== -1 && (
+                  <div
+                    className="absolute bottom-0 h-[2.5px] bg-blue-600 dark:bg-blue-400 rounded-full shadow-xs transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                    style={{
+                      width: `${100 / navLinks.length}%`,
+                      left: `${(activeIndex * 100) / navLinks.length}%`,
                     }}
-                    className={`px-4 h-full text-xs font-bold flex items-center gap-2 transition-all relative border-b-2 ${
-                      isActive
-                        ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
-                        : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
-                    <span>{link.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          )}
+                  />
+                )}
+
+                {navLinks.map((link, index) => {
+                  const Icon = link.icon;
+                  const isActive = activeIndex === index;
+                  
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      prefetch={true}
+                      onMouseEnter={() => {
+                        try { router.prefetch(link.href); } catch (e) {}
+                      }}
+                      className={`px-4 h-full text-xs font-bold flex items-center justify-center gap-2 transition-colors duration-200 relative whitespace-nowrap ${
+                        isActive
+                          ? 'text-blue-600 dark:text-blue-400 font-black'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 transition-transform duration-200 ${isActive ? 'text-blue-600 dark:text-blue-400 scale-105' : 'text-slate-400'}`} />
+                      <span>{link.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            );
+          })()}
 
           {/* Far Right Actions */}
           <div className="flex items-center gap-2.5">
