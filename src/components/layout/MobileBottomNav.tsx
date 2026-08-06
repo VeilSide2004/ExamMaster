@@ -7,8 +7,8 @@ import { Home, HelpCircle, FileText, Trophy, Folder } from 'lucide-react';
 
 const tabs = [
   { label: 'Home',      href: '/dashboard',  icon: Home },
-  { label: 'Practice',  href: '/practice',   icon: HelpCircle },
-  { label: 'Tests',     href: '/mock-tests', icon: FileText,  isFab: true },
+  { label: 'Tests',     href: '/mock-tests', icon: FileText },
+  { label: 'Practice',  href: '/practice',   icon: HelpCircle, isFab: true },
   { label: 'Ranks',     href: '/leaderboard',icon: Trophy },
   { label: 'Resources', href: '/resources',  icon: Folder },
 ];
