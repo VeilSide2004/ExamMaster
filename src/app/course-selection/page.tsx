@@ -129,15 +129,26 @@ export default function CourseSelectionPage() {
           </div>
         )}
 
-        {/* Category Navigation Tabs */}
-        <div className="flex justify-center items-center gap-2 mb-8 bg-slate-100 dark:bg-slate-800/60 p-1.5 rounded-2xl max-w-md mx-auto">
+        {/* Category Navigation Tabs with Smooth Sliding Background Pill */}
+        <div className="relative flex justify-center items-center p-1.5 mb-8 bg-slate-100 rounded-2xl max-w-md mx-auto select-none">
+          {/* Animated Sliding Background Pill */}
+          <div
+            className={`absolute top-1.5 bottom-1.5 rounded-xl shadow-xs transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+              activeTab === 'all' ? 'bg-blue-600' : activeTab === 'competitive' ? 'bg-amber-500' : 'bg-emerald-600'
+            }`}
+            style={{
+              width: 'calc(33.333% - 4px)',
+              left: activeTab === 'all' ? '6px' : activeTab === 'competitive' ? 'calc(33.333% + 2px)' : 'calc(66.666% - 2px)',
+            }}
+          />
+
           <button
             type="button"
             onClick={() => setActiveTab('all')}
-            className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+            className={`relative z-10 flex-1 py-2 px-3 text-xs transition-colors duration-200 flex items-center justify-center gap-1.5 ${
               activeTab === 'all'
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'text-white font-black'
+                : 'text-slate-600 hover:text-slate-900 font-bold'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" /> All Track ({courses.length})
@@ -146,10 +157,10 @@ export default function CourseSelectionPage() {
           <button
             type="button"
             onClick={() => setActiveTab('competitive')}
-            className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+            className={`relative z-10 flex-1 py-2 px-3 text-xs transition-colors duration-200 flex items-center justify-center gap-1.5 ${
               activeTab === 'competitive'
-                ? 'bg-amber-500 text-white shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'text-white font-black'
+                : 'text-slate-600 hover:text-slate-900 font-bold'
             }`}
           >
             <Trophy className="w-3.5 h-3.5" /> Competitive ({competitiveCourses.length})
@@ -158,13 +169,13 @@ export default function CourseSelectionPage() {
           <button
             type="button"
             onClick={() => setActiveTab('school')}
-            className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+            className={`relative z-10 flex-1 py-2 px-3 text-xs transition-colors duration-200 flex items-center justify-center gap-1.5 ${
               activeTab === 'school'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'text-white font-black'
+                : 'text-slate-600 hover:text-slate-900 font-bold'
             }`}
           >
-            <GraduationCap className="w-3.5 h-3.5" /> School (Class 6-12) ({schoolCourses.length})
+            <GraduationCap className="w-3.5 h-3.5" /> School ({schoolCourses.length})
           </button>
         </div>
 

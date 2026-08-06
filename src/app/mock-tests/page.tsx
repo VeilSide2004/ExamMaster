@@ -57,34 +57,46 @@ export default function MockTestsListPage() {
             </p>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          {/* Filter Pills with Smooth Sliding Background Pill */}
+          <div className="relative flex items-center bg-white p-1 rounded-xl border border-slate-200/80 shadow-xs select-none">
+            {/* Animated Sliding Background Pill */}
+            <div
+              className="absolute top-1 bottom-1 rounded-lg bg-blue-600 shadow-xs transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              style={{
+                width: 'calc(33.333% - 3px)',
+                left: filterType === 'all' ? '4px' : filterType === 'full' ? 'calc(33.333% + 1.5px)' : 'calc(66.666% - 1px)',
+              }}
+            />
+
             <button
+              type="button"
               onClick={() => setFilterType('all')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              className={`relative z-10 px-3 py-1.5 text-xs transition-colors duration-200 flex-1 text-center ${
                 filterType === 'all'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'text-white font-black'
+                  : 'text-slate-600 hover:text-slate-900 font-bold'
               }`}
             >
               All Tests ({tests.length})
             </button>
             <button
+              type="button"
               onClick={() => setFilterType('full')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              className={`relative z-10 px-3 py-1.5 text-xs transition-colors duration-200 flex-1 text-center ${
                 filterType === 'full'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'text-white font-black'
+                  : 'text-slate-600 hover:text-slate-900 font-bold'
               }`}
             >
               Full-Length
             </button>
             <button
+              type="button"
               onClick={() => setFilterType('sectional')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              className={`relative z-10 px-3 py-1.5 text-xs transition-colors duration-200 flex-1 text-center ${
                 filterType === 'sectional'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'text-white font-black'
+                  : 'text-slate-600 hover:text-slate-900 font-bold'
               }`}
             >
               Sectional
