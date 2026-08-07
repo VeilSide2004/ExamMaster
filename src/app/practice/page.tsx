@@ -522,6 +522,7 @@ export default function PracticeSetsPage() {
   // Derive Subject & Topic questions
   const subjectQuestionMap: Record<string, any[]> = useMemo(() => {
     const map: Record<string, any[]> = {};
+    const primarySubject = (courseSubjects[0] || 'Physics').toLowerCase();
     courseSubjects.forEach((s) => {
       const sLower = s.toLowerCase();
       map[s] = questions.filter((q) => {
@@ -531,6 +532,7 @@ export default function PracticeSetsPage() {
         const firstPart = q.topic_tag.split('-')[0].trim().toLowerCase();
         if (firstPart === sLower) return true;
         if (q.subject && String(q.subject).toLowerCase() === sLower) return true;
+        if (!q.topic_tag.includes('-') && sLower === primarySubject) return true;
         return false;
       });
     });
@@ -540,6 +542,7 @@ export default function PracticeSetsPage() {
   const activeSubjectQuestions = useMemo(() => {
     if (!selectedSubject) return [];
     const sLower = selectedSubject.toLowerCase();
+    const primarySubject = (courseSubjects[0] || 'Physics').toLowerCase();
     return questions.filter((q) => {
       if (!q.topic_tag) return false;
       const tagLower = q.topic_tag.toLowerCase();
@@ -547,9 +550,10 @@ export default function PracticeSetsPage() {
       const firstPart = q.topic_tag.split('-')[0].trim().toLowerCase();
       if (firstPart === sLower) return true;
       if (q.subject && String(q.subject).toLowerCase() === sLower) return true;
+      if (!q.topic_tag.includes('-') && sLower === primarySubject) return true;
       return false;
     });
-  }, [selectedSubject, questions]);
+  }, [selectedSubject, courseSubjects, questions]);
 
   const topicModulesMap: Record<string, any[]> = useMemo(() => {
     const map: Record<string, any[]> = {};
