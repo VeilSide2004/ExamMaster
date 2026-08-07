@@ -20,6 +20,7 @@ import {
   Brain,
   ShieldCheck,
   ChevronLeft,
+  ChevronDown,
   PlayCircle,
   Calendar,
   RotateCcw,
@@ -60,6 +61,7 @@ export default function PracticeSetsPage() {
   const [userAnswers, setUserAnswers] = useState<Record<string, number | null>>({});
   const [userTextAnswers, setUserTextAnswers] = useState<Record<string, string>>({});
   const [checkedQuestions, setCheckedQuestions] = useState<Record<string, boolean>>({});
+  const [openDetailedExplanation, setOpenDetailedExplanation] = useState<Record<string, boolean>>({});
 
   // Timer State (Stopwatch for Practice, Countdown for Quiz)
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -728,10 +730,46 @@ export default function PracticeSetsPage() {
                               );
                             })}
                           </div>
-                          {q.explanation && (
-                            <p className="text-[11px] text-slate-500 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-lg border border-slate-200/60 dark:border-slate-800">
-                              <strong>Solution:</strong> {q.explanation}
-                            </p>
+                          {(q.explanation || q.detailed_explanation) && (
+                            <div className="text-[11px] text-slate-700 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-lg border border-slate-200/60 dark:border-slate-800 space-y-2">
+                              <p>
+                                <strong>Normal Explanation:</strong> {q.explanation || 'Refer to textbook model answer.'}
+                              </p>
+                              {q.detailed_explanation && (
+                                <div className="border-t border-slate-200 dark:border-slate-700 pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setOpenDetailedExplanation((prev) => ({
+                                        ...prev,
+                                        [q._id]: !prev[q._id],
+                                      }))
+                                    }
+                                    className="text-xs font-bold text-brand-800 dark:text-blue-400 flex items-center justify-between w-full hover:underline"
+                                  >
+                                    <span>📘 View Detailed Step-by-Step Explanation</span>
+                                    <ChevronDown
+                                      className={`w-3.5 h-3.5 transition-transform duration-300 ${
+                                        openDetailedExplanation[q._id] ? 'rotate-180' : 'rotate-0'
+                                      }`}
+                                    />
+                                  </button>
+                                  <div
+                                    className={`grid transition-all duration-300 ease-in-out ${
+                                      openDetailedExplanation[q._id]
+                                        ? 'grid-rows-[1fr] opacity-100 mt-2'
+                                        : 'grid-rows-[0fr] opacity-0 mt-0 overflow-hidden'
+                                    }`}
+                                  >
+                                    <div className="overflow-hidden">
+                                      <p className="text-slate-600 dark:text-slate-300 font-mono text-[11px] whitespace-pre-line pt-1">
+                                        {q.detailed_explanation}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       );
@@ -843,13 +881,57 @@ export default function PracticeSetsPage() {
 
                       {/* Solution / Model Answer Reveal */}
                       {activeSession === 'practice' && checkedQuestions[currentQ._id] && (
-                        <div className="mt-5 p-4 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 rounded-xl space-y-1 text-xs">
-                          <span className="font-extrabold text-emerald-950 dark:text-emerald-300 flex items-center gap-1.5">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Model Answer & Official Key
-                          </span>
-                          <p className="text-emerald-900 dark:text-emerald-200 leading-relaxed whitespace-pre-line font-medium">
-                            {currentQ.sample_answer || currentQ.explanation || (currentQ.correct_option !== undefined ? `Correct option is ${String.fromCharCode(65 + currentQ.correct_option)}.` : 'Refer to textbook model answer.')}
-                          </p>
+                        <div className="mt-5 p-4 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 rounded-xl space-y-3 text-xs shadow-xs">
+                          <div>
+                            <span className="font-extrabold text-emerald-950 dark:text-emerald-300 flex items-center gap-1.5 mb-1">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> Solution & Normal Explanation
+                            </span>
+                            <p className="text-emerald-900 dark:text-emerald-200 leading-relaxed whitespace-pre-line font-medium text-xs">
+                              {currentQ.explanation || currentQ.sample_answer || (currentQ.correct_option !== undefined ? `Correct option is ${String.fromCharCode(65 + currentQ.correct_option)}.` : 'Refer to textbook model answer.')}
+                            </p>
+                          </div>
+
+                          <div className="border-t border-emerald-200/80 dark:border-emerald-800/60 pt-2.5">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setOpenDetailedExplanation((prev) => ({
+                                  ...prev,
+                                  [currentQ._id]: !prev[currentQ._id],
+                                }))
+                              }
+                              className="w-full py-2 px-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold flex items-center justify-between transition-all duration-200 shadow-xs"
+                            >
+                              <span className="flex items-center gap-2 text-brand-800 dark:text-blue-400 font-extrabold">
+                                <FileText className="w-4 h-4 text-brand-600 dark:text-blue-400" />
+                                View Detailed Step-by-Step Explanation
+                              </span>
+                              <ChevronDown
+                                className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${
+                                  openDetailedExplanation[currentQ._id] ? 'rotate-180' : 'rotate-0'
+                                }`}
+                              />
+                            </button>
+
+                            <div
+                              className={`grid transition-all duration-300 ease-in-out ${
+                                openDetailedExplanation[currentQ._id]
+                                  ? 'grid-rows-[1fr] opacity-100 mt-2.5'
+                                  : 'grid-rows-[0fr] opacity-0 mt-0 overflow-hidden'
+                              }`}
+                            >
+                              <div className="overflow-hidden">
+                                <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg space-y-2 text-xs">
+                                  <span className="font-extrabold text-slate-900 dark:text-white block text-xs">
+                                    📘 Detailed Step-by-Step Derivation & Solution:
+                                  </span>
+                                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-mono text-[11px]">
+                                    {currentQ.detailed_explanation || currentQ.explanation || 'No extra detailed breakdown provided for this question.'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -857,19 +939,20 @@ export default function PracticeSetsPage() {
                     {/* Bottom Action Controls */}
                     <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-4 mt-6">
                       {activeSession === 'practice' ? (
-                        <button
-                          type="button"
-                          disabled={
-                            (!currentQ.question_type || currentQ.question_type === 'MCQ')
-                              ? userAnswers[currentQ._id] === undefined || userAnswers[currentQ._id] === null
-                              : false
-                          }
-                          onClick={() => handleCheckSingleQuestion(currentQ._id)}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-40 flex items-center gap-1.5 shadow-xs"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          {checkedQuestions[currentQ._id] ? 'Re-check / View Model Answer' : 'Check / Reveal Model Answer'}
-                        </button>
+                        userAnswers[currentQ._id] !== undefined && userAnswers[currentQ._id] !== null ? (
+                          <button
+                            type="button"
+                            onClick={() => handleCheckSingleQuestion(currentQ._id)}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            {checkedQuestions[currentQ._id] ? 'Submitted (Click to Re-submit)' : 'Submit Question'}
+                          </button>
+                        ) : (
+                          <div className="text-xs text-slate-400 font-medium italic">
+                            Select an option above to submit this question.
+                          </div>
+                        )
                       ) : (
                         <div />
                       )}
@@ -933,6 +1016,16 @@ export default function PracticeSetsPage() {
                         );
                       })}
                     </div>
+
+                    {!submittedResult && (
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmModal(true)}
+                        className="w-full mt-4 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors shadow-xs flex items-center justify-center gap-1.5"
+                      >
+                        <ShieldCheck className="w-4 h-4" /> Finish & Submit Practice Set
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
