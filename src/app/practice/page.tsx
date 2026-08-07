@@ -571,15 +571,18 @@ export default function PracticeSetsPage() {
     if (!q || !targetSubject) return false;
 
     const sLower = targetSubject.toLowerCase().trim();
-    const qSubLower = (q.subject || '').toString().toLowerCase().trim();
+    const qSub = (q.subject || '').toString().trim();
+    const qSubLower = qSub.toLowerCase();
     const tagLower = (q.topic_tag || '').toString().toLowerCase().trim();
 
-    // 1. Direct match on q.subject field (e.g. q.subject === "Physics" or "Mathematics")
-    if (qSubLower && (qSubLower === sLower || qSubLower.includes(sLower) || sLower.includes(qSubLower))) {
-      return true;
+    // 1. Direct match on q.subject if valid string (not numeric like "1")
+    if (qSubLower && !/^\d+$/.test(qSubLower)) {
+      if (qSubLower === sLower || qSubLower.includes(sLower) || sLower.includes(qSubLower)) {
+        return true;
+      }
     }
 
-    // 2. Exact or Prefix match on q.topic_tag (e.g. "Physics - Laws of Motion", "Physics", etc.)
+    // 2. Exact or Prefix match on q.topic_tag
     if (tagLower) {
       if (tagLower === sLower) return true;
       if (tagLower.startsWith(sLower + ' ') || tagLower.startsWith(sLower + '-') || tagLower.startsWith(sLower + ':')) return true;
@@ -590,17 +593,44 @@ export default function PracticeSetsPage() {
       if (tagLower.includes(sLower)) return true;
     }
 
-    // 3. Fallback for unclassified questions with topic_tag but no subject field:
-    // If no other course subject claims this topic_tag, assign to primary course subject
-    if (!qSubLower && tagLower) {
-      const claimedByOther = (allSubjects || []).some((otherSub) => {
-        const otherLower = otherSub.toLowerCase().trim();
-        if (otherLower === sLower) return false;
-        return tagLower.includes(otherLower) || tagLower.startsWith(otherLower);
-      });
-      if (!claimedByOther && allSubjects.length > 0 && allSubjects[0].toLowerCase().trim() === sLower) {
-        return true;
-      }
+    // 3. Smart Topic Keyword Classification
+    const physicsKeywords = ['physics', 'mechanics', 'kinematics', 'dynamics', 'magnetism', 'gravitation', 'optics', 'waves', 'thermodynamics', 'electricity', 'electrostatics', 'work', 'energy', 'rotational', 'momentum', 'fluid', 'oscillation', 'sound', 'light', 'atomic', 'nuclear', 'semiconductor'];
+    const chemistryKeywords = ['chemistry', 'chemical', 'acid', 'base', 'reaction', 'organic', 'inorganic', 'physical chemistry', 'alkane', 'alkene', 'thermodynamics', 'thermochemistry', 'electrochemistry', 'environmental chemistry', 'periodic', 'bonding', 'solution', 'equilibrium', 'mole', 'gas', 'solid state'];
+    const mathKeywords = ['math', 'mathematics', 'calculus', 'algebra', 'vector', 'matrix', 'matrices', 'determinant', 'integral', 'integration', 'derivative', 'differentiation', 'trigonometry', 'geometry', 'probability', 'statistics', 'permutation', 'combination', 'complex number', 'relation', 'function'];
+    const biologyKeywords = ['biology', 'botany', 'zoology', 'cell', 'genetics', 'evolution', 'anatomy', 'physiology', 'plant', 'animal', 'ecology', 'reproduction', 'biotechnology', 'organism'];
+
+    if (sLower.includes('physics')) {
+      if (physicsKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+    }
+    if (sLower.includes('chem')) {
+      if (chemistryKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+    }
+    if (sLower.includes('math')) {
+      if (mathKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+    }
+    if (sLower.includes('bio')) {
+      if (biologyKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+    }
+
+    // 4. Fallback for unclassified questions (e.g. q.subject is numeric or empty):
+    // Assign to the primary course subject (Physics) if no other valid subject explicitly claims it!
+    const isClaimedByAnother = (allSubjects || []).some((otherSub) => {
+      const oLower = otherSub.toLowerCase().trim();
+      if (oLower === sLower) return false;
+
+      if (qSubLower && !/^\d+$/.test(qSubLower) && qSubLower === oLower) return true;
+      if (tagLower && (tagLower.includes(oLower) || tagLower.startsWith(oLower))) return true;
+
+      if (oLower.includes('chem') && chemistryKeywords.some((k) => tagLower.includes(k))) return true;
+      if (oLower.includes('math') && mathKeywords.some((k) => tagLower.includes(k))) return true;
+      if (oLower.includes('bio') && biologyKeywords.some((k) => tagLower.includes(k))) return true;
+      if (oLower.includes('physics') && physicsKeywords.some((k) => tagLower.includes(k))) return true;
+
+      return false;
+    });
+
+    if (!isClaimedByAnother && allSubjects.length > 0 && allSubjects[0].toLowerCase().trim() === sLower) {
+      return true;
     }
 
     return false;

@@ -42,18 +42,29 @@ export async function GET(req: Request) {
         );
       });
 
+      const isValidSubjectName = (str: string): boolean => {
+        if (!str || typeof str !== 'string') return false;
+        const cleaned = str.trim();
+        if (!cleaned) return false;
+        if (/^\d+$/.test(cleaned)) return false;
+        if (/^(?:q(?:uestion)?[\s\.\:]*)?\d+$/i.test(cleaned)) return false;
+        return true;
+      };
+
       const subjectSet = new Set<string>();
       if (courseObj?.subjects && Array.isArray(courseObj.subjects)) {
         courseObj.subjects.forEach((s: string) => {
-          if (s && s.trim()) subjectSet.add(s.trim());
+          if (isValidSubjectName(s)) subjectSet.add(s.trim());
         });
       }
       questions.forEach((q: any) => {
-        if (q.subject && typeof q.subject === 'string' && q.subject.trim()) {
+        if (q.subject && isValidSubjectName(q.subject)) {
           subjectSet.add(q.subject.trim());
         } else if (q.topic_tag && typeof q.topic_tag === 'string') {
-          const sName = q.topic_tag.includes('-') ? q.topic_tag.split('-')[0].trim() : '';
-          if (sName) subjectSet.add(sName);
+          const parts = q.topic_tag.split('-').map((p: string) => p.trim());
+          if (parts.length > 1 && isValidSubjectName(parts[0])) {
+            subjectSet.add(parts[0]);
+          }
         }
       });
       if (subjectSet.size === 0) {
@@ -134,18 +145,29 @@ export async function GET(req: Request) {
       );
     });
 
+    const isValidSubjectName = (str: string): boolean => {
+      if (!str || typeof str !== 'string') return false;
+      const cleaned = str.trim();
+      if (!cleaned) return false;
+      if (/^\d+$/.test(cleaned)) return false;
+      if (/^(?:q(?:uestion)?[\s\.\:]*)?\d+$/i.test(cleaned)) return false;
+      return true;
+    };
+
     const subjectSet = new Set<string>();
     if (courseObj?.subjects && Array.isArray(courseObj.subjects)) {
       courseObj.subjects.forEach((s: string) => {
-        if (s && s.trim()) subjectSet.add(s.trim());
+        if (isValidSubjectName(s)) subjectSet.add(s.trim());
       });
     }
     questions.forEach((q: any) => {
-      if (q.subject && typeof q.subject === 'string' && q.subject.trim()) {
+      if (q.subject && isValidSubjectName(q.subject)) {
         subjectSet.add(q.subject.trim());
       } else if (q.topic_tag && typeof q.topic_tag === 'string') {
-        const sName = q.topic_tag.includes('-') ? q.topic_tag.split('-')[0].trim() : '';
-        if (sName) subjectSet.add(sName);
+        const parts = q.topic_tag.split('-').map((p: string) => p.trim());
+        if (parts.length > 1 && isValidSubjectName(parts[0])) {
+          subjectSet.add(parts[0]);
+        }
       }
     });
     if (subjectSet.size === 0) {
