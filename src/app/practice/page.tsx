@@ -620,25 +620,60 @@ export default function PracticeSetsPage() {
     return questions.filter((q) => doesQuestionMatchSubject(q, selectedSubject, courseSubjects));
   }, [selectedSubject, courseSubjects, questions]);
 
+  const getCleanTopicTitle = (rawTopicTag: string, currentSubject: string): string => {
+    if (!rawTopicTag || typeof rawTopicTag !== 'string') return 'General Practice Set';
+
+    let tag = rawTopicTag.trim();
+
+    // 1. Remove subject prefix if present (e.g. "Physics - Kinematics" -> "Kinematics")
+    if (currentSubject && tag.toLowerCase().startsWith(currentSubject.toLowerCase())) {
+      const remaining = tag.slice(currentSubject.length).trim();
+      if (remaining.startsWith('-') || remaining.startsWith(':') || remaining.startsWith('.')) {
+        tag = remaining.slice(1).trim();
+      }
+    }
+
+    // 2. Strip leading question numbers/prefixes (e.g. "80 - Environmental Chemistry" -> "Environmental Chemistry", "Q1. Kinematics" -> "Kinematics", "1 - Vectors" -> "Vectors")
+    tag = tag.replace(/^(?:q(?:uestion)?[\s\.\:]*)?\d+[\s\.\:\-]+\s*/i, '').trim();
+
+    // 3. Strip any residual leading hyphens/colons
+    tag = tag.replace(/^[\-\:]+\s*/, '').trim();
+
+    // 4. If tag is empty or purely numeric (e.g. "80" or "1"), fallback to General Practice Set
+    if (!tag || /^\d+$/.test(tag)) {
+      return 'General Practice Set';
+    }
+
+    return tag.charAt(0).toUpperCase() + tag.slice(1);
+  };
+
+  const getNormalizedOptions = (q: any): string[] => {
+    if (!q) return [];
+    const isMcq = !q.question_type || q.question_type === 'MCQ';
+    let opts = Array.isArray(q.options)
+      ? q.options.map((o: any) => String(o || '').trim()).filter(Boolean)
+      : [];
+
+    if (isMcq || opts.length > 0) {
+      if (opts.length === 0) {
+        opts = ['Option A', 'Option B', 'Option C', 'Option D'];
+      } else if (opts.length === 1) {
+        opts.push('Option B', 'Option C', 'Option D');
+      } else if (opts.length === 2) {
+        opts.push('Option C', 'Option D');
+      } else if (opts.length === 3) {
+        opts.push('Option D');
+      } else if (opts.length > 4) {
+        opts = opts.slice(0, 4);
+      }
+    }
+    return opts;
+  };
+
   const topicModulesMap: Record<string, any[]> = useMemo(() => {
     const map: Record<string, any[]> = {};
     activeSubjectQuestions.forEach((q) => {
-      let tName = 'General Practice Set';
-      if (q.topic_tag && typeof q.topic_tag === 'string' && q.topic_tag.trim()) {
-        const parts = q.topic_tag.split('-').map((p: string) => p.trim());
-        if (parts.length > 1) {
-          if (parts[0].toLowerCase() === selectedSubject.toLowerCase()) {
-            tName = parts.slice(1).join(' - ');
-          } else {
-            tName = q.topic_tag.trim();
-          }
-        } else {
-          tName = parts[0];
-        }
-      } else if (q.topic) {
-        tName = q.topic;
-      }
-      if (!tName) tName = 'General Practice Set';
+      const tName = getCleanTopicTitle(q.topic_tag || q.topic, selectedSubject);
       if (!map[tName]) map[tName] = [];
       map[tName].push(q);
     });
@@ -916,10 +951,10 @@ export default function PracticeSetsPage() {
                         {currentQ.question_text}
                       </h2>
 
-                      {Array.isArray(currentQ?.options) && currentQ.options.length > 0 ? (
+                      {getNormalizedOptions(currentQ).length > 0 ? (
                         /* MCQ Options Grid */
                         <div className="space-y-3">
-                          {currentQ.options.map((opt: string, optIdx: number) => {
+                          {getNormalizedOptions(currentQ).map((opt: string, optIdx: number) => {
                             const isSelected = userAnswers[currentQ._id] === optIdx;
                             const isChecked = activeSession === 'practice' && checkedQuestions[currentQ._id];
                             const isCorrect = optIdx === currentQ.correct_option;
