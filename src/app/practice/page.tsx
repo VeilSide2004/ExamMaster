@@ -62,6 +62,7 @@ export default function PracticeSetsPage() {
   const [userTextAnswers, setUserTextAnswers] = useState<Record<string, string>>({});
   const [checkedQuestions, setCheckedQuestions] = useState<Record<string, boolean>>({});
   const [openDetailedExplanation, setOpenDetailedExplanation] = useState<Record<string, boolean>>({});
+  const [questionTimers, setQuestionTimers] = useState<Record<string, number>>({});
 
   // Timer State (Stopwatch for Practice, Countdown for Quiz)
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -122,7 +123,7 @@ export default function PracticeSetsPage() {
     fetchQuestions();
   }, []);
 
-  // Timer Effect
+  // Timer Effect (Global Session Timer + Per-Question Timer for Practice Mode)
   useEffect(() => {
     if (!activeSession || submittedResult) return;
 
@@ -136,13 +137,24 @@ export default function PracticeSetsPage() {
           }
           return prev - 1;
         } else {
-          return prev + 1; // Practice Mode forward stopwatch
+          return prev + 1; // Practice Mode forward total stopwatch
         }
       });
+
+      const activeQ = sessionQuestions[currentIdx];
+      if (activeSession === 'practice' && activeQ?._id) {
+        const qId = activeQ._id;
+        if (!checkedQuestions[qId]) {
+          setQuestionTimers((prev) => ({
+            ...prev,
+            [qId]: (prev[qId] || 0) + 1,
+          }));
+        }
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeSession, submittedResult]);
+  }, [activeSession, submittedResult, currentIdx, sessionQuestions, checkedQuestions]);
 
   // Signal to MobileBottomNav to hide itself during active sessions
   useEffect(() => {
@@ -404,6 +416,7 @@ export default function PracticeSetsPage() {
     setCurrentIdx(0);
     setUserAnswers({});
     setCheckedQuestions({});
+    setQuestionTimers({});
     setSubmittedResult(null);
 
     if (mode === 'quiz') {
@@ -801,9 +814,30 @@ export default function PracticeSetsPage() {
                           </span>
                         </div>
 
-                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                          {selectedTopic || selectedSubject}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {activeSession === 'practice' && (
+                            <span
+                              className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 border transition-all ${
+                                checkedQuestions[currentQ._id]
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800'
+                                  : 'bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800'
+                              }`}
+                              title={checkedQuestions[currentQ._id] ? 'Question Timer Stopped (Submitted)' : 'Question Timer Running'}
+                            >
+                              <Clock className="w-3.5 h-3.5 shrink-0" />
+                              {formatTime(questionTimers[currentQ._id] || 0)}
+                              {checkedQuestions[currentQ._id] && (
+                                <span className="text-[9px] px-1 bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100 rounded uppercase font-black">
+                                  Stopped
+                                </span>
+                              )}
+                            </span>
+                          )}
+
+                          <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            {selectedTopic || selectedSubject}
+                          </span>
+                        </div>
                       </div>
 
                       <h2 className="text-base font-extrabold text-slate-900 dark:text-white mb-6 leading-relaxed">
