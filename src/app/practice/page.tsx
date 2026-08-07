@@ -250,17 +250,6 @@ export default function PracticeSetsPage() {
     return arr;
   };
 
-  const hasCourseWeeklyDpp = useMemo(() => {
-    if (!publishedWeeklyDpp) return false;
-    if (Array.isArray(publishedWeeklyDpp.questions) && publishedWeeklyDpp.questions.length > 0) {
-      return true;
-    }
-    if (Array.isArray(publishedWeeklyDpp.question_ids) && publishedWeeklyDpp.question_ids.length > 0) {
-      return true;
-    }
-    return false;
-  }, [publishedWeeklyDpp]);
-
   const getWeeklyQuestions = () => {
     if (publishedWeeklyDpp) {
       if (Array.isArray(publishedWeeklyDpp.questions) && publishedWeeklyDpp.questions.length > 0) {
@@ -276,14 +265,78 @@ export default function PracticeSetsPage() {
         if (qList.length > 0) return qList;
       }
     }
-    return [];
+    return questions || [];
   };
 
-  // Smart 10-Question Selection Algorithm
-  // 1. Capped at 10 questions at max per session
-  // 2. Prioritizes questions the user answered INCORRECTLY in earlier sets
-  // 3. Fills remaining slots with fresh UNATTEMPTED questions (shuffled randomly)
-  // 4. Applies across every course, subject, and topic
+  const hasCourseWeeklyDpp = useMemo(() => {
+    const rawWeeklyQs = getWeeklyQuestions();
+    return rawWeeklyQs.length > 0;
+  }, [publishedWeeklyDpp, questions]);
+
+  // Weekly DPP Smart Shuffling Algorithm (Weekly Monday Reshuffle)
+  // 1. Shuffles from questions belonging to the enrolled course.
+  // 2. Priority Order:
+  //    a) Questions student got WRONG previously (repeat for mastery & correction)
+  //    b) Questions student got CORRECT & UNATTEMPTED questions (repeat/fill remaining up to 10)
+  // 3. Seeded by (weekNumber + year * 100) so questions stay fixed Mon 00:00 to Sun 23:59:59
+  // 4. Automatically reshuffles every Monday at 00:00:00 when week number changes!
+  const getCourseWeeklyDPPSet = (candidateQs: any[], seed: number): any[] => {
+    if (!candidateQs || candidateQs.length === 0) return [];
+
+    const questionAttemptMap: Record<string, boolean> = {};
+
+    const sortedAttempts = [...userAttempts].sort(
+      (a, b) => new Date(a.created_at || a.started_at || 0).getTime() - new Date(b.created_at || b.started_at || 0).getTime()
+    );
+
+    sortedAttempts.forEach((att) => {
+      if (Array.isArray(att.responses)) {
+        att.responses.forEach((resp: any) => {
+          if (resp.question_id) {
+            questionAttemptMap[String(resp.question_id)] = Boolean(resp.is_correct);
+          }
+        });
+      }
+    });
+
+    const wrongQs = candidateQs.filter((q) => questionAttemptMap[String(q._id)] === false);
+    const unattemptedQs = candidateQs.filter((q) => questionAttemptMap[String(q._id)] === undefined);
+    const correctQs = candidateQs.filter((q) => questionAttemptMap[String(q._id)] === true);
+
+    const seededShuffle = (arr: any[], customSeed: number) => {
+      const copy = [...arr];
+      let m = copy.length, t, i;
+      let s = customSeed;
+      while (m) {
+        s = (s * 9301 + 49297) % 233280;
+        i = Math.floor((s / 233280) * m--);
+        t = copy[m];
+        copy[m] = copy[i];
+        copy[i] = t;
+      }
+      return copy;
+    };
+
+    const orderedPool = [
+      ...seededShuffle(wrongQs, seed),
+      ...seededShuffle(correctQs, seed + 100),
+      ...seededShuffle(unattemptedQs, seed + 200),
+    ];
+
+    const result: any[] = [];
+    const seenIds = new Set<string>();
+    for (const q of orderedPool) {
+      const qId = String(q._id);
+      if (!seenIds.has(qId)) {
+        seenIds.add(qId);
+        result.push(q);
+      }
+    }
+
+    return result.slice(0, 10);
+  };
+
+  // Smart 10-Question Selection Algorithm for Practice Sets
   const getSmartPracticeSet = (rawCandidateQs: any[]): any[] => {
     if (!rawCandidateQs || rawCandidateQs.length === 0) return [];
 
@@ -346,19 +399,19 @@ export default function PracticeSetsPage() {
   const handleOpenWeeklyChallenge = () => {
     const rawWeeklyQs = getWeeklyQuestions();
     if (rawWeeklyQs.length === 0) {
-      alert('No questions uploaded for Weekly DPP Test yet.');
+      alert('Weekly DPP for your course track is coming soon. Please check back shortly!');
       return;
     }
 
-    // Deterministically shuffle with seed = weekNumber + year * 100 (never reshuffles until next Monday)
+    // Deterministically shuffle with seed = weekNumber + year * 100 (never reshuffles until next Monday at 00:00)
     const seed = getWeekNumber() + new Date().getFullYear() * 100;
-    const smartSet = shuffleArrayWithSeed(rawWeeklyQs, seed).slice(0, 10);
-    setSessionQuestions(smartSet);
+    const smartWeeklySet = getCourseWeeklyDPPSet(rawWeeklyQs, seed);
+    setSessionQuestions(smartWeeklySet);
 
-    const testTitle = publishedWeeklyDpp?.title || `${getCurrentWeekLabel()} - Weekly Test Paper`;
+    const testTitle = publishedWeeklyDpp?.title || `${getCurrentWeekLabel()} - Weekly DPP Paper`;
     const testDurationSecs = publishedWeeklyDpp?.duration_minutes
       ? publishedWeeklyDpp.duration_minutes * 60
-      : Math.max(300, smartSet.length * 60);
+      : Math.max(300, smartWeeklySet.length * 60);
 
     setIsWeeklySession(true);
     setSelectedSubject('Weekly DPP');
@@ -389,7 +442,7 @@ export default function PracticeSetsPage() {
     if (isWeeklySession) {
       const rawWeeklyQs = getWeeklyQuestions();
       const seed = getWeekNumber() + new Date().getFullYear() * 100;
-      smartSet = shuffleArrayWithSeed(rawWeeklyQs, seed).slice(0, 10);
+      smartSet = getCourseWeeklyDPPSet(rawWeeklyQs, seed);
     } else {
       let rawList: any[] = [];
       if (selectedTopic && topicModulesMap[selectedTopic] && topicModulesMap[selectedTopic].length > 0) {
@@ -1207,9 +1260,11 @@ export default function PracticeSetsPage() {
 
                   {/* WEEKLY MEGA DPP CHALLENGE SECTION (Clean Light Theme with Indigo Accent) */}
                   {(() => {
-                    const weeklyQs = getWeeklyQuestions();
-                    const hasDppForCourse = hasCourseWeeklyDpp && weeklyQs.length > 0;
-                    const totalWeeklyCount = Math.min(10, weeklyQs.length);
+                    const rawWeeklyQs = getWeeklyQuestions();
+                    const seed = getWeekNumber() + new Date().getFullYear() * 100;
+                    const weeklySmartSet = getCourseWeeklyDPPSet(rawWeeklyQs, seed);
+                    const hasDppForCourse = hasCourseWeeklyDpp && weeklySmartSet.length > 0;
+                    const totalWeeklyCount = weeklySmartSet.length;
 
                     return (
                       <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-100 dark:border-slate-800 p-7 shadow-xs space-y-6">
@@ -1224,7 +1279,7 @@ export default function PracticeSetsPage() {
                                   {getCurrentWeekLabel()}
                                 </span>
                                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                                  Completed Topics Revision Test
+                                  Course Weekly DPP Paper
                                 </span>
                                 {hasDppForCourse ? (
                                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800 flex items-center gap-1">
@@ -1243,8 +1298,8 @@ export default function PracticeSetsPage() {
                               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-1 max-w-xl">
                                 {hasDppForCourse
                                   ? isWeeklyAttemptedThisWeek
-                                    ? "✓ You completed an attempt this week! You can retake this test anytime. Questions stay fixed for the week and automatically reshuffle next Monday at 00:00."
-                                    : `A timed revision test configured for your course track (${courseName || 'Enrolled Course'}). Questions stay fixed for the week and automatically reshuffle next Monday at 00:00. Duration: ${publishedWeeklyDpp?.duration_minutes || 30} Mins.`
+                                    ? `✓ Attempt complete for this week! Questions stay fixed until next Monday at 00:00. Wrongly answered questions repeat for mastery.`
+                                    : `Course Weekly Test Paper (${courseName || 'Enrolled Course'}). Questions stay fixed for the week and automatically reshuffle next Monday at 00:00. Wrong & correct questions repeat to ensure full mastery!`
                                   : `Weekly DPP test for ${courseName || 'your course'} has not been configured yet. Check back soon for your weekly revision paper!`}
                               </p>
                             </div>
@@ -1289,9 +1344,9 @@ export default function PracticeSetsPage() {
                             </span>
                           </div>
                           <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-black block uppercase tracking-wider mb-1">STATUS</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-black block uppercase tracking-wider mb-1">REPEATING RULE</span>
                             <span className={`text-base font-black ${hasDppForCourse ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                              {hasDppForCourse ? 'Active & Ready' : 'Pending Release'}
+                              {hasDppForCourse ? 'Wrong + Mastery Repeat' : 'Pending Release'}
                             </span>
                           </div>
                           <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
