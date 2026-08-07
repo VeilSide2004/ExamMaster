@@ -30,8 +30,30 @@ export async function GET(req: Request) {
 
       const validCourseIds = getEquivalentCourseIds(courseId, db.courses || []);
 
+      const isMalformedQuestion = (qText: any, options?: any[]): boolean => {
+        if (!qText || typeof qText !== 'string') return true;
+        const cleaned = qText.trim().toLowerCase();
+        if (cleaned.length <= 2) return true;
+        const headerWords = [
+          'chemistry', 'physics', 'mathematics', 'math', 'biology', 'botany', 'zoology',
+          'inorganic chemistry', 'organic chemistry', 'physical chemistry', 'thermodynamics',
+          'kinematics', 'mechanics', 'optics', 'waves', 'magnetism', 'electrostatics',
+          'algebra', 'calculus', 'vectors', 'trigonometry', 'geometry', 'general', 'science'
+        ];
+        if (headerWords.includes(cleaned)) return true;
+        if (/^(?:subject|topic|chapter)\s*[\:\-]/i.test(cleaned)) return true;
+        if (options && Array.isArray(options) && options.length > 0) {
+          const opt0 = String(options[0] || '').trim().toLowerCase();
+          if (opt0 === cleaned && options.slice(1).every((o) => /^option\s+[b-d]$/i.test(String(o).trim()))) {
+            return true;
+          }
+        }
+        return false;
+      };
+
       let questions = (db.questions || []).filter((q) => {
         if (q.is_active === false) return false;
+        if (isMalformedQuestion(q.question_text, q.options)) return false;
         const qCourseId = String(typeof q.course_id === 'object' ? q.course_id?._id || q.course_id?.name : q.course_id);
         return (
           validCourseIds.includes(qCourseId) ||
@@ -133,8 +155,30 @@ export async function GET(req: Request) {
 
     const query: any = { is_active: true };
 
+    const isMalformedQuestion = (qText: any, options?: any[]): boolean => {
+      if (!qText || typeof qText !== 'string') return true;
+      const cleaned = qText.trim().toLowerCase();
+      if (cleaned.length <= 2) return true;
+      const headerWords = [
+        'chemistry', 'physics', 'mathematics', 'math', 'biology', 'botany', 'zoology',
+        'inorganic chemistry', 'organic chemistry', 'physical chemistry', 'thermodynamics',
+        'kinematics', 'mechanics', 'optics', 'waves', 'magnetism', 'electrostatics',
+        'algebra', 'calculus', 'vectors', 'trigonometry', 'geometry', 'general', 'science'
+      ];
+      if (headerWords.includes(cleaned)) return true;
+      if (/^(?:subject|topic|chapter)\s*[\:\-]/i.test(cleaned)) return true;
+      if (options && Array.isArray(options) && options.length > 0) {
+        const opt0 = String(options[0] || '').trim().toLowerCase();
+        if (opt0 === cleaned && options.slice(1).every((o) => /^option\s+[b-d]$/i.test(String(o).trim()))) {
+          return true;
+        }
+      }
+      return false;
+    };
+
     const allDbQuestions = await Question.find(query);
     let questions = allDbQuestions.filter((q: any) => {
+      if (isMalformedQuestion(q.question_text, q.options)) return false;
       const qCourseId = String(typeof q.course_id === 'object' ? q.course_id?._id || q.course_id?.name : q.course_id);
       return (
         validCourseIds.includes(qCourseId) ||
