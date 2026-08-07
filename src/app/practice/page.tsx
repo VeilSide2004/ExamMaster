@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useHeader } from '@/context/HeaderContext';
+import { HindiTranslateButton } from '@/components/common/HindiTranslateButton';
 import {
   HelpCircle,
   CheckCircle2,
@@ -74,6 +75,20 @@ export default function PracticeSetsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [sessionQuestions, setSessionQuestions] = useState<any[]>([]);
+
+  // Hindi Translation State (per question, keyed by question _id)
+  const [hindiTranslations, setHindiTranslations] = useState<Record<string, { question: string; options: string[] } | null>>({});
+
+  const handleTranslated = useCallback((qId: string, texts: string[]) => {
+    setHindiTranslations((prev) => ({
+      ...prev,
+      [qId]: { question: texts[0] || '', options: texts.slice(1) },
+    }));
+  }, []);
+
+  const handleResetTranslation = useCallback((qId: string) => {
+    setHindiTranslations((prev) => ({ ...prev, [qId]: null }));
+  }, []);
 
   const fetchQuestions = async () => {
     if (!initialCache && typeof window !== 'undefined' && !(window as any).__PRACTICE_CACHE__) {
@@ -977,9 +992,17 @@ export default function PracticeSetsPage() {
                         </div>
                       </div>
 
-                      <h2 className="text-base font-extrabold text-slate-900 dark:text-white mb-6 leading-relaxed">
-                        {currentQ.question_text}
-                      </h2>
+                      <div className="flex items-start justify-between gap-3 mb-6">
+                        <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-relaxed flex-1">
+                          {hindiTranslations[currentQ._id]?.question ?? currentQ.question_text}
+                        </h2>
+                        <HindiTranslateButton
+                          texts={[currentQ.question_text, ...getNormalizedOptions(currentQ)]}
+                          isTranslated={!!hindiTranslations[currentQ._id]}
+                          onTranslated={(translated) => handleTranslated(currentQ._id, translated)}
+                          onReset={() => handleResetTranslation(currentQ._id)}
+                        />
+                      </div>
 
                       {getNormalizedOptions(currentQ).length > 0 ? (
                         /* MCQ Options Grid */
@@ -1018,7 +1041,7 @@ export default function PracticeSetsPage() {
                                   >
                                     {String.fromCharCode(65 + optIdx)}
                                   </span>
-                                  <span>{opt}</span>
+                                  <span>{hindiTranslations[currentQ._id]?.options?.[optIdx] ?? opt}</span>
                                 </div>
 
                                 {isChecked && isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}

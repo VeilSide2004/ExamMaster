@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
+import { HindiTranslateButton } from '@/components/common/HindiTranslateButton';
 import { Clock, Bookmark, ChevronLeft, ChevronRight, CheckCircle2, Award, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
 
 export default function MockTestExecutionPage({ params }: { params: { id: string } }) {
@@ -26,6 +27,20 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
+
+  // Hindi Translation State
+  const [hindiTranslations, setHindiTranslations] = useState<Record<string, { question: string; options: string[] } | null>>({});
+
+  const handleMockTranslated = useCallback((qId: string, texts: string[]) => {
+    setHindiTranslations((prev) => ({
+      ...prev,
+      [qId]: { question: texts[0] || '', options: texts.slice(1) },
+    }));
+  }, []);
+
+  const handleMockResetTranslation = useCallback((qId: string) => {
+    setHindiTranslations((prev) => ({ ...prev, [qId]: null }));
+  }, []);
 
   useEffect(() => {
     if (!testId) return;
@@ -522,12 +537,21 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                     </button>
                   </div>
 
-                  <h2 className="text-base font-bold text-slate-900 dark:text-white mb-6 leading-relaxed">
-                    {currentQ.question_text}
-                  </h2>
+                  <div className="flex items-start justify-between gap-3 mb-6">
+                    <h2 className="text-base font-bold text-slate-900 dark:text-white leading-relaxed flex-1">
+                      {hindiTranslations[currentQ._id]?.question ?? currentQ.question_text}
+                    </h2>
+                    <HindiTranslateButton
+                      texts={[currentQ.question_text, ...(currentQ.options || [])]}
+                      isTranslated={!!hindiTranslations[currentQ._id]}
+                      onTranslated={(translated) => handleMockTranslated(currentQ._id, translated)}
+                      onReset={() => handleMockResetTranslation(currentQ._id)}
+                    />
+                  </div>
 
                   <div className="space-y-3">
-                    {(currentQ.options || []).map((opt: string, optIdx: number) => {
+                    {(currentQ.options || []).map((_opt: string, optIdx: number) => {
+                      const opt = (hindiTranslations[currentQ._id]?.options || currentQ.options || [])[optIdx];
                       const isSelected = userState[currentQ._id]?.selectedOption === optIdx;
                     return (
                       <button
