@@ -3,6 +3,7 @@ import { dbConnect } from '@/lib/db';
 import { User, Question, Course, Attempt } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getEquivalentCourseIds } from '@/lib/courseMatcher';
 
 export async function GET(req: Request) {
   try {
@@ -27,25 +28,40 @@ export async function GET(req: Request) {
       const courseId = typeof rawCourseId === 'object' && rawCourseId?._id ? String(rawCourseId._id) : String(rawCourseId);
       const courseObj = (db.courses || []).find((c) => String(c._id) === courseId || c.name === courseId) || (typeof rawCourseId === 'object' ? rawCourseId : null);
 
+      const validCourseIds = getEquivalentCourseIds(courseId, db.courses || []);
+
       let questions = (db.questions || []).filter((q) => {
         if (q.is_active === false) return false;
-        return String(q.course_id) === courseId || String(q.course_id) === String(courseObj?._id);
+        const qCourseId = String(typeof q.course_id === 'object' ? q.course_id?._id || q.course_id?.name : q.course_id);
+        return (
+          validCourseIds.includes(qCourseId) ||
+          validCourseIds.includes(String(q.course_id)) ||
+          qCourseId === courseId ||
+          String(q.course_id) === String(courseObj?._id) ||
+          String(q.course_id) === String(courseObj?.name)
+        );
       });
 
-      let courseSubjects = courseObj?.subjects && Array.isArray(courseObj.subjects) && courseObj.subjects.length > 0
-        ? courseObj.subjects
-        : [];
-
-      if (courseSubjects.length === 0) {
-        const subSet = new Set<string>();
-        questions.forEach((q) => {
-          if (q.topic_tag) {
-            const sName = q.topic_tag.includes('-') ? q.topic_tag.split('-')[0].trim() : q.topic_tag.trim();
-            if (sName) subSet.add(sName);
-          }
+      const subjectSet = new Set<string>();
+      if (courseObj?.subjects && Array.isArray(courseObj.subjects)) {
+        courseObj.subjects.forEach((s: string) => {
+          if (s && s.trim()) subjectSet.add(s.trim());
         });
-        courseSubjects = Array.from(subSet);
       }
+      questions.forEach((q: any) => {
+        if (q.subject && typeof q.subject === 'string' && q.subject.trim()) {
+          subjectSet.add(q.subject.trim());
+        } else if (q.topic_tag && typeof q.topic_tag === 'string') {
+          const sName = q.topic_tag.includes('-') ? q.topic_tag.split('-')[0].trim() : '';
+          if (sName) subjectSet.add(sName);
+        }
+      });
+      if (subjectSet.size === 0) {
+        subjectSet.add('Physics');
+        subjectSet.add('Chemistry');
+        subjectSet.add('Mathematics');
+      }
+      const courseSubjects = Array.from(subjectSet);
 
       const allQuestionsInCourse = questions;
       const topicCounts: Record<string, number> = {};
@@ -57,7 +73,11 @@ export async function GET(req: Request) {
       });
 
       if (subject) {
-        questions = questions.filter((q) => (q.topic_tag || '').toLowerCase().includes(subject.toLowerCase()));
+        questions = questions.filter(
+          (q) =>
+            (q.subject || '').toLowerCase().includes(subject.toLowerCase()) ||
+            (q.topic_tag || '').toLowerCase().includes(subject.toLowerCase())
+        );
       }
 
       if (topic) {
@@ -97,32 +117,54 @@ export async function GET(req: Request) {
       }
     }
 
+    const allCourses = await Course.find({});
+    const validCourseIds = getEquivalentCourseIds(courseId, allCourses);
+
     const query: any = { is_active: true };
-    if (subject) {
-      query.topic_tag = { $regex: subject, $options: 'i' };
-    }
-    if (topic) {
-      query.topic_tag = topic;
-    }
 
     const allDbQuestions = await Question.find(query);
-    const questions = allDbQuestions.filter((q: any) => {
-      return String(q.course_id) === courseId || String(q.course_id) === String(courseObj?._id);
+    let questions = allDbQuestions.filter((q: any) => {
+      const qCourseId = String(typeof q.course_id === 'object' ? q.course_id?._id || q.course_id?.name : q.course_id);
+      return (
+        validCourseIds.includes(qCourseId) ||
+        validCourseIds.includes(String(q.course_id)) ||
+        qCourseId === courseId ||
+        String(q.course_id) === String(courseObj?._id) ||
+        String(q.course_id) === String(courseObj?.name)
+      );
     });
 
-    let courseSubjects = courseObj?.subjects && Array.isArray(courseObj.subjects) && courseObj.subjects.length > 0
-      ? courseObj.subjects
-      : [];
-
-    if (courseSubjects.length === 0) {
-      const subSet = new Set<string>();
-      questions.forEach((q: any) => {
-        if (q.topic_tag) {
-          const sName = q.topic_tag.includes('-') ? q.topic_tag.split('-')[0].trim() : q.topic_tag.trim();
-          if (sName) subSet.add(sName);
-        }
+    const subjectSet = new Set<string>();
+    if (courseObj?.subjects && Array.isArray(courseObj.subjects)) {
+      courseObj.subjects.forEach((s: string) => {
+        if (s && s.trim()) subjectSet.add(s.trim());
       });
-      courseSubjects = Array.from(subSet);
+    }
+    questions.forEach((q: any) => {
+      if (q.subject && typeof q.subject === 'string' && q.subject.trim()) {
+        subjectSet.add(q.subject.trim());
+      } else if (q.topic_tag && typeof q.topic_tag === 'string') {
+        const sName = q.topic_tag.includes('-') ? q.topic_tag.split('-')[0].trim() : '';
+        if (sName) subjectSet.add(sName);
+      }
+    });
+    if (subjectSet.size === 0) {
+      subjectSet.add('Physics');
+      subjectSet.add('Chemistry');
+      subjectSet.add('Mathematics');
+    }
+    const courseSubjects = Array.from(subjectSet);
+
+    if (subject) {
+      questions = questions.filter(
+        (q: any) =>
+          (q.subject || '').toLowerCase().includes(subject.toLowerCase()) ||
+          (q.topic_tag || '').toLowerCase().includes(subject.toLowerCase())
+      );
+    }
+
+    if (topic) {
+      questions = questions.filter((q: any) => q.topic_tag === topic || (q.topic_tag || '').toLowerCase().includes(topic.toLowerCase()));
     }
 
     const topicCounts: Record<string, number> = {};

@@ -567,47 +567,64 @@ export default function PracticeSetsPage() {
     }
   };
 
+  const doesQuestionMatchSubject = (q: any, targetSubject: string, allSubjects: string[]): boolean => {
+    if (!q || !targetSubject) return false;
+
+    const sLower = targetSubject.toLowerCase().trim();
+    const qSubLower = (q.subject || '').toString().toLowerCase().trim();
+    const tagLower = (q.topic_tag || '').toString().toLowerCase().trim();
+
+    // 1. Direct match on q.subject field (e.g. q.subject === "Physics" or "Mathematics")
+    if (qSubLower && (qSubLower === sLower || qSubLower.includes(sLower) || sLower.includes(qSubLower))) {
+      return true;
+    }
+
+    // 2. Exact or Prefix match on q.topic_tag (e.g. "Physics - Laws of Motion", "Physics", etc.)
+    if (tagLower) {
+      if (tagLower === sLower) return true;
+      if (tagLower.startsWith(sLower + ' ') || tagLower.startsWith(sLower + '-') || tagLower.startsWith(sLower + ':')) return true;
+
+      const firstPart = tagLower.split('-')[0].trim();
+      if (firstPart === sLower) return true;
+
+      if (tagLower.includes(sLower)) return true;
+    }
+
+    // 3. Fallback for unclassified questions with topic_tag but no subject field:
+    // If no other course subject claims this topic_tag, assign to primary course subject
+    if (!qSubLower && tagLower) {
+      const claimedByOther = (allSubjects || []).some((otherSub) => {
+        const otherLower = otherSub.toLowerCase().trim();
+        if (otherLower === sLower) return false;
+        return tagLower.includes(otherLower) || tagLower.startsWith(otherLower);
+      });
+      if (!claimedByOther && allSubjects.length > 0 && allSubjects[0].toLowerCase().trim() === sLower) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   // Derive Subject & Topic questions
   const subjectQuestionMap: Record<string, any[]> = useMemo(() => {
     const map: Record<string, any[]> = {};
-    const primarySubject = (courseSubjects[0] || 'Physics').toLowerCase();
     courseSubjects.forEach((s) => {
-      const sLower = s.toLowerCase();
-      map[s] = questions.filter((q) => {
-        if (!q.topic_tag) return false;
-        const tagLower = q.topic_tag.toLowerCase();
-        if (tagLower.includes(sLower)) return true;
-        const firstPart = q.topic_tag.split('-')[0].trim().toLowerCase();
-        if (firstPart === sLower) return true;
-        if (q.subject && String(q.subject).toLowerCase() === sLower) return true;
-        if (!q.topic_tag.includes('-') && sLower === primarySubject) return true;
-        return false;
-      });
+      map[s] = questions.filter((q) => doesQuestionMatchSubject(q, s, courseSubjects));
     });
     return map;
   }, [courseSubjects, questions]);
 
   const activeSubjectQuestions = useMemo(() => {
     if (!selectedSubject) return [];
-    const sLower = selectedSubject.toLowerCase();
-    const primarySubject = (courseSubjects[0] || 'Physics').toLowerCase();
-    return questions.filter((q) => {
-      if (!q.topic_tag) return false;
-      const tagLower = q.topic_tag.toLowerCase();
-      if (tagLower.includes(sLower)) return true;
-      const firstPart = q.topic_tag.split('-')[0].trim().toLowerCase();
-      if (firstPart === sLower) return true;
-      if (q.subject && String(q.subject).toLowerCase() === sLower) return true;
-      if (!q.topic_tag.includes('-') && sLower === primarySubject) return true;
-      return false;
-    });
+    return questions.filter((q) => doesQuestionMatchSubject(q, selectedSubject, courseSubjects));
   }, [selectedSubject, courseSubjects, questions]);
 
   const topicModulesMap: Record<string, any[]> = useMemo(() => {
     const map: Record<string, any[]> = {};
     activeSubjectQuestions.forEach((q) => {
-      let tName = 'General Module';
-      if (q.topic_tag) {
+      let tName = 'General Practice Set';
+      if (q.topic_tag && typeof q.topic_tag === 'string' && q.topic_tag.trim()) {
         const parts = q.topic_tag.split('-').map((p: string) => p.trim());
         if (parts.length > 1) {
           if (parts[0].toLowerCase() === selectedSubject.toLowerCase()) {
@@ -618,7 +635,10 @@ export default function PracticeSetsPage() {
         } else {
           tName = parts[0];
         }
+      } else if (q.topic) {
+        tName = q.topic;
       }
+      if (!tName) tName = 'General Practice Set';
       if (!map[tName]) map[tName] = [];
       map[tName].push(q);
     });
