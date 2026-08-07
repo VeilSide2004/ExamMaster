@@ -80,6 +80,32 @@ export async function GET() {
         }
       }
 
+      const incorrectLogMap = new Map<string, any>();
+      attempts.forEach((a) => {
+        (a.responses || []).forEach((r: any) => {
+          const qId = String(r.question_id);
+          const q = (db.questions || []).find((item) => String(item._id) === qId);
+          if (q) {
+            const isIncorrect = r.is_correct === false || (r.selected_option !== undefined && r.selected_option !== null && r.selected_option !== q.correct_option);
+            if (isIncorrect && !incorrectLogMap.has(qId)) {
+              incorrectLogMap.set(qId, {
+                _id: q._id,
+                question_text: q.question_text,
+                options: q.options || [],
+                userSelectedOption: r.selected_option,
+                correctOption: q.correct_option,
+                explanation: q.explanation || '',
+                detailed_explanation: q.detailed_explanation || '',
+                topic_tag: q.topic_tag || a.topic_tag || 'General',
+                attemptedAt: a.submitted_at || a.started_at || a.created_at || new Date().toISOString(),
+                attemptType: a.type || 'practice',
+              });
+            }
+          }
+        });
+      });
+      const incorrectLog = Array.from(incorrectLogMap.values());
+
       return NextResponse.json({
         user: {
           name: user.name,
@@ -91,6 +117,7 @@ export async function GET() {
         },
         mockTests,
         topLeaderboard: leaderboardStudents.slice(0, 3),
+        incorrectLog,
       });
     }
 
@@ -117,11 +144,37 @@ export async function GET() {
     }
 
     const courseQs = await Question.find({ course_id: courseId, is_active: true });
-    const attempts = await Attempt.find({ student_id: user._id, course_id: courseId });
+    const attempts = await Attempt.find({ student_id: user._id, course_id: courseId }).sort({ submitted_at: -1 });
     const attemptedQIds = new Set<string>();
     attempts.forEach((a) => {
       a.responses.forEach((r) => attemptedQIds.add(r.question_id.toString()));
     });
+
+    const incorrectLogMap = new Map<string, any>();
+    attempts.forEach((a) => {
+      a.responses.forEach((r) => {
+        const qId = r.question_id.toString();
+        const q = courseQs.find((item) => item._id.toString() === qId);
+        if (q) {
+          const isIncorrect = r.is_correct === false || (r.selected_option !== undefined && r.selected_option !== null && r.selected_option !== q.correct_option);
+          if (isIncorrect && !incorrectLogMap.has(qId)) {
+            incorrectLogMap.set(qId, {
+              _id: q._id.toString(),
+              question_text: q.question_text,
+              options: q.options || [],
+              userSelectedOption: r.selected_option,
+              correctOption: q.correct_option,
+              explanation: q.explanation || '',
+              detailed_explanation: q.detailed_explanation || '',
+              topic_tag: q.topic_tag || a.topic_tag || 'General',
+              attemptedAt: a.submitted_at || a.started_at || new Date().toISOString(),
+              attemptType: a.type || 'practice',
+            });
+          }
+        }
+      });
+    });
+    const incorrectLog = Array.from(incorrectLogMap.values());
 
     const topicSet = new Set<string>();
     courseQs.forEach((q) => {
@@ -183,6 +236,7 @@ export async function GET() {
       },
       mockTests,
       topLeaderboard: leaderboardStudents.slice(0, 3),
+      incorrectLog,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
