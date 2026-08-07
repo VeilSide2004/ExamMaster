@@ -62,6 +62,28 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       if (!res.ok) {
         setError(data.error || 'Invalid email or password');
       } else {
+        if (typeof window !== 'undefined' && data.user) {
+          try {
+            const savedStr = localStorage.getItem('exammaster_saved_accounts');
+            let saved = savedStr ? JSON.parse(savedStr) : [];
+            if (!Array.isArray(saved)) saved = [];
+            const userEmail = data.user.email || email;
+            const userName = data.user.name || userEmail.split('@')[0];
+            const colors = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
+            
+            saved = saved.filter((a: any) => a.email.toLowerCase() !== userEmail.toLowerCase());
+            saved.unshift({
+              id: data.user.id || userEmail,
+              email: userEmail,
+              name: userName,
+              avatarColor: colors[saved.length % colors.length] || 'bg-blue-600',
+              lastLogin: new Date().toISOString(),
+            });
+            if (saved.length > 4) saved = saved.slice(0, 4);
+            localStorage.setItem('exammaster_saved_accounts', JSON.stringify(saved));
+          } catch (e) {}
+        }
+
         if (!data.user.lockedCourseId) {
           router.push('/course-selection');
         } else {

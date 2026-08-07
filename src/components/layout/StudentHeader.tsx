@@ -16,7 +16,14 @@ import {
   LogOut,
   User,
   BookOpen,
-  ArrowLeft
+  ArrowLeft,
+  Users,
+  Plus,
+  Trash2,
+  Check,
+  X,
+  Lock,
+  Mail
 } from 'lucide-react';
 
 interface StudentHeaderProps {
@@ -25,15 +32,69 @@ interface StudentHeaderProps {
   hideNav?: boolean;
 }
 
+interface SavedAccount {
+  id: string;
+  email: string;
+  name: string;
+  avatarColor: string;
+  lastLogin?: string;
+}
+
 export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUserName, onBack, hideNav }) => {
   const router = useRouter();
   const pathname = usePathname();
   const [userName, setUserName] = useState<string>(propsUserName || '');
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const [textSize, setTextSize] = useState<number>(100);
 
+  // Multi-Account Switcher State (Limit 4)
+  const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
+  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  const [addEmail, setAddEmail] = useState('');
+  const [addPassword, setAddPassword] = useState('');
+  const [addError, setAddError] = useState('');
+  const [addLoading, setAddLoading] = useState(false);
+
+  const loadSavedAccounts = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const savedStr = localStorage.getItem('exammaster_saved_accounts');
+      if (savedStr) {
+        const parsed = JSON.parse(savedStr);
+        if (Array.isArray(parsed)) {
+          setSavedAccounts(parsed.slice(0, 4));
+        }
+      }
+    } catch (e) {}
+  };
+
+  const saveCurrentAccount = (emailStr: string, nameStr: string) => {
+    if (typeof window === 'undefined' || !emailStr) return;
+    try {
+      const savedStr = localStorage.getItem('exammaster_saved_accounts');
+      let saved: SavedAccount[] = savedStr ? JSON.parse(savedStr) : [];
+      if (!Array.isArray(saved)) saved = [];
+      const colors = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
+      
+      saved = saved.filter((a) => a.email.toLowerCase() !== emailStr.toLowerCase());
+      saved.unshift({
+        id: emailStr,
+        email: emailStr,
+        name: nameStr || emailStr.split('@')[0],
+        avatarColor: colors[saved.length % colors.length] || 'bg-blue-600',
+        lastLogin: new Date().toISOString(),
+      });
+      if (saved.length > 4) saved = saved.slice(0, 4);
+      localStorage.setItem('exammaster_saved_accounts', JSON.stringify(saved));
+      setSavedAccounts(saved);
+    } catch (e) {}
+  };
+
   useEffect(() => {
+    loadSavedAccounts();
+
     try {
       const saved = localStorage.getItem('exammaster_text_scale');
       if (saved) {
@@ -60,21 +121,28 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   useEffect(() => {
     if (propsUserName) {
       setUserName(propsUserName);
-      return;
     }
 
     fetch('/api/auth/me')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data?.user?.name) {
-          setUserName(data.user.name);
-        } else if (data?.user?.email) {
-          setUserName(data.user.email.split('@')[0]);
+        if (data?.user) {
+          const uName = data.user.name || data.user.email.split('@')[0];
+          setUserName(uName);
+          setCurrentUserEmail(data.user.email || '');
+          saveCurrentAccount(data.user.email || '', uName);
         } else {
           return fetch('/api/dashboard')
             .then((res) => (res.ok ? res.json() : null))
             .then((d) => {
-              if (d?.user?.name) setUserName(d.user.name);
+              if (d?.user) {
+                const uName = d.user.name || 'Student';
+                setUserName(uName);
+                if (d.user.email) {
+                  setCurrentUserEmail(d.user.email);
+                  saveCurrentAccount(d.user.email, uName);
+                }
+              }
             });
         }
       })
@@ -90,6 +158,55 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     router.push('/login');
   };
 
+  const handleSwitchAccount = async (targetAccount: SavedAccount) => {
+    if (targetAccount.email.toLowerCase() === currentUserEmail.toLowerCase()) return;
+    
+    setAddEmail(targetAccount.email);
+    setAddPassword('');
+    setAddError(`Enter password for "${targetAccount.name}" (${targetAccount.email}) to switch account`);
+    setShowAddAccountModal(true);
+    setShowProfileMenu(false);
+  };
+
+  const handleRemoveSavedAccount = (e: React.MouseEvent, emailToRemove: string) => {
+    e.stopPropagation();
+    const updated = savedAccounts.filter((a) => a.email.toLowerCase() !== emailToRemove.toLowerCase());
+    setSavedAccounts(updated);
+    try {
+      localStorage.setItem('exammaster_saved_accounts', JSON.stringify(updated));
+    } catch (err) {}
+  };
+
+  const handleAddOrSwitchAccountSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddError('');
+    setAddLoading(true);
+
+    try {
+      await fetch('/api/seed');
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: addEmail, password: addPassword }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setAddError(data.error || 'Invalid password for account switch');
+      } else {
+        saveCurrentAccount(data.user.email || addEmail, data.user.name || addEmail.split('@')[0]);
+        setShowAddAccountModal(false);
+        setAddEmail('');
+        setAddPassword('');
+        window.location.href = '/dashboard';
+      }
+    } catch (err) {
+      setAddError('Failed to switch user account');
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
   const navLinks = [
     { label: 'Dashboard', href: '/dashboard', icon: Home },
     { label: 'Mock Tests', href: '/mock-tests', icon: FileText },
@@ -99,7 +216,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   ];
 
   useEffect(() => {
-    // Prefetch all key student portal routes for instant navigation speed
     navLinks.forEach((link) => {
       try {
         router.prefetch(link.href);
@@ -136,7 +252,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             </Link>
           </div>
 
-          {/* Center: Centered Navigation Bar (Hidden when hideNav is true) */}
+          {/* Center Navigation Bar */}
           {!hideNav && (
             <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full">
               {navLinks.map((link) => {
@@ -167,7 +283,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
           {/* Far Right Actions */}
           <div className="flex items-center gap-2.5">
-            {/* Text Size Increase / Decrease Controller — hidden on mobile */}
+            {/* Text Size Increaser */}
             <div className="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
               <button
                 type="button"
@@ -198,7 +314,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             <div className="relative">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-1.5 sm:gap-2 p-1 pr-1.5 sm:pr-2.5 rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 transition-all border border-slate-200/80 dark:border-slate-800 shadow-xs"
+                className="flex items-center gap-1.5 sm:gap-2 p-1 pr-1.5 sm:pr-2.5 rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 transition-all border border-slate-200/80 dark:border-slate-800 shadow-xs cursor-pointer"
               >
                 <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0">
                   {displayName.charAt(0).toUpperCase()}
@@ -209,9 +325,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Dropdown — always mounted, animated via CSS */}
+              {/* Dropdown — Amazon Prime Video / Netflix style Switch Account */}
               <div
-                className={`absolute right-0 mt-2 w-52 bg-white/90 backdrop-blur-md border border-slate-200/90 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] py-1 z-50
+                className={`absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 z-50
                   transition-all duration-200 ease-out origin-top-right
                   ${
                     showProfileMenu
@@ -219,23 +335,116 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                       : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
                   }`}
               >
-                <div className="px-4 py-2.5 border-b border-slate-100">
-                  <p className="text-xs font-black text-slate-900 truncate">{displayName}</p>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mt-0.5">Student Account</p>
+                {/* Active Account Info */}
+                <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-sm shadow-md shrink-0">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-slate-900 dark:text-white truncate">{displayName}</p>
+                    <p className="text-[10px] text-slate-400 font-mono truncate">{currentUserEmail || 'Active Student'}</p>
+                    <span className="inline-block mt-0.5 px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[9px] font-extrabold tracking-wider uppercase">
+                      ✓ Active Account
+                    </span>
+                  </div>
                 </div>
-                <Link
-                  href="/profile"
-                  onClick={() => setShowProfileMenu(false)}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  <User className="w-4 h-4 text-blue-500" /> Profile Settings
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 border-t border-slate-100 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" /> Sign Out
-                </button>
+
+                {/* Switch Accounts Section (Amazon Prime Video Style) */}
+                <div className="p-2 space-y-1 border-b border-slate-100 dark:border-slate-800">
+                  <div className="px-2 py-1 flex items-center justify-between">
+                    <span className="text-[11px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-blue-500" /> Switch Account
+                    </span>
+                    <span className="text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300">
+                      {savedAccounts.length}/4
+                    </span>
+                  </div>
+
+                  {savedAccounts.map((acc, idx) => {
+                    const isActive = acc.email.toLowerCase() === currentUserEmail.toLowerCase();
+                    const avatarBg = acc.avatarColor || (idx === 0 ? 'bg-blue-600' : idx === 1 ? 'bg-emerald-600' : idx === 2 ? 'bg-purple-600' : 'bg-amber-600');
+                    return (
+                      <div
+                        key={acc.email}
+                        onClick={() => !isActive && handleSwitchAccount(acc)}
+                        className={`group flex items-center justify-between p-2 rounded-xl text-xs transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-blue-50/70 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800/60'
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-800/70'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-full ${avatarBg} text-white font-black flex items-center justify-center text-xs shrink-0 shadow-2xs`}>
+                            {acc.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-slate-900 dark:text-white text-[11px] truncate">{acc.name}</p>
+                            <p className="text-[10px] text-slate-400 font-mono truncate">{acc.email}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0 ml-2">
+                          {isActive ? (
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full">
+                              <Check className="w-3 h-3" /> Active
+                            </span>
+                          ) : (
+                            <>
+                              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Switch
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => handleRemoveSavedAccount(e, acc.email)}
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
+                                title="Remove from device accounts"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Add Account Button (Limit 4) */}
+                  {savedAccounts.length < 4 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddEmail('');
+                        setAddPassword('');
+                        setAddError('');
+                        setShowAddAccountModal(true);
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full mt-1 flex items-center justify-center gap-2 p-2 rounded-xl border border-dashed border-blue-300 dark:border-blue-800/80 bg-blue-50/50 hover:bg-blue-100/50 dark:bg-blue-950/30 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-bold transition-all cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" /> Add / Switch Another Account ({savedAccounts.length}/4)
+                    </button>
+                  ) : (
+                    <div className="p-2 mt-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-[10px] font-medium text-amber-800 dark:text-amber-300 text-center">
+                      🔒 Maximum 4 saved accounts reached. Remove an account to add another.
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-1">
+                  <Link
+                    href="/profile"
+                    onClick={() => setShowProfileMenu(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                  >
+                    <User className="w-4 h-4 text-blue-500" /> Profile Settings
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out All
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -244,6 +453,88 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
       {/* Persistent Top Height Spacer */}
       <div className="h-16 w-full shrink-0" aria-hidden="true" />
+
+      {/* Add / Switch User Account Modal */}
+      {showAddAccountModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-5">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Switch or Add Student Account</h3>
+                  <p className="text-[11px] text-slate-500">Device limit: Max 4 active accounts</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddAccountModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {addError && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/80 rounded-xl text-amber-900 dark:text-amber-200 text-xs font-medium">
+                {addError}
+              </div>
+            )}
+
+            <form onSubmit={handleAddOrSwitchAccountSubmit} className="space-y-4 text-xs font-medium">
+              <div className="space-y-1">
+                <label className="text-slate-700 dark:text-slate-300 font-extrabold">Student Email Address *</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="email"
+                    required
+                    value={addEmail}
+                    onChange={(e) => setAddEmail(e.target.value)}
+                    placeholder="student@example.com"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-700 dark:text-slate-300 font-extrabold">Account Password *</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="password"
+                    required
+                    value={addPassword}
+                    onChange={(e) => setAddPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowAddAccountModal(false)}
+                  className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addLoading}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-sm transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                >
+                  {addLoading ? 'Switching Account...' : 'Log In & Switch Account'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 };
+
