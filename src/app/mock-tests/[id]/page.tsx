@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
-import { HindiTranslateButton } from '@/components/common/HindiTranslateButton';
+import { HindiTranslateButton, translateToHindi } from '@/components/common/HindiTranslateButton';
 import {
   Clock, Bookmark, ChevronLeft, ChevronRight, CheckCircle2, Award,
   AlertTriangle, ShieldCheck, ShieldAlert, RotateCcw, Star, BarChart2, MessageSquare, PieChart, Sparkles
@@ -57,6 +57,9 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [test, setTest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentIdx, setCurrentIdx] = useState(0);
+
+  // Active Language preference ('en' | 'hi') initialized from query param
+  const [activeLanguage, setActiveLanguage] = useState<'en' | 'hi'>(initialLangParam === 'hi' ? 'hi' : 'en');
 
   // Question Response State
   const [userState, setUserState] = useState<Record<string, { selectedOption: number | null; isMFR: boolean; isVisited: boolean }>>({});
@@ -397,6 +400,31 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
   const questions: any[] = test?.question_ids || [];
   const currentQ = questions[currentIdx] || null;
+
+  // Auto-Translation Effect when activeLanguage === 'hi'
+  useEffect(() => {
+    if (activeLanguage !== 'hi' || !currentQ) return;
+    if (hindiTranslations[currentQ._id]) return;
+
+    let isMounted = true;
+    translateToHindi([currentQ.question_text, ...(currentQ.options || [])])
+      .then((translated) => {
+        if (isMounted && translated && translated.length > 0) {
+          setHindiTranslations((prev) => ({
+            ...prev,
+            [currentQ._id]: {
+              question: translated[0] || currentQ.question_text,
+              options: translated.slice(1),
+            },
+          }));
+        }
+      })
+      .catch((err) => console.error('Auto-translate error:', err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeLanguage, currentQ, hindiTranslations]);
 
   const courseSubjects: string[] = test?.course_id?.subjects || ['Physics', 'Chemistry', 'Mathematics', 'Biology'];
 
@@ -890,9 +918,15 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
                   <HindiTranslateButton
                     texts={[currentQ?.question_text || '', ...(currentQ?.options || [])]}
-                    isTranslated={!!hindiTranslations[currentQ?._id]}
-                    onTranslated={(translated) => handleMockTranslated(currentQ._id, translated)}
-                    onReset={() => handleMockResetTranslation(currentQ._id)}
+                    isTranslated={activeLanguage === 'hi'}
+                    onTranslated={(translated) => {
+                      setActiveLanguage('hi');
+                      handleMockTranslated(currentQ._id, translated);
+                    }}
+                    onReset={() => {
+                      setActiveLanguage('en');
+                      handleMockResetTranslation(currentQ._id);
+                    }}
                   />
                 </div>
 

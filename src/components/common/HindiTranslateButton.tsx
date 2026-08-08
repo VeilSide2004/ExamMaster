@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useCallback } from 'react';
 
@@ -9,7 +9,7 @@ interface HindiTranslateButtonProps {
   isTranslated: boolean;
 }
 
-async function translateToHindi(texts: string[]): Promise<string[]> {
+export async function translateToHindi(texts: string[]): Promise<string[]> {
   const results: string[] = [];
   for (const text of texts) {
     if (!text || !text.trim()) {
