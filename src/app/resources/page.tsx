@@ -81,6 +81,8 @@ export default function StudentResourcesPage() {
     const matchesType = selectedType === 'All' || item.resource_type === selectedType;
 
     return matchesSearch && matchesSubject && matchesType;
+  });
+
   const isComingSoon = !loading && resources.length === 0;
 
   return (
