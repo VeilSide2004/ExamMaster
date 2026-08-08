@@ -10,6 +10,7 @@ export interface IUser extends Document {
   xp_total: number;
   created_at: Date;
   account_email?: string;
+  friends?: string[];
 }
 
 const UserSchema = new Schema<IUser>({
@@ -21,6 +22,7 @@ const UserSchema = new Schema<IUser>({
   xp_total: { type: Number, default: 0 },
   created_at: { type: Date, default: Date.now },
   account_email: { type: String, default: null, lowercase: true },
+  friends: [{ type: String }],
 });
 
 // Course
