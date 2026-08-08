@@ -438,58 +438,77 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
       )}
 
       {/* Test Top Header Bar */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 md:px-6 py-2 md:py-3 flex items-center justify-between shrink-0 sticky top-0 z-20 shadow-md shadow-slate-200/50 dark:shadow-black/60">
-        <div className="flex items-center gap-2 md:gap-4 min-w-0">
-          <Logo size={28} showText={false} />
-          <div className="min-w-0">
-            <h1 className="text-xs md:text-sm font-bold text-slate-900 dark:text-white truncate max-w-[120px] md:max-w-none">{test.title}</h1>
-            <p className="text-[9px] md:text-[10px] text-slate-500 hidden sm:block">Course: {test.course_id?.name}</p>
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 md:px-6 py-2 md:py-3 shrink-0 sticky top-0 z-20 shadow-md shadow-slate-200/50 dark:shadow-black/60">
+
+        {/* ── Mobile: 3-column layout — logo | SUBMIT CENTER | timer ── */}
+        <div className="flex md:hidden items-center w-full gap-2">
+          {/* Left col */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <Logo size={26} showText={false} />
+            <h1 className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-[80px]">{test.title}</h1>
+          </div>
+
+          {/* Center col: Submit */}
+          {!result && (
+            <button
+              onClick={() => setShowConfirmModal(true)}
+              type="button"
+              className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-[11px] font-black rounded-lg shadow-md shadow-rose-500/30 transition-all shrink-0"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Submit Test
+            </button>
+          )}
+
+          {/* Right col: violation + timer */}
+          <div className="flex items-center gap-1.5 flex-1 justify-end">
+            {backPressCount > 0 && !result && (
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700">
+                <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                <span className="text-[9px] font-black text-amber-700 dark:text-amber-300">{backPressCount}/3</span>
+              </div>
+            )}
+            {!result && (
+              <div className="flex items-center gap-1 bg-brand-50 dark:bg-slate-800 border border-brand-200 dark:border-slate-700 px-2 py-1 rounded-lg">
+                <Clock className="w-3 h-3 text-brand-700 dark:text-brand-400" />
+                <span className="font-mono text-[11px] font-bold text-brand-900 dark:text-brand-300">{formatTime(timeLeft)}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Back-press Violation Badge */}
-        {backPressCount > 0 && !result && (
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700">
-            <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-            <span className="text-[10px] font-black text-amber-700 dark:text-amber-300">
-              {backPressCount}/3 Violations
-            </span>
+        {/* ── Desktop: standard flex row ── */}
+        <div className="hidden md:flex items-center justify-between w-full">
+          <div className="flex items-center gap-4 min-w-0">
+            <Logo size={28} showText={false} />
+            <div className="min-w-0">
+              <h1 className="text-sm font-bold text-slate-900 dark:text-white truncate">{test.title}</h1>
+              <p className="text-[10px] text-slate-500">Course: {test.course_id?.name}</p>
+            </div>
           </div>
-        )}
-
-        {/* Live Timer */}
-        {!result && (
-          <div className="flex items-center gap-1.5 bg-brand-50 dark:bg-slate-800 border border-brand-200 dark:border-slate-700 px-2 md:px-4 py-1 md:py-1.5 rounded-xl text-brand-900 dark:text-brand-300">
-            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-700 dark:text-brand-400" />
-            <span className="font-mono text-xs md:text-sm font-bold">{formatTime(timeLeft)}</span>
-          </div>
-        )}
-
-        {/* Submit button — desktop header only */}
-        {!result && (
-          <button
-            onClick={() => setShowConfirmModal(true)}
-            type="button"
-            className="hidden md:block px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-colors shrink-0"
-          >
-            Submit Test
-          </button>
-        )}
+          {backPressCount > 0 && !result && (
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700">
+              <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+              <span className="text-[10px] font-black text-amber-700 dark:text-amber-300">{backPressCount}/3 Violations</span>
+            </div>
+          )}
+          {!result && (
+            <div className="flex items-center gap-1.5 bg-brand-50 dark:bg-slate-800 border border-brand-200 dark:border-slate-700 px-4 py-1.5 rounded-xl text-brand-900 dark:text-brand-300">
+              <Clock className="w-4 h-4 text-brand-700 dark:text-brand-400" />
+              <span className="font-mono text-sm font-bold">{formatTime(timeLeft)}</span>
+            </div>
+          )}
+          {!result && (
+            <button
+              onClick={() => setShowConfirmModal(true)}
+              type="button"
+              className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-colors shrink-0"
+            >
+              Submit Test
+            </button>
+          )}
+        </div>
       </header>
-
-      {/* ─── Mobile floating Submit button (bottom-center, thumb-friendly) ─── */}
-      {!result && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 md:hidden">
-          <button
-            onClick={() => setShowConfirmModal(true)}
-            type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-black rounded-full shadow-xl shadow-rose-600/40 transition-all"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            Submit Test
-          </button>
-        </div>
-      )}
 
       {/* Subject Section Navigation Bar */}
       {!result && (
