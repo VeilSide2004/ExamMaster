@@ -1,0 +1,115 @@
+import { NextResponse } from 'next/server';
+import { dbConnect } from '@/lib/db';
+import { User } from '@/lib/models';
+import { readSharedDb } from '@/lib/sharedDb';
+import { getAuthenticatedUser, signUserToken } from '@/lib/auth';
+
+export async function POST(req: Request) {
+  try {
+    const auth = getAuthenticatedUser();
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { profileId } = await req.json();
+    if (!profileId) {
+      return NextResponse.json({ error: 'Profile ID is required' }, { status: 400 });
+    }
+
+    const { isMemoryMode } = await dbConnect();
+
+    if (isMemoryMode) {
+      const db = readSharedDb();
+      const currentUser = (db.users || []).find((u) => u._id === auth.userId);
+      if (!currentUser) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
+
+      // Target profile
+      const targetProfile = (db.users || []).find((u) => u._id === profileId);
+      if (!targetProfile) {
+        return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+      }
+
+      // Verify ownership
+      const targetAccountEmail = (targetProfile.account_email || targetProfile.email).toLowerCase();
+      if (targetAccountEmail !== mainEmail && targetProfile.email.toLowerCase() !== mainEmail) {
+        return NextResponse.json({ error: 'Unauthorized profile switch' }, { status: 403 });
+      }
+
+      const token = signUserToken({
+        userId: targetProfile._id,
+        email: targetProfile.email,
+        name: targetProfile.name,
+        lockedCourseId: targetProfile.locked_course_id ? String(targetProfile.locked_course_id) : null,
+      });
+
+      const response = NextResponse.json({
+        success: true,
+        profile: {
+          id: targetProfile._id,
+          name: targetProfile.name,
+          email: targetProfile.email,
+          lockedCourseId: targetProfile.locked_course_id ? String(targetProfile.locked_course_id) : null,
+        },
+      });
+
+      response.cookies.set('student_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60,
+        path: '/',
+      });
+
+      return response;
+    }
+
+    // Mongoose Mode
+    const currentUser = await User.findById(auth.userId);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
+
+    const targetProfile = await User.findById(profileId);
+    if (!targetProfile || targetProfile.status === 'Deleted') {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    const targetAccountEmail = (targetProfile.account_email || targetProfile.email).toLowerCase();
+    if (targetAccountEmail !== mainEmail && targetProfile.email.toLowerCase() !== mainEmail) {
+      return NextResponse.json({ error: 'Unauthorized profile switch' }, { status: 403 });
+    }
+
+    const token = signUserToken({
+      userId: targetProfile._id.toString(),
+      email: targetProfile.email,
+      name: targetProfile.name,
+      lockedCourseId: targetProfile.locked_course_id ? targetProfile.locked_course_id.toString() : null,
+    });
+
+    const response = NextResponse.json({
+      success: true,
+      profile: {
+        id: targetProfile._id.toString(),
+        name: targetProfile.name,
+        email: targetProfile.email,
+        lockedCourseId: targetProfile.locked_course_id ? targetProfile.locked_course_id.toString() : null,
+      },
+    });
+
+    response.cookies.set('student_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60,
+      path: '/',
+    });
+
+    return response;
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

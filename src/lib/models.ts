@@ -9,6 +9,7 @@ export interface IUser extends Document {
   status: 'Active' | 'Suspended' | 'Deleted';
   xp_total: number;
   created_at: Date;
+  account_email?: string;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -19,6 +20,7 @@ const UserSchema = new Schema<IUser>({
   status: { type: String, enum: ['Active', 'Suspended', 'Deleted'], default: 'Active' },
   xp_total: { type: Number, default: 0 },
   created_at: { type: Date, default: Date.now },
+  account_email: { type: String, default: null, lowercase: true },
 });
 
 // Course

@@ -23,9 +23,7 @@ import {
   Check,
   X,
   Lock,
-  Mail,
-  Eye,
-  EyeOff
+  Sparkles,
 } from 'lucide-react';
 
 interface StudentHeaderProps {
@@ -34,12 +32,16 @@ interface StudentHeaderProps {
   hideNav?: boolean;
 }
 
-interface SavedAccount {
+interface ProfileItem {
   id: string;
-  email: string;
   name: string;
-  avatarColor: string;
-  lastLogin?: string;
+  email: string;
+  accountEmail: string;
+  lockedCourseId?: string | null;
+  lockedCourseName?: string | null;
+  isActive: boolean;
+  isPrimary: boolean;
+  xp_total: number;
 }
 
 export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUserName, onBack, hideNav }) => {
@@ -47,56 +49,38 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const pathname = usePathname();
   const [userName, setUserName] = useState<string>(propsUserName || '');
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
+  const [currentCourseName, setCurrentCourseName] = useState<string | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const [textSize, setTextSize] = useState<number>(100);
 
-  // Multi-Account Switcher State (Limit 4)
-  const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
-  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
-  const [addEmail, setAddEmail] = useState('');
-  const [addPassword, setAddPassword] = useState('');
-  const [showAddPassword, setShowAddPassword] = useState(false);
-  const [addError, setAddError] = useState('');
-  const [addLoading, setAddLoading] = useState(false);
+  // Netflix-style Multi-Profile State
+  const [profiles, setProfiles] = useState<ProfileItem[]>([]);
+  const [showAddProfileModal, setShowAddProfileModal] = useState(false);
+  const [newProfileName, setNewProfileName] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [createLoading, setCreateLoading] = useState(false);
 
-  const loadSavedAccounts = () => {
-    if (typeof window === 'undefined') return;
+  const fetchProfiles = async () => {
     try {
-      const savedStr = localStorage.getItem('exammaster_saved_accounts');
-      if (savedStr) {
-        const parsed = JSON.parse(savedStr);
-        if (Array.isArray(parsed)) {
-          setSavedAccounts(parsed.slice(0, 4));
+      const res = await fetch('/api/profile/list');
+      const data = await res.json();
+      if (data.profiles && Array.isArray(data.profiles)) {
+        setProfiles(data.profiles);
+        const active = data.profiles.find((p: ProfileItem) => p.isActive);
+        if (active) {
+          setUserName(active.name);
+          setCurrentUserEmail(active.accountEmail || active.email);
+          setCurrentCourseName(active.lockedCourseName || null);
         }
       }
-    } catch (e) {}
-  };
-
-  const saveCurrentAccount = (emailStr: string, nameStr: string) => {
-    if (typeof window === 'undefined' || !emailStr) return;
-    try {
-      const savedStr = localStorage.getItem('exammaster_saved_accounts');
-      let saved: SavedAccount[] = savedStr ? JSON.parse(savedStr) : [];
-      if (!Array.isArray(saved)) saved = [];
-      const colors = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
-      
-      saved = saved.filter((a) => a.email.toLowerCase() !== emailStr.toLowerCase());
-      saved.unshift({
-        id: emailStr,
-        email: emailStr,
-        name: nameStr || emailStr.split('@')[0],
-        avatarColor: colors[saved.length % colors.length] || 'bg-blue-600',
-        lastLogin: new Date().toISOString(),
-      });
-      if (saved.length > 4) saved = saved.slice(0, 4);
-      localStorage.setItem('exammaster_saved_accounts', JSON.stringify(saved));
-      setSavedAccounts(saved);
-    } catch (e) {}
+    } catch (e) {
+      console.error('Failed to fetch profiles:', e);
+    }
   };
 
   useEffect(() => {
-    loadSavedAccounts();
+    fetchProfiles();
 
     try {
       const saved = localStorage.getItem('exammaster_text_scale');
@@ -130,23 +114,11 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.user) {
-          const uName = data.user.name || data.user.email.split('@')[0];
-          setUserName(uName);
-          setCurrentUserEmail(data.user.email || '');
-          saveCurrentAccount(data.user.email || '', uName);
-        } else {
-          return fetch('/api/dashboard')
-            .then((res) => (res.ok ? res.json() : null))
-            .then((d) => {
-              if (d?.user) {
-                const uName = d.user.name || 'Student';
-                setUserName(uName);
-                if (d.user.email) {
-                  setCurrentUserEmail(d.user.email);
-                  saveCurrentAccount(d.user.email, uName);
-                }
-              }
-            });
+          setUserName(data.user.name);
+          setCurrentUserEmail(data.user.email);
+          if (data.user.lockedCourse?.name) {
+            setCurrentCourseName(data.user.lockedCourse.name);
+          }
         }
       })
       .catch(console.error);
@@ -161,52 +133,76 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     router.push('/login');
   };
 
-  const handleSwitchAccount = async (targetAccount: SavedAccount) => {
-    if (targetAccount.email.toLowerCase() === currentUserEmail.toLowerCase()) return;
-    
-    setAddEmail(targetAccount.email);
-    setAddPassword('');
-    setAddError(`Enter password for "${targetAccount.name}" (${targetAccount.email}) to switch account`);
-    setShowAddAccountModal(true);
-    setShowProfileMenu(false);
-  };
-
-  const handleRemoveSavedAccount = (e: React.MouseEvent, emailToRemove: string) => {
-    e.stopPropagation();
-    const updated = savedAccounts.filter((a) => a.email.toLowerCase() !== emailToRemove.toLowerCase());
-    setSavedAccounts(updated);
-    try {
-      localStorage.setItem('exammaster_saved_accounts', JSON.stringify(updated));
-    } catch (err) {}
-  };
-
-  const handleAddOrSwitchAccountSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAddError('');
-    setAddLoading(true);
+  const handleSwitchProfile = async (profile: ProfileItem) => {
+    if (profile.isActive) return;
 
     try {
-      await fetch('/api/seed');
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/profile/switch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: addEmail, password: addPassword }),
+        body: JSON.stringify({ profileId: profile.id }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setShowProfileMenu(false);
+        // If the target profile has NO locked course, redirect to course selection!
+        if (!data.profile?.lockedCourseId) {
+          window.location.href = '/course-selection';
+        } else {
+          window.location.href = '/dashboard';
+        }
+      }
+    } catch (err) {
+      console.error('Failed to switch profile:', err);
+    }
+  };
+
+  const handleDeleteProfile = async (e: React.MouseEvent, profileId: string) => {
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to remove this profile?')) return;
+
+    try {
+      const res = await fetch('/api/profile/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileId }),
+      });
+      if (res.ok) {
+        fetchProfiles();
+      }
+    } catch (err) {
+      console.error('Failed to delete profile:', err);
+    }
+  };
+
+  const handleCreateProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProfileName.trim()) return;
+
+    setCreateError('');
+    setCreateLoading(true);
+
+    try {
+      const res = await fetch('/api/profile/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newProfileName.trim() }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        setAddError(data.error || 'Invalid password for account switch');
+        setCreateError(data.error || 'Failed to create new profile');
       } else {
-        saveCurrentAccount(data.user.email || addEmail, data.user.name || addEmail.split('@')[0]);
-        setShowAddAccountModal(false);
-        setAddEmail('');
-        setAddPassword('');
-        window.location.href = '/dashboard';
+        setShowAddProfileModal(false);
+        setNewProfileName('');
+        // NEW PROFILE HAS NO COURSE LOCKED YET -> REDIRECT DIRECTLY TO /course-selection!
+        window.location.href = '/course-selection';
       }
     } catch (err) {
-      setAddError('Failed to switch user account');
+      setCreateError('Failed to create profile');
     } finally {
-      setAddLoading(false);
+      setCreateLoading(false);
     }
   };
 
@@ -218,13 +214,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   ];
 
-  useEffect(() => {
-    navLinks.forEach((link) => {
-      try {
-        router.prefetch(link.href);
-      } catch (e) {}
-    });
-  }, [router]);
+  const profileColors = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
 
   return (
     <>
@@ -267,9 +257,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     key={link.href}
                     href={link.href}
                     prefetch={true}
-                    onMouseEnter={() => {
-                      try { router.prefetch(link.href); } catch (e) {}
-                    }}
                     className={`px-4 h-full text-xs font-bold flex items-center gap-2 transition-all relative border-b-2 ${
                       isActive
                         ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
@@ -313,10 +300,13 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
             <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
 
-            {/* Profile User Dropdown Pill */}
+            {/* Netflix-Style Profile Dropdown Pill */}
             <div className="relative">
               <button
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                onClick={() => {
+                  fetchProfiles();
+                  setShowProfileMenu(!showProfileMenu);
+                }}
                 className="flex items-center gap-1.5 sm:gap-2 p-1 pr-1.5 sm:pr-2.5 rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 transition-all border border-slate-200/80 dark:border-slate-800 shadow-xs cursor-pointer"
               >
                 <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0">
@@ -328,7 +318,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Dropdown — Amazon Prime Video / Netflix style Switch Account */}
+              {/* Dropdown — Netflix Style Multi-Profile Switcher */}
               <div
                 className={`absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 z-50
                   transition-all duration-200 ease-out origin-top-right
@@ -338,56 +328,68 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                       : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
                   }`}
               >
-                {/* Active Account Info */}
+                {/* Active Profile Header Info */}
                 <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-black flex items-center justify-center text-sm shadow-md shrink-0">
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-black text-slate-900 dark:text-white truncate">{displayName}</p>
-                    <p className="text-[10px] text-slate-400 font-mono truncate">{currentUserEmail || 'Active Student'}</p>
-                    <span className="inline-block mt-0.5 px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[9px] font-extrabold tracking-wider uppercase">
-                      ✓ Active Account
-                    </span>
+                    <p className="text-[10px] text-slate-400 font-mono truncate">{currentUserEmail || 'Active Student Account'}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="inline-block px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[9px] font-extrabold tracking-wider uppercase">
+                        ✓ Active Profile
+                      </span>
+                      {currentCourseName ? (
+                        <span className="inline-block px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-[9px] font-extrabold truncate max-w-[110px]">
+                          {currentCourseName}
+                        </span>
+                      ) : (
+                        <span className="inline-block px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 text-[9px] font-extrabold">
+                          No Course Selected
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Switch Accounts Section (Amazon Prime Video Style) */}
+                {/* Netflix-Style Switch Profile Section */}
                 <div className="p-2 space-y-1 border-b border-slate-100 dark:border-slate-800">
                   <div className="px-2 py-1 flex items-center justify-between">
                     <span className="text-[11px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-blue-500" /> Switch Account
+                      <Users className="w-3.5 h-3.5 text-blue-500" /> Switch Profile
                     </span>
                     <span className="text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300">
-                      {savedAccounts.length}/4
+                      {profiles.length}/4
                     </span>
                   </div>
 
-                  {savedAccounts.map((acc, idx) => {
-                    const isActive = acc.email.toLowerCase() === currentUserEmail.toLowerCase();
-                    const avatarBg = acc.avatarColor || (idx === 0 ? 'bg-blue-600' : idx === 1 ? 'bg-emerald-600' : idx === 2 ? 'bg-purple-600' : 'bg-amber-600');
+                  {profiles.map((prof, idx) => {
+                    const avatarBg = profileColors[idx % profileColors.length];
                     return (
                       <div
-                        key={acc.email}
-                        onClick={() => !isActive && handleSwitchAccount(acc)}
+                        key={prof.id}
+                        onClick={() => handleSwitchProfile(prof)}
                         className={`group flex items-center justify-between p-2 rounded-xl text-xs transition-all cursor-pointer ${
-                          isActive
+                          prof.isActive
                             ? 'bg-blue-50/70 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800/60'
                             : 'hover:bg-slate-100 dark:hover:bg-slate-800/70'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className={`w-7 h-7 rounded-full ${avatarBg} text-white font-black flex items-center justify-center text-xs shrink-0 shadow-2xs`}>
-                            {acc.name.charAt(0).toUpperCase()}
+                          <div className={`w-8 h-8 rounded-full ${avatarBg} text-white font-black flex items-center justify-center text-xs shrink-0 shadow-2xs`}>
+                            {prof.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-bold text-slate-900 dark:text-white text-[11px] truncate">{acc.name}</p>
-                            <p className="text-[10px] text-slate-400 font-mono truncate">{acc.email}</p>
+                            <p className="font-bold text-slate-900 dark:text-white text-[11px] truncate">{prof.name}</p>
+                            <p className="text-[10px] text-slate-400 font-medium truncate">
+                              {prof.lockedCourseName ? `Course: ${prof.lockedCourseName}` : '⚠️ Needs Course Lock'}
+                            </p>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-1 shrink-0 ml-2">
-                          {isActive ? (
+                          {prof.isActive ? (
                             <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full">
                               <Check className="w-3 h-3" /> Active
                             </span>
@@ -396,14 +398,16 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                               <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
                                 Switch
                               </span>
-                              <button
-                                type="button"
-                                onClick={(e) => handleRemoveSavedAccount(e, acc.email)}
-                                className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
-                                title="Remove from device accounts"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              {!prof.isPrimary && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDeleteProfile(e, prof.id)}
+                                  className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
+                                  title="Delete profile"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </>
                           )}
                         </div>
@@ -411,24 +415,23 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     );
                   })}
 
-                  {/* Add Account Button (Limit 4) */}
-                  {savedAccounts.length < 4 ? (
+                  {/* Add New Profile Button (Netflix Style Limit 4) */}
+                  {profiles.length < 4 ? (
                     <button
                       type="button"
                       onClick={() => {
-                        setAddEmail('');
-                        setAddPassword('');
-                        setAddError('');
-                        setShowAddAccountModal(true);
+                        setNewProfileName('');
+                        setCreateError('');
+                        setShowAddProfileModal(true);
                         setShowProfileMenu(false);
                       }}
                       className="w-full mt-1 flex items-center justify-center gap-2 p-2 rounded-xl border border-dashed border-blue-300 dark:border-blue-800/80 bg-blue-50/50 hover:bg-blue-100/50 dark:bg-blue-950/30 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-bold transition-all cursor-pointer"
                     >
-                      <Plus className="w-4 h-4" /> Add / Switch Another Account ({savedAccounts.length}/4)
+                      <Plus className="w-4 h-4" /> Add New Profile ({profiles.length}/4)
                     </button>
                   ) : (
                     <div className="p-2 mt-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-[10px] font-medium text-amber-800 dark:text-amber-300 text-center">
-                      🔒 Maximum 4 saved accounts reached. Remove an account to add another.
+                      🔒 Maximum 4 profiles per account reached. Remove a profile to create a new one.
                     </div>
                   )}
                 </div>
@@ -445,7 +448,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer"
                   >
-                    <LogOut className="w-4 h-4" /> Sign Out All
+                    <LogOut className="w-4 h-4" /> Sign Out Account
                   </button>
                 </div>
               </div>
@@ -457,88 +460,66 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       {/* Persistent Top Height Spacer */}
       <div className="h-16 w-full shrink-0" aria-hidden="true" />
 
-      {/* Add / Switch User Account Modal */}
-      {showAddAccountModal && (
+      {/* Netflix-Style Inline Modal: Add New Profile */}
+      {showAddProfileModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-5">
             <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <Users className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md">
+                  <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Switch or Add Student Account</h3>
-                  <p className="text-[11px] text-slate-500">Device limit: Max 4 active accounts</p>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Create New User Profile</h3>
+                  <p className="text-[11px] text-slate-500">Netflix-style profile under account {currentUserEmail}</p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setShowAddAccountModal(false)}
+                onClick={() => setShowAddProfileModal(false)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {addError && (
+            {createError && (
               <div className="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/80 rounded-xl text-amber-900 dark:text-amber-200 text-xs font-medium">
-                {addError}
+                {createError}
               </div>
             )}
 
-            <form onSubmit={handleAddOrSwitchAccountSubmit} className="space-y-4 text-xs font-medium">
-              <div className="space-y-1">
-                <label className="text-slate-700 dark:text-slate-300 font-extrabold">Student Email Address *</label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type="email"
-                    required
-                    value={addEmail}
-                    onChange={(e) => setAddEmail(e.target.value)}
-                    placeholder="student@example.com"
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
+            <form onSubmit={handleCreateProfileSubmit} className="space-y-4 text-xs font-medium">
+              <div className="space-y-1.5">
+                <label className="text-slate-700 dark:text-slate-300 font-extrabold">Profile Name *</label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={newProfileName}
+                  onChange={(e) => setNewProfileName(e.target.value)}
+                  placeholder="e.g. Ram, Student 2, JEE Prep 2026"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs font-bold"
+                />
+                <p className="text-[10px] text-slate-400 leading-normal pt-1">
+                  💡 Creating this profile will immediately take you to the <strong>Course Selection Menu</strong> to lock the target course for this new profile.
+                </p>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-slate-700 dark:text-slate-300 font-extrabold">Account Password *</label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type={showAddPassword ? 'text' : 'password'}
-                    required
-                    value={addPassword}
-                    onChange={(e) => setAddPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAddPassword(!showAddPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-0.5 cursor-pointer"
-                    title={showAddPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showAddPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
-                  onClick={() => setShowAddAccountModal(false)}
+                  onClick={() => setShowAddProfileModal(false)}
                   className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={addLoading}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-sm transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                  disabled={createLoading || !newProfileName.trim()}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
-                  {addLoading ? 'Switching Account...' : 'Log In & Switch Account'}
+                  {createLoading ? 'Creating Profile...' : 'Create Profile & Select Course'}
                 </button>
               </div>
             </form>
@@ -548,4 +529,3 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     </>
   );
 };
-
