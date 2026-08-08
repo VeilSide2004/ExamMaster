@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { StudentHeader } from '@/components/layout/StudentHeader';
-import { FileText, Clock, Award, PlayCircle, Filter, Sparkles, CheckCircle2 } from 'lucide-react';
+import { FileText, PlayCircle, Sparkles, AlertTriangle, ShieldAlert, RotateCcw, X } from 'lucide-react';
 
 const getInitialMockTestsCache = () => {
   if (typeof window !== 'undefined' && (window as any).__MOCK_TESTS_CACHE__) {
@@ -13,10 +13,15 @@ const getInitialMockTestsCache = () => {
 };
 
 export default function MockTestsListPage() {
+  const router = useRouter();
   const initialCache = getInitialMockTestsCache();
   const [tests, setTests] = useState<any[]>(initialCache || []);
   const [loading, setLoading] = useState(!initialCache);
   const [filterType, setFilterType] = useState<'all' | 'full' | 'sectional'>('all');
+
+  // Pre-test warning modal state
+  const [pendingTestId, setPendingTestId] = useState<string | null>(null);
+  const [showPreTestModal, setShowPreTestModal] = useState(false);
 
   useEffect(() => {
     fetch('/api/mock-tests')
@@ -37,6 +42,23 @@ export default function MockTestsListPage() {
     return (t.type || 'full') === filterType;
   });
 
+  const handleStartTest = (testId: string) => {
+    setPendingTestId(testId);
+    setShowPreTestModal(true);
+  };
+
+  const handleConfirmStartTest = () => {
+    if (pendingTestId) {
+      setShowPreTestModal(false);
+      router.push(`/mock-tests/${pendingTestId}`);
+    }
+  };
+
+  const handleCancelModal = () => {
+    setShowPreTestModal(false);
+    setPendingTestId(null);
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-page-in pb-24 lg:pb-0">
@@ -49,7 +71,7 @@ export default function MockTestsListPage() {
                 <FileText className="w-5 h-5" />
               </span>
               <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Mock Examinations & Assessment Papers
+                Mock Examinations &amp; Assessment Papers
               </h1>
             </div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
@@ -165,18 +187,101 @@ export default function MockTestsListPage() {
                   </div>
                 </div>
 
-                <Link
-                  href={`/mock-tests/${test._id}`}
+                <button
+                  type="button"
+                  onClick={() => handleStartTest(test._id)}
                   className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2"
                 >
                   <PlayCircle className="w-4 h-4 fill-current stroke-[1]" /> Start Mock Exam
-                </Link>
+                </button>
               </div>
             ))
           )}
         </div>
 
       </main>
+
+      {/* ─── Pre-Test Entry Warning Modal ─── */}
+      {showPreTestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(2,6,23,0.75)', backdropFilter: 'blur(8px)' }}>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center space-y-5 relative animate-in fade-in zoom-in-95 duration-200">
+
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={handleCancelModal}
+              className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center mx-auto">
+              <ShieldAlert className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+            </div>
+
+            {/* Title */}
+            <div>
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 tracking-wider">
+                Exam Security Notice
+              </span>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white mt-3 leading-tight">
+                Before You Begin
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                Please read the following rules carefully before entering the examination.
+              </p>
+            </div>
+
+            {/* Rules list */}
+            <div className="text-left space-y-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                </div>
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <span className="font-black text-slate-900 dark:text-white">No going back.</span> Once you enter the test, you cannot navigate away or press the back button before completing it.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                </div>
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <span className="font-black text-slate-900 dark:text-white">3-strike auto-submit.</span> Each back-navigation attempt counts as a violation. After <span className="text-rose-600 dark:text-rose-400 font-black">3 violations</span>, your test will be automatically submitted.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </div>
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <span className="font-black text-slate-900 dark:text-white">Mobile users:</span> The test must be taken in landscape orientation. Please rotate your device before starting.
+                </p>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleCancelModal}
+                className="flex-1 py-2.5 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmStartTest}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2"
+              >
+                <PlayCircle className="w-4 h-4" />
+                I Understand, Start Test
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

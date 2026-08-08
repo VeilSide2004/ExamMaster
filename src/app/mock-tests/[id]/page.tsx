@@ -4,7 +4,10 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { HindiTranslateButton } from '@/components/common/HindiTranslateButton';
-import { Clock, Bookmark, ChevronLeft, ChevronRight, CheckCircle2, Award, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
+import {
+  Clock, Bookmark, ChevronLeft, ChevronRight, CheckCircle2, Award,
+  AlertTriangle, ShieldCheck, ShieldAlert, RotateCcw
+} from 'lucide-react';
 
 export default function MockTestExecutionPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -16,7 +19,6 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [currentIdx, setCurrentIdx] = useState(0);
 
   // Question Response State
-  // { [qId]: { selectedOption: number | null, isMFR: boolean, isVisited: boolean } }
   const [userState, setUserState] = useState<Record<string, { selectedOption: number | null; isMFR: boolean; isVisited: boolean }>>({});
 
   // Timer State (in seconds)
@@ -30,6 +32,14 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
   // Hindi Translation State
   const [hindiTranslations, setHindiTranslations] = useState<Record<string, { question: string; options: string[] } | null>>({});
+
+  // ─── Back-Navigation Lock State ───
+  const [backPressCount, setBackPressCount] = useState(0);
+  const [showBackWarning, setShowBackWarning] = useState(false);
+  const backPressCountRef = useRef(0); // ref for use inside event listener
+
+  // ─── Landscape / Portrait State ───
+  const [isPortrait, setIsPortrait] = useState(false);
 
   const handleMockTranslated = useCallback((qId: string, texts: string[]) => {
     setHindiTranslations((prev) => ({
@@ -133,6 +143,73 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     }
   };
 
+  // ─── Force Landscape on Mobile ───
+  useEffect(() => {
+    const tryLockLandscape = async () => {
+      try {
+        if (screen?.orientation && typeof (screen.orientation as any).lock === 'function') {
+          await (screen.orientation as any).lock('landscape');
+        }
+      } catch (e) {
+        // Not supported or user denied — fall back to CSS overlay
+      }
+    };
+
+    tryLockLandscape();
+
+    const checkOrientation = () => {
+      const isMobile = window.innerWidth <= 900 || ('ontouchstart' in window);
+      const portrait = window.innerHeight > window.innerWidth;
+      setIsPortrait(isMobile && portrait);
+    };
+
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+      try {
+        if (screen?.orientation && typeof (screen.orientation as any).unlock === 'function') {
+          (screen.orientation as any).unlock();
+        }
+      } catch (e) {}
+    };
+  }, []);
+
+  // ─── Back Navigation Lock ───
+  useEffect(() => {
+    if (!test || result) return;
+
+    // Push a dummy state so there's always a "back entry" to intercept
+    window.history.pushState({ mockTestLock: true }, '', window.location.href);
+
+    const handlePopState = (e: PopStateEvent) => {
+      // Re-push the dummy state so back is always intercepted
+      window.history.pushState({ mockTestLock: true }, '', window.location.href);
+
+      backPressCountRef.current += 1;
+      const newCount = backPressCountRef.current;
+      setBackPressCount(newCount);
+
+      if (newCount >= 3) {
+        // 3rd violation → auto-submit
+        handleFinalSubmit('auto');
+      } else {
+        // Show warning modal (1st or 2nd)
+        setShowBackWarning(true);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [test, result]);
+
   // Fullscreen & Lockdown Security Listener
   useEffect(() => {
     if (!test || result) return;
@@ -167,7 +244,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     };
   }, [test, result]);
 
-  // Live Timer Countdown Effect (FR-15, FR-17, RULE-08)
+  // Live Timer Countdown Effect
   useEffect(() => {
     if (!test || result) return;
 
@@ -175,7 +252,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
-          handleFinalSubmit('auto'); // FR-17 Auto-submit on timer expiry
+          handleFinalSubmit('auto');
           return 0;
         }
         return prev - 1;
@@ -274,7 +351,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     }
   };
 
-  // Compute Palette Stats (FR-15 / FR-18)
+  // Compute Palette Stats
   let answeredCount = 0;
   let unansweredCount = 0;
   let mfrCount = 0;
@@ -307,6 +384,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         setResult(data.result);
         setShowConfirmModal(false);
         setShowLockWarning(false);
+        setShowBackWarning(false);
         exitFullscreen();
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('xpUpdated'));
@@ -330,23 +408,60 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
+  const violationsRemaining = 3 - backPressCount;
+
   return (
     <div className="h-screen max-h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950">
+
+      {/* ─── Portrait Mode Overlay (mobile only) ─── */}
+      {isPortrait && !result && (
+        <div
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center text-center p-8"
+          style={{ background: 'linear-gradient(135deg, #0B192C 0%, #1a2d4a 100%)' }}
+        >
+          <div
+            className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center mb-6"
+            style={{ animation: 'spin 3s linear infinite' }}
+          >
+            <RotateCcw className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-white text-xl font-black mb-2">Rotate Your Device</h2>
+          <p className="text-white/60 text-sm leading-relaxed max-w-xs">
+            Please rotate your device to <strong className="text-white">landscape mode</strong> to take the mock test.
+          </p>
+          <div className="mt-6 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-white/30 animate-pulse" />
+            <span className="text-white/40 text-xs">Waiting for rotation...</span>
+          </div>
+          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+
       {/* Test Top Header Bar */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between shrink-0 sticky top-0 z-20 shadow-md shadow-slate-200/50 dark:shadow-black/60">
-        <div className="flex items-center gap-4">
-          <Logo size={32} showText={false} />
-          <div>
-            <h1 className="text-sm font-bold text-slate-900 dark:text-white">{test.title}</h1>
-            <p className="text-[10px] text-slate-500">Course: {test.course_id?.name}</p>
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 md:px-6 py-2 md:py-3 flex items-center justify-between shrink-0 sticky top-0 z-20 shadow-md shadow-slate-200/50 dark:shadow-black/60">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+          <Logo size={28} showText={false} />
+          <div className="min-w-0">
+            <h1 className="text-xs md:text-sm font-bold text-slate-900 dark:text-white truncate max-w-[120px] md:max-w-none">{test.title}</h1>
+            <p className="text-[9px] md:text-[10px] text-slate-500 hidden sm:block">Course: {test.course_id?.name}</p>
           </div>
         </div>
 
-        {/* Live Timer matching FR-15 */}
+        {/* Back-press Violation Badge */}
+        {backPressCount > 0 && !result && (
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700">
+            <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+            <span className="text-[10px] font-black text-amber-700 dark:text-amber-300">
+              {backPressCount}/3 Violations
+            </span>
+          </div>
+        )}
+
+        {/* Live Timer */}
         {!result && (
-          <div className="flex items-center gap-2 bg-brand-50 dark:bg-slate-800 border border-brand-200 dark:border-slate-700 px-4 py-1.5 rounded-xl text-brand-900 dark:text-brand-300">
-            <Clock className="w-4 h-4 text-brand-700 dark:text-brand-400" />
-            <span className="font-mono text-sm font-bold">{formatTime(timeLeft)}</span>
+          <div className="flex items-center gap-1.5 bg-brand-50 dark:bg-slate-800 border border-brand-200 dark:border-slate-700 px-2 md:px-4 py-1 md:py-1.5 rounded-xl text-brand-900 dark:text-brand-300">
+            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-700 dark:text-brand-400" />
+            <span className="font-mono text-xs md:text-sm font-bold">{formatTime(timeLeft)}</span>
           </div>
         )}
 
@@ -354,18 +469,18 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           <button
             onClick={() => setShowConfirmModal(true)}
             type="button"
-            className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-colors"
+            className="px-2 md:px-4 py-1 md:py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-[10px] md:text-xs font-bold rounded-lg transition-colors shrink-0"
           >
-            Submit Test
+            Submit
           </button>
         )}
       </header>
 
       {/* Subject Section Navigation Bar */}
       {!result && (
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-2 flex items-center justify-between shrink-0 sticky top-0 z-20 shadow-xs">
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 md:px-6 py-1.5 md:py-2 flex items-center justify-between shrink-0 z-20 shadow-xs">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
-            <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider mr-1 shrink-0">
+            <span className="text-[10px] md:text-[11px] font-black uppercase text-slate-400 tracking-wider mr-1 shrink-0">
               SECTIONS:
             </span>
             {testSubjects.map((subject) => {
@@ -386,7 +501,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                   key={subject}
                   type="button"
                   onClick={() => navigateTo(firstQIdx)}
-                  className={`px-4 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all shrink-0 border ${
+                  className={`px-2.5 md:px-4 py-1 md:py-1.5 rounded-xl text-[10px] md:text-xs font-extrabold flex items-center gap-1.5 md:gap-2 transition-all shrink-0 border ${
                     isCurrentSubject
                       ? 'bg-[#0B192C] text-white border-[#0B192C] dark:bg-brand-500 dark:border-brand-500 shadow-xs'
                       : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
@@ -394,7 +509,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 >
                   <span>{subject}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    className={`text-[9px] md:text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                       isCurrentSubject
                         ? 'bg-white/20 text-white'
                         : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -409,12 +524,13 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         </div>
       )}
 
-      {/* Main Content Grid: Question Area vs Navigation Palette */}
-      <div className="flex-1 flex flex-col md:flex-row min-h-0">
+      {/* Main Content Grid */}
+      <div className="flex-1 flex flex-row min-h-0">
+
         {/* Left Column: Question Screen */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-6">
+        <div className="flex-1 p-3 md:p-6 overflow-y-auto space-y-4 md:space-y-6">
           {result ? (
-            /* Post-Test Result & Review Screen (FR-19 & FR-20) */
+            /* Post-Test Result & Review Screen */
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -458,7 +574,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 </button>
               </div>
 
-              {/* FR-20 Post-Test Question Review */}
+              {/* Post-Test Question Review */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">Question-by-Question Solution Review</h3>
                 {questions.map((q, idx) => {
@@ -505,40 +621,35 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               </div>
             </div>
           ) : (
-            /* Active Question Screen (FR-15) */
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between h-full min-h-[420px]">
+            /* Active Question Screen */
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 md:p-6 shadow-sm flex flex-col justify-between h-full min-h-0">
               {currentQ ? (
-                <div>
-                  <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-md text-[11px] font-black bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800 uppercase tracking-wider">
-                        Section: {currentQInfo.subject}
+                <div className="flex flex-col h-full">
+                  <div className="flex justify-between items-center mb-3 md:mb-4 pb-2 md:pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] md:text-[11px] font-black bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800 uppercase tracking-wider">
+                        {currentQInfo.subject}
                       </span>
-                      {currentQInfo.topic && (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                          {currentQInfo.topic}
-                        </span>
-                      )}
-                      <span className="text-xs font-bold text-slate-400 ml-1">
-                        • Question {currentIdx + 1} of {questions.length}
+                      <span className="text-[10px] md:text-xs font-bold text-slate-400">
+                        Q{currentIdx + 1}/{questions.length}
                       </span>
                     </div>
                     <button
                       onClick={handleToggleMFR}
                       type="button"
-                      className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition-colors ${
+                      className={`px-2 md:px-3 py-1 rounded-lg text-[10px] md:text-xs font-bold flex items-center gap-1 md:gap-1.5 border transition-colors ${
                         userState[currentQ._id]?.isMFR
                           ? 'bg-amber-100 border-amber-400 text-amber-900 dark:bg-amber-950 dark:border-amber-700 dark:text-amber-300'
                           : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      <Bookmark className="w-3.5 h-3.5" />
-                      {userState[currentQ._id]?.isMFR ? 'Marked for Review' : 'Mark for Review'}
+                      <Bookmark className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                      <span className="hidden sm:inline">{userState[currentQ._id]?.isMFR ? 'Marked' : 'Mark'}</span>
                     </button>
                   </div>
 
-                  <div className="flex items-start justify-between gap-3 mb-6">
-                    <h2 className="text-base font-bold text-slate-900 dark:text-white leading-relaxed flex-1">
+                  <div className="flex items-start justify-between gap-2 md:gap-3 mb-4 md:mb-6">
+                    <h2 className="text-sm md:text-base font-bold text-slate-900 dark:text-white leading-relaxed flex-1">
                       {hindiTranslations[currentQ._id]?.question ?? currentQ.question_text}
                     </h2>
                     <HindiTranslateButton
@@ -549,95 +660,99 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                     />
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2 md:space-y-3 flex-1">
                     {(currentQ.options || []).map((_opt: string, optIdx: number) => {
                       const opt = (hindiTranslations[currentQ._id]?.options || currentQ.options || [])[optIdx];
                       const isSelected = userState[currentQ._id]?.selectedOption === optIdx;
-                    return (
-                      <button
-                        key={optIdx}
-                        type="button"
-                        onClick={() => handleSelectOption(optIdx)}
-                        className={`w-full p-3.5 rounded-xl border text-xs text-left font-medium transition-all flex items-center gap-3 ${
-                          isSelected
-                            ? 'bg-brand-50 border-brand-800 text-brand-900 dark:bg-brand-950 dark:border-brand-500 dark:text-brand-300 font-bold shadow-sm'
-                            : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <span
-                          className={`w-6 h-6 rounded-full text-[11px] flex items-center justify-center font-bold ${
+                      return (
+                        <button
+                          key={optIdx}
+                          type="button"
+                          onClick={() => handleSelectOption(optIdx)}
+                          className={`w-full p-2.5 md:p-3.5 rounded-xl border text-[11px] md:text-xs text-left font-medium transition-all flex items-center gap-2 md:gap-3 ${
                             isSelected
-                              ? 'bg-brand-800 text-white'
-                              : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                              ? 'bg-brand-50 border-brand-800 text-brand-900 dark:bg-brand-950 dark:border-brand-500 dark:text-brand-300 font-bold shadow-sm'
+                              : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300'
                           }`}
                         >
-                          {String.fromCharCode(65 + optIdx)}
-                        </span>
-                        <span>{opt}</span>
+                          <span
+                            className={`w-5 h-5 md:w-6 md:h-6 rounded-full text-[10px] md:text-[11px] flex items-center justify-center font-bold shrink-0 ${
+                              isSelected
+                                ? 'bg-brand-800 text-white'
+                                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {String.fromCharCode(65 + optIdx)}
+                          </span>
+                          <span>{opt}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Bottom Controls */}
+                  <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-3 md:pt-4 mt-3 md:mt-6">
+                    <button
+                      type="button"
+                      onClick={handleClearResponse}
+                      className="px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold"
+                    >
+                      Clear Answer
+                    </button>
+
+                    <div className="flex gap-1.5 md:gap-2">
+                      <button
+                        type="button"
+                        disabled={currentIdx === 0}
+                        onClick={() => navigateTo(currentIdx - 1)}
+                        className="px-2.5 md:px-4 py-1.5 md:py-2 border border-slate-300 dark:border-slate-700 text-[10px] md:text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1 text-slate-700 dark:text-slate-300"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5 md:w-4 md:h-4" /> Prev
                       </button>
-                    );
-                  })}
+
+                      <button
+                        type="button"
+                        disabled={currentIdx === questions.length - 1}
+                        onClick={() => navigateTo(currentIdx + 1)}
+                        className="px-2.5 md:px-4 py-1.5 md:py-2 bg-brand-800 hover:bg-brand-900 text-white text-[10px] md:text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1 transition-colors"
+                      >
+                        Next <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
               ) : (
                 <div className="p-8 text-center text-slate-500 text-xs">No active question available.</div>
               )}
-
-              {/* Bottom Controls */}
-              <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-4 mt-6">
-                <button
-                  type="button"
-                  onClick={handleClearResponse}
-                  className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold"
-                >
-                  Clear Answer
-                </button>
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    disabled={currentIdx === 0}
-                    onClick={() => navigateTo(currentIdx - 1)}
-                    className="px-4 py-2 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1 text-slate-700 dark:text-slate-300"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Previous
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={currentIdx === questions.length - 1}
-                    onClick={() => navigateTo(currentIdx + 1)}
-                    className="px-4 py-2 bg-brand-800 hover:bg-brand-900 text-white text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1 transition-colors"
-                  >
-                    Next <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
             </div>
           )}
         </div>
 
-        {/* Right Navigation Palette Column (FR-15) */}
+        {/* Right Navigation Palette Column */}
         {!result && (
-          <div className="w-full md:w-72 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shrink-0 space-y-5 overflow-y-auto">
+          <div className="w-36 md:w-72 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 md:p-5 shrink-0 space-y-3 md:space-y-5 overflow-y-auto">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
-                Question Palette
+              <h3 className="text-[10px] md:text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2 md:mb-3">
+                Palette
               </h3>
 
-              {/* 4 State Legend per FR-15 */}
-              <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-slate-600 dark:text-slate-400">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded bg-emerald-500" /> Answered ({answeredCount})
+              {/* 4 State Legend */}
+              <div className="grid grid-cols-1 gap-1 md:gap-2 text-[9px] md:text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+                <div className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-emerald-500 shrink-0" /> 
+                  <span>Done ({answeredCount})</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded bg-rose-500" /> Unanswered ({unansweredCount})
+                <div className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-rose-500 shrink-0" /> 
+                  <span>Skip ({unansweredCount})</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded bg-amber-500" /> Marked ({mfrCount})
+                <div className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-amber-500 shrink-0" /> 
+                  <span>MFR ({mfrCount})</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded bg-slate-200 dark:bg-slate-700" /> Unvisited ({unvisitedCount})
+                <div className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-slate-200 dark:bg-slate-700 shrink-0" /> 
+                  <span>New ({unvisitedCount})</span>
                 </div>
               </div>
             </div>
@@ -648,18 +763,18 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               const isCurrentSubject = currentQInfo.subject === subject;
 
               return (
-                <div key={subject} className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex justify-between items-center text-xs font-black text-slate-900 dark:text-white">
-                    <span className="flex items-center gap-1.5">
-                      <span className={`w-2 h-2 rounded-full ${isCurrentSubject ? 'bg-brand-600 animate-pulse' : 'bg-slate-300 dark:bg-slate-700'}`} />
-                      {subject}
+                <div key={subject} className="space-y-1.5 md:space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex justify-between items-center text-[9px] md:text-xs font-black text-slate-900 dark:text-white">
+                    <span className="flex items-center gap-1">
+                      <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${isCurrentSubject ? 'bg-brand-600 animate-pulse' : 'bg-slate-300 dark:bg-slate-700'}`} />
+                      <span className="truncate max-w-[60px] md:max-w-none">{subject}</span>
                     </span>
-                    <span className="text-[10px] text-slate-400 font-medium">
-                      ({subQList.length} Questions)
+                    <span className="text-[8px] md:text-[10px] text-slate-400 font-medium shrink-0 ml-1">
+                      ({subQList.length})
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-4 md:grid-cols-5 gap-1 md:gap-2">
                     {subQList.map(({ question: q, originalIdx: idx }) => {
                       const st = userState[q._id];
                       const isCurrent = idx === currentIdx;
@@ -678,8 +793,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                         <button
                           key={q._id}
                           onClick={() => navigateTo(idx)}
-                          className={`h-9 rounded-lg font-mono text-xs flex items-center justify-center border transition-all ${stateColor} ${
-                            isCurrent ? 'ring-2 ring-brand-800 ring-offset-2' : ''
+                          className={`h-7 md:h-9 rounded-lg font-mono text-[9px] md:text-xs flex items-center justify-center border transition-all ${stateColor} ${
+                            isCurrent ? 'ring-2 ring-brand-800 ring-offset-1' : ''
                           }`}
                         >
                           {idx + 1}
@@ -694,7 +809,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         )}
       </div>
 
-      {/* Manual Submission Modal (FR-18) */}
+      {/* Manual Submission Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-lg text-center">
@@ -737,6 +852,60 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 {submitting ? 'Submitting...' : 'Yes, Submit Test'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Back Navigation Warning Modal ─── */}
+      {showBackWarning && !result && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(2,6,23,0.85)', backdropFilter: 'blur(8px)' }}>
+          <div className="bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center space-y-5">
+
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center mx-auto">
+              <ShieldAlert className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+            </div>
+
+            {/* Strike counter */}
+            <div className="flex justify-center gap-2">
+              {[1, 2, 3].map((n) => (
+                <div
+                  key={n}
+                  className={`w-8 h-2 rounded-full transition-colors ${
+                    n <= backPressCount
+                      ? 'bg-rose-500'
+                      : 'bg-slate-200 dark:bg-slate-700'
+                  }`}
+                />
+              ))}
+            </div>
+
+            <div>
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 tracking-wider">
+                Violation {backPressCount} of 3
+              </span>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white mt-3">
+                Back Navigation Detected!
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                You attempted to navigate away from the examination.
+                {violationsRemaining > 0 ? (
+                  <>
+                    {' '}You have <span className="font-black text-rose-600 dark:text-rose-400">{violationsRemaining} violation{violationsRemaining !== 1 ? 's' : ''}</span> remaining before your test is automatically submitted.
+                  </>
+                ) : (
+                  <> Your test is being submitted now.</>
+                )}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowBackWarning(false)}
+              className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black rounded-xl shadow-lg transition-all"
+            >
+              Return to Examination
+            </button>
           </div>
         </div>
       )}
