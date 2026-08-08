@@ -113,6 +113,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   // Fullscreen Lockdown State
   const [isFullscreen, setIsFullscreen] = useState(true);
   const [showLockWarning, setShowLockWarning] = useState(false);
+  const [fullscreenViolationCount, setFullscreenViolationCount] = useState(0);
+  const fullscreenViolationRef = useRef(0);
 
   const enterFullscreen = () => {
     try {
@@ -220,8 +222,19 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     const handleFullscreenChange = () => {
       const fsEl = document.fullscreenElement || (document as any).webkitFullscreenElement;
       if (!fsEl && !result) {
+        // Increment violation counter
+        fullscreenViolationRef.current += 1;
+        const vCount = fullscreenViolationRef.current;
+        setFullscreenViolationCount(vCount);
         setIsFullscreen(false);
-        setShowLockWarning(true);
+
+        if (vCount >= 3) {
+          // 3rd violation → auto-submit immediately
+          setShowLockWarning(true); // show "submitting" state briefly
+          handleFinalSubmit('auto');
+        } else {
+          setShowLockWarning(true);
+        }
       } else {
         setIsFullscreen(true);
         setShowLockWarning(false);
@@ -949,36 +962,80 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         </div>
       )}
 
-      {/* SCREEN LOCK WARNING MODAL */}
+      {/* ─── SCREEN LOCK VIOLATION MODAL — fully blocking, no escape ─── */}
       {!result && !isFullscreen && showLockWarning && (
-        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
-              <ShieldCheck className="w-8 h-8" />
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{
+            background: 'rgba(2,6,23,0.97)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            touchAction: 'none',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+          }}
+          // Block all pointer events from reaching anything beneath
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        >
+          <div className="bg-white dark:bg-slate-900 border-2 border-rose-400 dark:border-rose-600 rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center space-y-5">
+
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-full bg-rose-100 dark:bg-rose-950/80 flex items-center justify-center mx-auto">
+              <ShieldCheck className="w-8 h-8 text-rose-600 dark:text-rose-400" />
+            </div>
+
+            {/* Strike counter bars */}
+            <div className="flex justify-center gap-2">
+              {[1, 2, 3].map((n) => (
+                <div
+                  key={n}
+                  className={`h-2 flex-1 max-w-[60px] rounded-full transition-colors ${
+                    n <= fullscreenViolationCount
+                      ? 'bg-rose-500'
+                      : 'bg-slate-200 dark:bg-slate-700'
+                  }`}
+                />
+              ))}
             </div>
 
             <div>
               <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300 tracking-wider">
-                Exam Security Protocol
+                {fullscreenViolationCount >= 3 ? 'Auto-Submitting...' : `Violation ${fullscreenViolationCount} of 3`}
               </span>
               <h3 className="text-lg font-black text-slate-900 dark:text-white mt-2">
-                Examination Screen Locked
+                {fullscreenViolationCount >= 3 ? 'Test Submitted' : 'Examination Screen Locked'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                Mock examinations must be completed in Full Screen Mode. You cannot leave or navigate away until the test is submitted or the timer expires.
+                {fullscreenViolationCount >= 3
+                  ? 'You exited fullscreen 3 times. Your test has been automatically submitted.'
+                  : `You exited Full Screen Mode. You have ${3 - fullscreenViolationCount} warning${3 - fullscreenViolationCount !== 1 ? 's' : ''} remaining before your test is automatically submitted.`
+                }
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                enterFullscreen();
-                setShowLockWarning(false);
-              }}
-              className="w-full py-3 bg-brand-800 hover:bg-brand-900 text-white text-xs font-black rounded-xl shadow-lg transition-all"
-            >
-              Re-enter Full Screen Examination
-            </button>
+            {/* Only show re-enter button if not yet auto-submitted */}
+            {fullscreenViolationCount < 3 && (
+              <button
+                type="button"
+                onClick={() => {
+                  enterFullscreen();
+                  setShowLockWarning(false);
+                }}
+                className="w-full py-3 bg-brand-800 hover:bg-brand-900 text-white text-xs font-black rounded-xl shadow-lg transition-all"
+              >
+                Re-enter Full Screen Examination
+              </button>
+            )}
+
+            {fullscreenViolationCount >= 3 && (
+              <div className="flex items-center justify-center gap-2 text-slate-400">
+                <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs font-bold">Submitting your answers...</span>
+              </div>
+            )}
           </div>
         </div>
       )}
