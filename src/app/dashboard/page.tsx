@@ -192,24 +192,26 @@ export default function StudentDashboardPage() {
             ) : (
               <div className="space-y-3 my-auto">
                 {mockTests.slice(0, 2).map((test, idx) => (
-                  <div
+                  <Link
                     key={test._id || idx}
-                    className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 flex items-center justify-between gap-4"
+                    href="/mock-tests"
+                    className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 flex items-center justify-between gap-4 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all cursor-pointer group"
                   >
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">{test.title}</h4>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {test.title}
+                      </h4>
                       <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
                         Duration: {test.duration_minutes} mins | Cutoff: {test.cutoff_marks} Marks
                       </p>
                     </div>
 
-                    <Link
-                      href={`/mock-tests/${test._id}`}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-xs shrink-0"
+                    <span
+                      className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-blue-600 group-hover:text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shrink-0"
                     >
-                      <Play className="w-3.5 h-3.5 fill-current" /> Start Test
-                    </Link>
-                  </div>
+                      View Paper <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                  </Link>
                 ))}
               </div>
             )}
