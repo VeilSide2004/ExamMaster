@@ -219,25 +219,70 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     // Request Initial Fullscreen
     enterFullscreen();
 
+    // ─── Shared violation trigger ───────────────────────────────────
+    const triggerViolation = () => {
+      if (fullscreenViolationRef.current >= 3) return; // already submitted
+      fullscreenViolationRef.current += 1;
+      const vCount = fullscreenViolationRef.current;
+      setFullscreenViolationCount(vCount);
+      setIsFullscreen(false);
+      if (vCount >= 3) {
+        setShowLockWarning(true);
+        handleFinalSubmit('auto');
+      } else {
+        setShowLockWarning(true);
+      }
+    };
+
+    // ─── Fullscreen exit (Esc key, browser UI) ───────────────────────
     const handleFullscreenChange = () => {
       const fsEl = document.fullscreenElement || (document as any).webkitFullscreenElement;
-      if (!fsEl && !result) {
-        // Increment violation counter
-        fullscreenViolationRef.current += 1;
-        const vCount = fullscreenViolationRef.current;
-        setFullscreenViolationCount(vCount);
-        setIsFullscreen(false);
-
-        if (vCount >= 3) {
-          // 3rd violation → auto-submit immediately
-          setShowLockWarning(true); // show "submitting" state briefly
-          handleFinalSubmit('auto');
-        } else {
-          setShowLockWarning(true);
-        }
+      if (!fsEl) {
+        triggerViolation();
       } else {
         setIsFullscreen(true);
         setShowLockWarning(false);
+      }
+    };
+
+    // ─── Tab switch / window minimize (visibilitychange) ─────────────
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        triggerViolation();
+      }
+    };
+
+    // ─── Windows key / Alt-Tab / app switch (window blur) ────────────
+    // Use a short timeout so we don't double-count when visibilitychange
+    // also fires for the same user action.
+    let blurTimer: ReturnType<typeof setTimeout> | null = null;
+    const handleWindowBlur = () => {
+      blurTimer = setTimeout(() => {
+        // Only count if the page is still visible (e.g., Windows key pressed
+        // without switching away — visibility stays "visible" but focus is lost)
+        if (!document.hidden) {
+          triggerViolation();
+        }
+      }, 150);
+    };
+    const handleWindowFocus = () => {
+      if (blurTimer) clearTimeout(blurTimer);
+    };
+
+    // ─── Keyboard shortcut interception (best-effort) ─────────────────
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block common OS shortcuts that could escape the exam
+      const blocked =
+        e.key === 'Meta' || // Windows/Command key
+        (e.altKey && e.key === 'Tab') || // Alt+Tab
+        (e.altKey && e.key === 'F4') || // Alt+F4
+        (e.ctrlKey && e.key === 'w') || // Close tab
+        (e.ctrlKey && e.key === 'W') ||
+        (e.ctrlKey && e.shiftKey && e.key === 'Escape') || // Task manager shortcut
+        e.key === 'F11'; // Fullscreen toggle
+      if (blocked) {
+        e.preventDefault();
+        e.stopPropagation();
       }
     };
 
@@ -248,13 +293,23 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
+    window.addEventListener('keydown', handleKeyDown, true); // capture phase
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('keydown', handleKeyDown, true);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (blurTimer) clearTimeout(blurTimer);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [test, result]);
 
   // Live Timer Countdown Effect
