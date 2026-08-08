@@ -23,6 +23,8 @@ import {
   CheckCircle2,
   XCircle,
   FileText,
+  Lock,
+  Zap,
 } from 'lucide-react';
 
 const getInitialDashboardCache = () => {
@@ -214,74 +216,102 @@ export default function StudentDashboardPage() {
           </div>
 
           {/* Row 1 Right: Course Leaderboard */}
-          <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-500 flex items-center justify-center">
-                  <Trophy className="w-4.5 h-4.5" />
-                </div>
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Course Leaderboard</h3>
-              </div>
-
-              <Link
-                href="/leaderboard"
-                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-              >
-                Full rank list <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            {/* Deep Purple Gradient Rank Banner Card */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-950 via-[#220E3D] to-purple-950 p-5 text-white border border-purple-800/50 shadow-md">
-              {/* Subtle wave SVG overlay background */}
-              <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <path d="M0,50 Q25,30 50,50 T100,50 L100,100 L0,100 Z" fill="white" />
-                </svg>
-              </div>
-
-              <div className="relative z-10 flex justify-between items-end">
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-200/80 block">
-                    YOUR CURRENT RANK
-                  </span>
-                  <span className="text-4xl font-black tracking-tight text-white mt-1 block">
-                    #{studentRank}
-                  </span>
-                </div>
-
-                <div className="text-right max-w-[140px]">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-200/80 block">
-                    TRACK
-                  </span>
-                  <span className="text-xs font-bold text-purple-100 truncate block mt-1">
-                    {courseName}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Leaderboard Entries / Empty Note */}
-            <div className="mt-4 text-center">
-              {leaderboard.length === 0 ? (
-                <p className="text-xs text-slate-400 font-medium py-2">No leaderboard records yet.</p>
-              ) : (
-                <div className="space-y-2 text-left">
-                  {leaderboard.slice(0, 2).map((st, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs font-bold">
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] flex items-center justify-center">
-                          {idx + 1}
-                        </span>
-                        <span className="text-slate-800 dark:text-slate-200">{st.name}</span>
+          {(() => {
+            const isLeaderboardLocked = !userData || (userData.xp_total || 0) === 0;
+            return (
+              <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex flex-col justify-between relative overflow-hidden">
+                <div className={isLeaderboardLocked ? "blur-md pointer-events-none select-none transition-all duration-500" : ""}>
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-500 flex items-center justify-center">
+                        <Trophy className="w-4.5 h-4.5" />
                       </div>
-                      <span className="text-slate-400 font-extrabold">{st.xp_total || 0} XP</span>
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Course Leaderboard</h3>
                     </div>
-                  ))}
+
+                    <Link
+                      href="/leaderboard"
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                    >
+                      Full rank list <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+
+                  {/* Deep Purple Gradient Rank Banner Card */}
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-950 via-[#220E3D] to-purple-950 p-5 text-white border border-purple-800/50 shadow-md">
+                    {/* Subtle wave SVG overlay background */}
+                    <div className="absolute inset-0 opacity-20 pointer-events-none">
+                      <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <path d="M0,50 Q25,30 50,50 T100,50 L100,100 L0,100 Z" fill="white" />
+                      </svg>
+                    </div>
+
+                    <div className="relative z-10 flex justify-between items-end">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-purple-200/80 block">
+                          YOUR CURRENT RANK
+                        </span>
+                        <span className="text-4xl font-black tracking-tight text-white mt-1 block">
+                          #{studentRank}
+                        </span>
+                      </div>
+
+                      <div className="text-right max-w-[140px]">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-purple-200/80 block">
+                          TRACK
+                        </span>
+                        <span className="text-xs font-bold text-purple-100 truncate block mt-1">
+                          {courseName}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Leaderboard Entries / Empty Note */}
+                  <div className="mt-4 text-center">
+                    {leaderboard.length === 0 ? (
+                      <p className="text-xs text-slate-400 font-medium py-2">No leaderboard records yet.</p>
+                    ) : (
+                      <div className="space-y-2 text-left">
+                        {leaderboard.slice(0, 2).map((st, idx) => (
+                          <div key={idx} className="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs font-bold">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] flex items-center justify-center">
+                                {idx + 1}
+                              </span>
+                              <span className="text-slate-800 dark:text-slate-200">{st.name}</span>
+                            </div>
+                            <span className="text-slate-400 font-extrabold">{st.xp_total || 0} XP</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
+
+                {/* Lock Overlay for 0 XP */}
+                {isLeaderboardLocked && (
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xs rounded-2xl text-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 mb-2.5">
+                      <Lock className="w-6 h-6 text-white" strokeWidth={2.5} />
+                    </div>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white mb-1">Leaderboard Locked</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium max-w-[220px] mb-3.5 leading-tight">
+                      Earn your first XP in practice sets to unlock your rank &amp; standings!
+                    </p>
+                    <Link
+                      href="/practice"
+                      className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs rounded-xl shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                    >
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                      Unlock Now
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Row 2: Incorrect Questions Audit Log Window Card */}
