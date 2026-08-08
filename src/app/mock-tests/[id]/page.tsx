@@ -401,30 +401,43 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const questions: any[] = test?.question_ids || [];
   const currentQ = questions[currentIdx] || null;
 
-  // Auto-Translation Effect when activeLanguage === 'hi'
+  // Auto-Translation & Pre-fetching Effect when activeLanguage === 'hi'
   useEffect(() => {
-    if (activeLanguage !== 'hi' || !currentQ) return;
-    if (hindiTranslations[currentQ._id]) return;
+    if (activeLanguage !== 'hi' || questions.length === 0) return;
 
     let isMounted = true;
-    translateToHindi([currentQ.question_text, ...(currentQ.options || [])])
-      .then((translated) => {
-        if (isMounted && translated && translated.length > 0) {
-          setHindiTranslations((prev) => ({
-            ...prev,
-            [currentQ._id]: {
-              question: translated[0] || currentQ.question_text,
-              options: translated.slice(1),
-            },
-          }));
-        }
-      })
-      .catch((err) => console.error('Auto-translate error:', err));
+
+    // Pre-translate current question + next 2 upcoming questions in background
+    const targetIndices = [currentIdx, currentIdx + 1, currentIdx + 2].filter(
+      (i) => i >= 0 && i < questions.length
+    );
+
+    targetIndices.forEach((idx) => {
+      const q = questions[idx];
+      if (!q || hindiTranslations[q._id]) return; // already translated
+
+      translateToHindi([q.question_text, ...(q.options || [])])
+        .then((translated) => {
+          if (isMounted && translated && translated.length > 0) {
+            setHindiTranslations((prev) => {
+              if (prev[q._id]) return prev;
+              return {
+                ...prev,
+                [q._id]: {
+                  question: translated[0] || q.question_text,
+                  options: translated.slice(1),
+                },
+              };
+            });
+          }
+        })
+        .catch((err) => console.error('Auto-translate error for Q' + (idx + 1), err));
+    });
 
     return () => {
       isMounted = false;
     };
-  }, [activeLanguage, currentQ, hindiTranslations]);
+  }, [activeLanguage, currentIdx, questions, hindiTranslations]);
 
   const courseSubjects: string[] = test?.course_id?.subjects || ['Physics', 'Chemistry', 'Mathematics', 'Biology'];
 
@@ -930,43 +943,68 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                   />
                 </div>
 
-                {/* Question Text */}
-                <div className="text-base md:text-lg font-extrabold text-slate-900 dark:text-white leading-relaxed">
-                  {hindiTranslations[currentQ?._id]?.question ?? currentQ?.question_text}
-                </div>
+                {/* Question Text & Options Render / Hindi Skeleton */}
+                {activeLanguage === 'hi' && !hindiTranslations[currentQ?._id] ? (
+                  <div className="space-y-4 py-4 animate-pulse">
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 p-3 rounded-xl border border-amber-200 dark:border-amber-900/50">
+                      <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin shrink-0" />
+                      <span>🇮🇳 हिंदी अनुवाद लोड हो रहा है... (Translating question to Hindi...)</span>
+                    </div>
+                    <div className="h-6 w-5/6 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                    <div className="h-6 w-2/3 bg-slate-200 dark:bg-slate-800 rounded-xl" />
 
-                {/* Options Grid */}
-                <div className="grid grid-cols-1 gap-3 pt-2">
-                  {(hindiTranslations[currentQ?._id]?.options || currentQ?.options || []).map((optText: string, optIdx: number) => {
-                    const isSelected = userState[currentQ?._id]?.selectedOption === optIdx;
-                    return (
-                      <button
-                        key={optIdx}
-                        type="button"
-                        onClick={() => handleSelectOption(optIdx)}
-                        className={`w-full p-4 rounded-2xl border-2 text-left text-xs md:text-sm font-bold transition-all flex items-center justify-between cursor-pointer ${
-                          isSelected
-                            ? 'bg-blue-50/90 border-blue-600 text-blue-950 dark:bg-blue-950/80 dark:border-blue-500 dark:text-blue-100 shadow-md shadow-blue-500/10'
-                            : 'bg-slate-50/60 border-slate-200/80 hover:border-blue-300 hover:bg-slate-100 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-200'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3.5">
-                          <span
-                            className={`w-7 h-7 rounded-xl text-xs font-black flex items-center justify-center shrink-0 transition-colors ${
-                              isSelected
-                                ? 'bg-blue-600 text-white shadow-xs'
-                                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
-                            }`}
-                          >
-                            {String.fromCharCode(65 + optIdx)}
-                          </span>
-                          <span className="leading-snug">{optText}</span>
-                        </div>
-                        {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
+                    <div className="grid grid-cols-1 gap-3 pt-3">
+                      {[0, 1, 2, 3].map((i) => (
+                        <div key={i} className="w-full h-14 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800" />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Question Text */}
+                    <div className="text-base md:text-lg font-extrabold text-slate-900 dark:text-white leading-relaxed">
+                      {activeLanguage === 'hi'
+                        ? hindiTranslations[currentQ?._id]?.question || currentQ?.question_text
+                        : currentQ?.question_text}
+                    </div>
+
+                    {/* Options Grid */}
+                    <div className="grid grid-cols-1 gap-3 pt-2">
+                      {(activeLanguage === 'hi'
+                        ? hindiTranslations[currentQ?._id]?.options || currentQ?.options || []
+                        : currentQ?.options || []
+                      ).map((optText: string, optIdx: number) => {
+                        const isSelected = userState[currentQ?._id]?.selectedOption === optIdx;
+                        return (
+                          <button
+                            key={optIdx}
+                              type="button"
+                              onClick={() => handleSelectOption(optIdx)}
+                              className={`w-full p-4 rounded-2xl border-2 text-left text-xs md:text-sm font-bold transition-all flex items-center justify-between cursor-pointer ${
+                                isSelected
+                                  ? 'bg-blue-50/90 border-blue-600 text-blue-950 dark:bg-blue-950/80 dark:border-blue-500 dark:text-blue-100 shadow-md shadow-blue-500/10'
+                                  : 'bg-slate-50/60 border-slate-200/80 hover:border-blue-300 hover:bg-slate-100 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-200'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3.5">
+                                <span
+                                  className={`w-7 h-7 rounded-xl text-xs font-black flex items-center justify-center shrink-0 transition-colors ${
+                                    isSelected
+                                      ? 'bg-blue-600 text-white shadow-xs'
+                                      : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                                  }`}
+                                >
+                                  {String.fromCharCode(65 + optIdx)}
+                                </span>
+                                <span className="leading-snug">{optText}</span>
+                              </div>
+                              {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
               </div>
 
               {/* Question Footer Bar */}
