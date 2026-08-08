@@ -465,16 +465,31 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           </div>
         )}
 
+        {/* Submit button — desktop header only */}
         {!result && (
           <button
             onClick={() => setShowConfirmModal(true)}
             type="button"
-            className="px-2 md:px-4 py-1 md:py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-[10px] md:text-xs font-bold rounded-lg transition-colors shrink-0"
+            className="hidden md:block px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-colors shrink-0"
           >
-            Submit
+            Submit Test
           </button>
         )}
       </header>
+
+      {/* ─── Mobile floating Submit button (bottom-center, thumb-friendly) ─── */}
+      {!result && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 md:hidden">
+          <button
+            onClick={() => setShowConfirmModal(true)}
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-black rounded-full shadow-xl shadow-rose-600/40 transition-all"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Submit Test
+          </button>
+        </div>
+      )}
 
       {/* Subject Section Navigation Bar */}
       {!result && (
