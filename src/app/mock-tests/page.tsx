@@ -22,6 +22,7 @@ export default function MockTestsListPage() {
   // Pre-test warning modal state
   const [pendingTestId, setPendingTestId] = useState<string | null>(null);
   const [showPreTestModal, setShowPreTestModal] = useState(false);
+  const [selectedLang, setSelectedLang] = useState<'en' | 'hi'>('en');
 
   useEffect(() => {
     fetch('/api/mock-tests')
@@ -44,13 +45,14 @@ export default function MockTestsListPage() {
 
   const handleStartTest = (testId: string) => {
     setPendingTestId(testId);
+    setSelectedLang('en');
     setShowPreTestModal(true);
   };
 
   const handleConfirmStartTest = () => {
     if (pendingTestId) {
       setShowPreTestModal(false);
-      router.push(`/mock-tests/${pendingTestId}`);
+      router.push(`/mock-tests/${pendingTestId}?lang=${selectedLang}`);
     }
   };
 
@@ -99,7 +101,7 @@ export default function MockTestsListPage() {
                   : 'text-slate-600 hover:text-slate-900 font-bold'
               }`}
             >
-              All Tests ({tests.length})
+              All Tests
             </button>
             <button
               type="button"
@@ -110,7 +112,7 @@ export default function MockTestsListPage() {
                   : 'text-slate-600 hover:text-slate-900 font-bold'
               }`}
             >
-              Full-Length
+              Full Mocks
             </button>
             <button
               type="button"
@@ -126,74 +128,61 @@ export default function MockTestsListPage() {
           </div>
         </div>
 
-        {/* Tests Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Mock Test Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            <>
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 h-52 animate-pulse space-y-4 shadow-xs">
-                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-                <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                <div className="h-10 w-full bg-slate-200 dark:bg-slate-800 rounded-xl pt-4" />
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 h-56 animate-pulse space-y-4 shadow-xs">
+                <div className="h-6 w-28 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                <div className="h-5 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                <div className="h-10 w-full bg-slate-200 dark:bg-slate-800 rounded-xl" />
               </div>
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 h-52 animate-pulse space-y-4 shadow-xs">
-                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-                <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                <div className="h-10 w-full bg-slate-200 dark:bg-slate-800 rounded-xl pt-4" />
-              </div>
-            </>
+            ))
           ) : filteredTests.length === 0 ? (
-            <div className="col-span-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-3 shadow-xs">
-              <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-500 flex items-center justify-center">
-                <FileText className="w-6 h-6 stroke-[1.5]" />
-              </div>
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">No Mock Tests Available</h3>
-              <p className="text-xs text-slate-500 max-w-sm">
-                No mock tests match your current filter. Check back soon or visit the Admin Portal to publish papers!
-              </p>
+            <div className="col-span-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-12 text-center text-slate-400 font-medium shadow-xs">
+              No mock tests found matching filter criteria.
             </div>
           ) : (
-            filteredTests.map((test) => (
+            filteredTests.map((testItem) => (
               <div
-                key={test._id}
-                className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex flex-col justify-between hover:border-blue-300 dark:hover:border-blue-800 transition-all space-y-5"
+                key={testItem._id}
+                className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs hover:border-blue-300 dark:hover:border-blue-800 transition-all flex flex-col justify-between space-y-4 group"
               >
-                <div>
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 text-[10px] font-extrabold uppercase tracking-wider">
-                      {test.type === 'sectional' ? 'Sectional Paper' : 'Full Mock Exam'}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60">
+                      {testItem.type || 'Full Mock'}
                     </span>
-                    <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5" /> +50 XP
+                    <span className="text-xs font-bold text-slate-400">
+                      ⏱ {testItem.duration_minutes || 60} Mins
                     </span>
                   </div>
 
-                  <h3 className="text-base font-black text-slate-900 dark:text-white leading-snug">{test.title}</h3>
-
-                  <div className="grid grid-cols-3 gap-3 text-center bg-slate-50/80 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 mt-4">
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-bold uppercase">Duration</span>
-                      <span className="text-xs font-black text-slate-900 dark:text-white mt-0.5 block">{test.duration_minutes} Mins</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-bold uppercase">Questions</span>
-                      <span className="text-xs font-black text-slate-900 dark:text-white mt-0.5 block">{test.question_ids?.length || 0}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-bold uppercase">Cutoff</span>
-                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">{test.cutoff_marks || 0} Marks</span>
-                    </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {testItem.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 font-medium">
+                      {testItem.description || 'Full-length examination simulation for course assessment.'}
+                    </p>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleStartTest(test._id)}
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2"
-                >
-                  <PlayCircle className="w-4 h-4 fill-current stroke-[1]" /> Start Mock Exam
-                </button>
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3">
+                  <div className="text-[11px] font-bold text-slate-500">
+                    <span>{testItem.question_ids?.length || 0} Questions</span>
+                    <span className="mx-1">•</span>
+                    <span className="text-amber-600 dark:text-amber-400 font-black">+{testItem.cutoff_bonus_xp || 100} XP Bonus</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleStartTest(testItem._id)}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 group-hover:scale-105"
+                  >
+                    <PlayCircle className="w-4 h-4" /> Start
+                  </button>
+                </div>
               </div>
             ))
           )}
@@ -204,16 +193,9 @@ export default function MockTestsListPage() {
       {/* ─── Pre-Test Entry Warning Modal ─── */}
       {showPreTestModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4" style={{ background: 'rgba(2,6,23,0.75)', backdropFilter: 'blur(8px)' }}>
-          {/* On mobile: bottom sheet style. On sm+: centred card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl relative overflow-hidden flex flex-col mb-16 sm:mb-0"
             style={{ maxHeight: 'calc(90vh - 4rem)' }}>
 
-            {/* Drag handle (mobile hint) */}
-            <div className="flex justify-center pt-2.5 pb-1 sm:hidden shrink-0">
-              <div className="w-8 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-            </div>
-
-            {/* Close button */}
             <button
               type="button"
               onClick={handleCancelModal}
@@ -222,10 +204,7 @@ export default function MockTestsListPage() {
               <X className="w-4 h-4" />
             </button>
 
-            {/* Scrollable body */}
             <div className="overflow-y-auto flex-1 px-5 pb-2 pt-3 sm:px-8 sm:pt-6 space-y-4 text-center">
-
-              {/* Icon + title (compact on mobile) */}
               <div className="flex flex-col items-center gap-2">
                 <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center">
                   <ShieldAlert className="w-6 h-6 sm:w-7 sm:h-7 text-amber-600 dark:text-amber-400" />
@@ -240,14 +219,45 @@ export default function MockTestsListPage() {
                 </div>
               </div>
 
-              {/* Rules list — compact rows on mobile */}
+              {/* Language Preference Option */}
+              <div className="bg-blue-50/70 dark:bg-blue-950/40 rounded-xl p-3 border border-blue-200/80 dark:border-blue-900/50 text-left space-y-2">
+                <label className="text-[11px] font-black text-blue-900 dark:text-blue-300 uppercase tracking-wider block">
+                  Select Language Preference:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedLang('en')}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+                      selectedLang === 'en'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    🌐 English (Default)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedLang('hi')}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+                      selectedLang === 'hi'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    🇮🇳 Hindi (हिंदी)
+                  </button>
+                </div>
+              </div>
+
+              {/* Security Rules list */}
               <div className="text-left space-y-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 sm:p-4 border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
                     <AlertTriangle className="w-3 h-3" />
                   </div>
                   <p className="text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 leading-snug">
-                    <span className="font-black text-slate-900 dark:text-white">No going back</span> once you start the test.
+                    <span className="font-black text-rose-600 dark:text-rose-400">Once you enter the test</span>, you cannot return before completing it.
                   </p>
                 </div>
                 <div className="flex items-center gap-2.5">
@@ -255,7 +265,7 @@ export default function MockTestsListPage() {
                     <AlertTriangle className="w-3 h-3" />
                   </div>
                   <p className="text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 leading-snug">
-                    <span className="font-black text-slate-900 dark:text-white">3-strike rule</span> — back presses auto-submit after <span className="text-rose-600 dark:text-rose-400 font-black">3 violations</span>.
+                    <span className="font-black text-slate-900 dark:text-white">3-strike rule</span> — back presses or window focus loss auto-submit after <span className="text-rose-600 dark:text-rose-400 font-black">3 violations</span>.
                   </p>
                 </div>
                 <div className="flex items-center gap-2.5">
@@ -263,13 +273,12 @@ export default function MockTestsListPage() {
                     <RotateCcw className="w-3 h-3" />
                   </div>
                   <p className="text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 leading-snug">
-                    <span className="font-black text-slate-900 dark:text-white">Landscape required</span> on mobile — rotate before starting.
+                    <span className="font-black text-slate-900 dark:text-white">Landscape required</span> on mobile — rotate device before starting.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Action buttons — always visible at bottom */}
             <div className="flex gap-2 px-5 sm:px-8 py-4 sm:pb-6 shrink-0 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"

@@ -1,17 +1,57 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { HindiTranslateButton } from '@/components/common/HindiTranslateButton';
 import {
   Clock, Bookmark, ChevronLeft, ChevronRight, CheckCircle2, Award,
-  AlertTriangle, ShieldCheck, ShieldAlert, RotateCcw
+  AlertTriangle, ShieldCheck, ShieldAlert, RotateCcw, Star, BarChart2, MessageSquare, PieChart, Sparkles
 } from 'lucide-react';
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function getQuestionSubjectAndTopicHelper(q: any, courseSubjects: string[]) {
+  if (!q) return { subject: 'General', topic: 'General Topics' };
+  const tag = (q.topic_tag || '').trim();
+  let subject = 'General';
+  let topic = tag;
+
+  for (const s of courseSubjects) {
+    if (s && tag.toLowerCase().includes(s.toLowerCase())) {
+      subject = s;
+      try {
+        const escapedS = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const rest = tag.replace(new RegExp(escapedS, 'i'), '').replace(/^[\s\-:]+/, '').trim();
+        topic = rest || tag;
+      } catch (e) {
+        topic = tag;
+      }
+      break;
+    }
+  }
+
+  if (subject === 'General' && tag.includes('-')) {
+    const parts = tag.split('-');
+    subject = parts[0].trim();
+    topic = parts.slice(1).join('-').trim();
+  }
+
+  return { subject, topic: topic || 'General Topics' };
+}
 
 export default function MockTestExecutionPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const routeParams = useParams();
+  const searchParams = useSearchParams();
+  const initialLangParam = searchParams?.get('lang') || 'en';
   const testId = (params?.id || routeParams?.id) as string;
 
   const [test, setTest] = useState<any>(null);
@@ -29,6 +69,12 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
+
+  // Post-Test Completion Window & Feedback State
+  const [showCompletionWindow, setShowCompletionWindow] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState<number>(5);
+  const [feedbackText, setFeedbackText] = useState<string>('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState<boolean>(false);
 
   // Hindi Translation State
   const [hindiTranslations, setHindiTranslations] = useState<Record<string, { question: string; options: string[] } | null>>({});
@@ -65,6 +111,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         }
 
         const rawQuestions = Array.isArray(data.test?.question_ids) ? data.test.question_ids : [];
+        const courseSubjectsList: string[] = data.test?.course_id?.subjects || ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'Botany', 'Zoology'];
+
         const normalizedQuestions = rawQuestions.map((q: any, idx: number) => {
           if (typeof q === 'string') {
             return {
@@ -85,16 +133,33 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           };
         }).filter(Boolean);
 
+        // ─── SUBJECT-SCOPED QUESTION RESHUFFLING PER ATTEMPT ───
+        // Questions are grouped strictly by subject and shuffled ONLY within each subject group
+        const subjectBuckets: Record<string, any[]> = {};
+        normalizedQuestions.forEach((q: any) => {
+          const { subject } = getQuestionSubjectAndTopicHelper(q, courseSubjectsList);
+          if (!subjectBuckets[subject]) {
+            subjectBuckets[subject] = [];
+          }
+          subjectBuckets[subject].push(q);
+        });
+
+        let finalReshuffledQuestions: any[] = [];
+        Object.keys(subjectBuckets).forEach((subj) => {
+          const shuffledBucket = shuffleArray(subjectBuckets[subj]);
+          finalReshuffledQuestions = finalReshuffledQuestions.concat(shuffledBucket);
+        });
+
         const testData = {
           ...data.test,
-          question_ids: normalizedQuestions,
+          question_ids: finalReshuffledQuestions,
         };
 
         setTest(testData);
 
         // Initialize state for each question
         const initial: Record<string, any> = {};
-        normalizedQuestions.forEach((q: any, i: number) => {
+        finalReshuffledQuestions.forEach((q: any, i: number) => {
           if (q && q._id) {
             initial[q._id] = { selectedOption: null, isMFR: false, isVisited: i === 0 };
           }
@@ -381,9 +446,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const testSubjects = Object.keys(subjectGroupedQuestions);
   const currentQInfo = currentQ ? getQuestionSubjectAndTopic(currentQ) : { subject: 'General', topic: '' };
 
-  if (loading || !test) {
-    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-xs text-slate-500">Initializing mock test session...</div>;
-  }
+
 
   // Helper function to update question state
   const updateQuestionState = (qId: string, updates: Partial<{ selectedOption: number | null; isMFR: boolean; isVisited: boolean }>) => {
@@ -438,6 +501,33 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     }
   });
 
+  const topicStats = React.useMemo(() => {
+    const questionsList: any[] = test?.question_ids || [];
+    if (!questionsList || questionsList.length === 0) return { subjects: {}, topics: {}, total: 0 };
+    const total = questionsList.length;
+    const subCounts: Record<string, number> = {};
+    const topCounts: Record<string, number> = {};
+
+    questionsList.forEach((q) => {
+      const { subject, topic } = getQuestionSubjectAndTopic(q);
+      subCounts[subject] = (subCounts[subject] || 0) + 1;
+      const key = `${subject} - ${topic}`;
+      topCounts[key] = (topCounts[key] || 0) + 1;
+    });
+
+    const subjects: Record<string, { count: number; percent: number }> = {};
+    Object.keys(subCounts).forEach((s) => {
+      subjects[s] = { count: subCounts[s], percent: Math.round((subCounts[s] / total) * 100) };
+    });
+
+    const topics: Record<string, { count: number; percent: number }> = {};
+    Object.keys(topCounts).forEach((t) => {
+      topics[t] = { count: topCounts[t], percent: Math.round((topCounts[t] / total) * 100) };
+    });
+
+    return { subjects, topics, total };
+  }, [test, courseSubjects]);
+
   const handleFinalSubmit = async (submissionType: 'manual' | 'auto' = 'manual') => {
     setSubmitting(true);
     try {
@@ -453,6 +543,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         setShowConfirmModal(false);
         setShowLockWarning(false);
         setShowBackWarning(false);
+        setShowCompletionWindow(true); // SHOW POST-TEST COMPLETION WINDOW
         exitFullscreen();
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('xpUpdated'));
@@ -477,6 +568,14 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   };
 
   const violationsRemaining = 3 - backPressCount;
+
+  if (loading || !test) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-xs text-slate-500">
+        Initializing mock test session...
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen max-h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950">
@@ -589,6 +688,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               const isCurrentSubject = currentQInfo.subject === subject;
               const subjectQList = subjectGroupedQuestions[subject].questions;
               const firstQIdx = subjectQList[0]?.originalIdx ?? 0;
+              const subjWeightage = topicStats.subjects[subject]?.percent || 0;
 
               let answeredInSub = 0;
               subjectQList.forEach(({ question }) => {
@@ -609,7 +709,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                       : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  <span>{subject}</span>
+                  <span>{subject} ({subjWeightage}%)</span>
                   <span
                     className={`text-[9px] md:text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                       isCurrentSubject
@@ -676,6 +776,54 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 </button>
               </div>
 
+              {/* Topic & Subject Weightage Analysis Card */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <PieChart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Topic &amp; Subject Weightage Breakdown</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Subject Breakdown */}
+                  <div className="space-y-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">Subject Distribution %</h4>
+                    {Object.keys(topicStats.subjects).map((subj) => {
+                      const info = topicStats.subjects[subj];
+                      return (
+                        <div key={subj} className="space-y-1">
+                          <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+                            <span>{subj}</span>
+                            <span>{info.count} Qs ({info.percent}%)</span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                            <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: `${info.percent}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Topic Breakdown */}
+                  <div className="space-y-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 max-h-64 overflow-y-auto">
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">Topic Distribution %</h4>
+                    {Object.keys(topicStats.topics).map((top) => {
+                      const info = topicStats.topics[top];
+                      return (
+                        <div key={top} className="space-y-1">
+                          <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                            <span className="truncate max-w-[200px]">{top}</span>
+                            <span className="font-bold">{info.percent}%</span>
+                          </div>
+                          <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                            <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${info.percent}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
               {/* Post-Test Question Review */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">Question-by-Question Solution Review</h3>
@@ -724,113 +872,111 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
             </div>
           ) : (
             /* Active Question Screen */
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl p-2 md:p-6 shadow-sm flex flex-col justify-between h-full min-h-0">
-              {currentQ ? (
-                <div className="flex flex-col h-full gap-1.5 md:gap-0">
-
-                  {/* Question header: subject badge + Q number + Mark button */}
-                  <div className="flex justify-between items-center pb-1.5 md:pb-3 md:mb-4 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-1.5 md:px-2 py-0.5 rounded-md text-[9px] md:text-[11px] font-black bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800 uppercase tracking-wider">
-                        {currentQInfo.subject}
-                      </span>
-                      <span className="text-[9px] md:text-xs font-bold text-slate-400">
-                        Q{currentIdx + 1}/{questions.length}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <HindiTranslateButton
-                        texts={[currentQ.question_text, ...(currentQ.options || [])]}
-                        isTranslated={!!hindiTranslations[currentQ._id]}
-                        onTranslated={(translated) => handleMockTranslated(currentQ._id, translated)}
-                        onReset={() => handleMockResetTranslation(currentQ._id)}
-                      />
-                      <button
-                        onClick={handleToggleMFR}
-                        type="button"
-                        className={`px-1.5 md:px-3 py-0.5 md:py-1 rounded-lg text-[9px] md:text-xs font-bold flex items-center gap-1 border transition-colors ${
-                          userState[currentQ._id]?.isMFR
-                            ? 'bg-amber-100 border-amber-400 text-amber-900 dark:bg-amber-950 dark:border-amber-700 dark:text-amber-300'
-                            : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        <Bookmark className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" />
-                        <span className="hidden md:inline">{userState[currentQ._id]?.isMFR ? 'Marked' : 'Mark'}</span>
-                        <span className="md:hidden">{userState[currentQ._id]?.isMFR ? '★' : 'Mark'}</span>
-                      </button>
-                    </div>
+            <div className="space-y-4 max-w-4xl mx-auto">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 md:p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 text-xs font-black">
+                      Q{currentIdx + 1} of {questions.length}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-extrabold">
+                      {currentQInfo.subject}
+                    </span>
+                    <span className="hidden sm:inline-block px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:purple-300 text-[11px] font-bold">
+                      Topic: {currentQInfo.topic}
+                    </span>
                   </div>
 
-                  {/* Question text — compact on mobile */}
-                  <p className="text-[11px] md:text-base font-semibold md:font-bold text-slate-900 dark:text-white leading-snug md:leading-relaxed md:mb-6">
-                    {hindiTranslations[currentQ._id]?.question ?? currentQ.question_text}
-                  </p>
+                  <HindiTranslateButton
+                    texts={[currentQ?.question_text || '', ...(currentQ?.options || [])]}
+                    isTranslated={!!hindiTranslations[currentQ?._id]}
+                    onTranslated={(translated) => handleMockTranslated(currentQ._id, translated)}
+                    onReset={() => handleMockResetTranslation(currentQ._id)}
+                  />
+                </div>
 
-                  {/* Options — 2-column grid on mobile, single column on desktop */}
-                  <div className="grid grid-cols-2 md:grid-cols-1 gap-1.5 md:gap-3 flex-1">
-                    {(currentQ.options || []).map((_opt: string, optIdx: number) => {
-                      const opt = (hindiTranslations[currentQ._id]?.options || currentQ.options || [])[optIdx];
-                      const isSelected = userState[currentQ._id]?.selectedOption === optIdx;
-                      return (
-                        <button
-                          key={optIdx}
-                          type="button"
-                          onClick={() => handleSelectOption(optIdx)}
-                          className={`w-full px-2 py-1.5 md:p-3.5 rounded-lg md:rounded-xl border text-[10px] md:text-xs text-left font-medium transition-all flex items-center gap-1.5 md:gap-3 ${
-                            isSelected
-                              ? 'bg-brand-50 border-brand-800 text-brand-900 dark:bg-brand-950 dark:border-brand-500 dark:text-brand-300 font-bold shadow-sm'
-                              : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300'
-                          }`}
-                        >
+                {/* Question Text */}
+                <div className="text-sm md:text-base font-bold text-slate-900 dark:text-white leading-relaxed pt-1">
+                  {hindiTranslations[currentQ?._id]?.question ?? currentQ?.question_text}
+                </div>
+
+                {/* Options Grid */}
+                <div className="grid grid-cols-1 gap-2.5 pt-2">
+                  {(hindiTranslations[currentQ?._id]?.options || currentQ?.options || []).map((optText: string, optIdx: number) => {
+                    const isSelected = userState[currentQ?._id]?.selectedOption === optIdx;
+                    return (
+                      <button
+                        key={optIdx}
+                        type="button"
+                        onClick={() => handleSelectOption(optIdx)}
+                        className={`w-full p-3 md:p-3.5 rounded-xl border text-left text-xs md:text-sm font-semibold transition-all flex items-center justify-between cursor-pointer ${
+                          isSelected
+                            ? 'bg-blue-50/90 border-blue-500 text-blue-900 dark:bg-blue-950/80 dark:border-blue-500 dark:text-blue-200 font-bold shadow-xs'
+                            : 'bg-slate-50/70 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/50 dark:border-slate-700 dark:text-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
                           <span
-                            className={`w-4 h-4 md:w-6 md:h-6 rounded-full text-[9px] md:text-[11px] flex items-center justify-center font-bold shrink-0 ${
+                            className={`w-6 h-6 rounded-full text-xs font-black flex items-center justify-center shrink-0 ${
                               isSelected
-                                ? 'bg-brand-800 text-white'
-                                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
                             }`}
                           >
                             {String.fromCharCode(65 + optIdx)}
                           </span>
-                          <span className="leading-tight">{opt}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                          <span>{optText}</span>
+                        </div>
+                        {isSelected && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
 
-                  {/* Bottom Controls — slim on mobile */}
-                  <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-1.5 md:pt-4 mt-1.5 md:mt-6">
+                {/* Question Footer Bar */}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={handleClearResponse}
-                      className="px-2 md:px-3 py-1 md:py-1.5 text-[9px] md:text-xs text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-semibold"
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     >
-                      Clear
+                      Clear Selection
                     </button>
+                    <button
+                      type="button"
+                      onClick={handleToggleMFR}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        userState[currentQ?._id]?.isMFR
+                          ? 'bg-purple-600 text-white border-purple-600'
+                          : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Bookmark className="w-3.5 h-3.5" />
+                      {userState[currentQ?._id]?.isMFR ? 'Marked for Review' : 'Mark for Review'}
+                    </button>
+                  </div>
 
-                    <div className="flex gap-1.5 md:gap-2">
-                      <button
-                        type="button"
-                        disabled={currentIdx === 0}
-                        onClick={() => navigateTo(currentIdx - 1)}
-                        className="px-2.5 md:px-4 py-1 md:py-2 border border-slate-300 dark:border-slate-700 text-[9px] md:text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-0.5 md:gap-1 text-slate-700 dark:text-slate-300"
-                      >
-                        <ChevronLeft className="w-3 h-3 md:w-4 md:h-4" /> Prev
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={currentIdx === questions.length - 1}
-                        onClick={() => navigateTo(currentIdx + 1)}
-                        className="px-2.5 md:px-4 py-1 md:py-2 bg-brand-800 hover:bg-brand-900 text-white text-[9px] md:text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-0.5 md:gap-1 transition-colors"
-                      >
-                        Next <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-                      </button>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigateTo(currentIdx - 1)}
+                      disabled={currentIdx === 0}
+                      className="px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Prev
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigateTo(currentIdx + 1)}
+                      disabled={currentIdx === questions.length - 1}
+                      className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all flex items-center gap-1 shadow-xs"
+                    >
+                      Next <ChevronRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <div className="p-8 text-center text-slate-500 text-xs">No active question available.</div>
-              )}
+              </div>
             </div>
           )}
         </div>
