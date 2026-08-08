@@ -205,8 +205,8 @@ export default function MockTestsListPage() {
       {showPreTestModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4" style={{ background: 'rgba(2,6,23,0.75)', backdropFilter: 'blur(8px)' }}>
           {/* On mobile: bottom sheet style. On sm+: centred card */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl relative overflow-hidden flex flex-col"
-            style={{ maxHeight: '90vh' }}>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl relative overflow-hidden flex flex-col mb-16 sm:mb-0"
+            style={{ maxHeight: 'calc(90vh - 4rem)' }}>
 
             {/* Drag handle (mobile hint) */}
             <div className="flex justify-center pt-2.5 pb-1 sm:hidden shrink-0">
