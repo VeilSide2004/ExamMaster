@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
 import {
-  Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, Sparkles
+  Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, Sparkles, BarChart2, Eye
 } from 'lucide-react';
 
 const getInitialLeaderboardCache = () => {
@@ -17,6 +18,7 @@ export default function LeaderboardPage() {
   const router = useRouter();
   const initialCache = getInitialLeaderboardCache();
   const [activeTab, setActiveTab] = useState<'global' | 'friends'>('global');
+  const [selectedStudentStatsId, setSelectedStudentStatsId] = useState<string | null>(null);
   
   // Global Leaderboard State
   const [leaderboard, setLeaderboard] = useState<any[]>(initialCache?.leaderboard || []);
@@ -441,9 +443,15 @@ export default function LeaderboardPage() {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            {item.name}
-                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedStudentStatsId(item.user_id || item.id || item._id)}
+                            className="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5 cursor-pointer text-left"
+                            title="Click to view student statistics"
+                          >
+                            <span>{item.name}</span>
+                            <BarChart2 className="w-3.5 h-3.5 text-blue-500 opacity-60 hover:opacity-100" />
+                          </button>
                           {item.isCurrentUser && (
                             <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold">
                               YOU
@@ -589,9 +597,15 @@ export default function LeaderboardPage() {
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 dark:text-white">
-                              {friend.name}
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedStudentStatsId(friend.id || friend.user_id || friend._id)}
+                              className="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5 cursor-pointer text-left"
+                              title="Click to view student statistics"
+                            >
+                              <span>{friend.name}</span>
+                              <BarChart2 className="w-3.5 h-3.5 text-blue-500 opacity-60 hover:opacity-100" />
+                            </button>
                             {friend.isCurrentUser && (
                               <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold">
                                 YOU
@@ -851,6 +865,13 @@ export default function LeaderboardPage() {
         </div>
       )}
 
+      {/* Student Performance Statistics Modal */}
+      {selectedStudentStatsId && (
+        <StudentStatsModal
+          studentId={selectedStudentStatsId}
+          onClose={() => setSelectedStudentStatsId(null)}
+        />
+      )}
     </div>
   );
 }
