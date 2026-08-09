@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { User as UserIcon, Lock, Mail, BookOpen, Save, ShieldCheck, Sun } from 'lucide-react';
+import { User as UserIcon, Lock, Mail, BookOpen, Save, ShieldCheck, Sun, Sparkles, RotateCcw, GraduationCap } from 'lucide-react';
 
 export default function ProfilePage() {
   const [userData, setUserData] = useState<any>(null);
@@ -10,6 +10,30 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+
+  // Class Promotion & Rollback State
+  const [promoteInfo, setPromoteInfo] = useState<{
+    isSchoolUser: boolean;
+    isMarchActive: boolean;
+    currentCourse?: any;
+    nextCourse?: any;
+    previousCourse?: any;
+    hasPromoted?: boolean;
+    canPromote?: boolean;
+    canRollback?: boolean;
+    loading?: boolean;
+  } | null>(null);
+
+  const fetchPromoteInfo = () => {
+    fetch('/api/course/promote')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.isSchoolUser) {
+          setPromoteInfo(data);
+        }
+      })
+      .catch(console.error);
+  };
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -22,7 +46,34 @@ export default function ProfilePage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    fetchPromoteInfo();
   }, []);
+
+  const handlePromoteAction = async (action: 'promote' | 'rollback') => {
+    setPromoteInfo((prev) => (prev ? { ...prev, loading: true } : null));
+    try {
+      const res = await fetch('/api/course/promote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage(data.message);
+        fetchPromoteInfo();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      } else {
+        setMessage(data.error || 'Action failed');
+        setPromoteInfo((prev) => (prev ? { ...prev, loading: false } : null));
+      }
+    } catch {
+      setMessage('Error performing class action');
+      setPromoteInfo((prev) => (prev ? { ...prev, loading: false } : null));
+    }
+  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +113,81 @@ export default function ProfilePage() {
         {message && (
           <div className="p-4 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs rounded-xl font-bold transition-all animate-fadeIn">
             {message}
+          </div>
+        )}
+
+        {/* March Class Promotion & Rollback Banner (For School Class 3 to 12 Users Only) */}
+        {promoteInfo?.isSchoolUser && (
+          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden animate-fade-in">
+            <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute right-32 -top-12 w-48 h-48 bg-emerald-400/20 rounded-full blur-xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              <div className="space-y-2 max-w-2xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-wider text-emerald-100 border border-white/20">
+                    {promoteInfo.isMarchActive ? '📅 March Academic Promotion Window Active' : '📅 March Annual Promotion Feature'}
+                  </span>
+                  {promoteInfo.hasPromoted && (
+                    <span className="px-3 py-1 bg-amber-400/30 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-wider text-amber-200 border border-amber-300/30">
+                      ⚡ Class Promoted
+                    </span>
+                  )}
+                </div>
+
+                <h2 className="text-xl md:text-2xl font-black tracking-tight">
+                  {promoteInfo.hasPromoted
+                    ? `Promoted to ${promoteInfo.currentCourse?.name}!`
+                    : promoteInfo.nextCourse
+                    ? `Promote to ${promoteInfo.nextCourse.name}`
+                    : `Grade Level Progress`}
+                </h2>
+
+                <p className="text-xs md:text-sm text-emerald-50 leading-relaxed font-medium">
+                  {promoteInfo.hasPromoted
+                    ? `You have promoted to ${promoteInfo.currentCourse?.name}. If you made a mistake, you can roll back to ${promoteInfo.previousCourse?.name || 'your previous class'} during the March promotion window.`
+                    : promoteInfo.nextCourse
+                    ? `Academic promotion for Class 3 to 12 batches is active during the month of March. You can now advance your account to ${promoteInfo.nextCourse.name}!`
+                    : `You are currently enrolled in ${promoteInfo.currentCourse?.name || 'School Track'}.`}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 shrink-0 w-full sm:w-auto">
+                {promoteInfo.isMarchActive ? (
+                  <>
+                    {!promoteInfo.hasPromoted && promoteInfo.nextCourse && (
+                      <button
+                        type="button"
+                        onClick={() => handlePromoteAction('promote')}
+                        disabled={promoteInfo.loading}
+                        className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-emerald-50 text-emerald-900 font-black text-xs rounded-2xl shadow-lg shadow-emerald-950/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        <Sparkles className="w-4 h-4 text-emerald-600 fill-emerald-600 animate-pulse" />
+                        {promoteInfo.loading ? 'Promoting Class...' : `Promote to ${promoteInfo.nextCourse.name}`}
+                      </button>
+                    )}
+
+                    {promoteInfo.hasPromoted && promoteInfo.previousCourse && (
+                      <button
+                        type="button"
+                        onClick={() => handlePromoteAction('rollback')}
+                        disabled={promoteInfo.loading}
+                        className="w-full sm:w-auto px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-2xl shadow-lg shadow-amber-950/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        {promoteInfo.loading ? 'Rolling back...' : `Roll Back to ${promoteInfo.previousCourse.name}`}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className="px-4 py-2.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-xs font-bold text-emerald-100 flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-emerald-200" />
+                    <span>Promotion active during March</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
