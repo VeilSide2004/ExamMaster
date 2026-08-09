@@ -58,8 +58,19 @@ export async function GET(request: Request) {
         isSelf: u._id === currentUser._id,
       }));
 
+      const pendingRequests = (currentUser.friendRequests || [])
+        .filter((r: any) => r.status === 'pending')
+        .map((r: any) => ({
+          requesterId: r.requesterId,
+          name: r.requesterName,
+          email: r.requesterEmail,
+          xp_total: r.requesterXp || 0,
+          created_at: r.created_at,
+        }));
+
       return NextResponse.json({
         friendsLeaderboard: leaderboard,
+        pendingRequests,
         inviteCode: currentUser._id.slice(0, 8).toUpperCase(),
         totalFriends: friendsIds.length,
       });
@@ -110,8 +121,19 @@ export async function GET(request: Request) {
       isSelf: u._id.toString() === currentUser._id.toString(),
     }));
 
+    const pendingRequests = (currentUser.friendRequests || [])
+      .filter((r: any) => r.status === 'pending')
+      .map((r: any) => ({
+        requesterId: r.requesterId,
+        name: r.requesterName,
+        email: r.requesterEmail,
+        xp_total: r.requesterXp || 0,
+        created_at: r.created_at,
+      }));
+
     return NextResponse.json({
       friendsLeaderboard: leaderboard,
+      pendingRequests,
       inviteCode: currentUser._id.toString().slice(0, 8).toUpperCase(),
       totalFriends: friendsIds.length,
     });

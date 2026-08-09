@@ -84,7 +84,12 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
           } catch (e) {}
         }
 
-        if (!data.user.lockedCourseId) {
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const joinCode = urlParams?.get('joinCode');
+
+        if (joinCode) {
+          router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
+        } else if (!data.user.lockedCourseId) {
           router.push('/course-selection');
         } else {
           router.push('/dashboard');
@@ -114,7 +119,14 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       if (!res.ok) {
         setError(data.error || 'Registration failed');
       } else {
-        router.push('/course-selection');
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const joinCode = urlParams?.get('joinCode');
+
+        if (joinCode) {
+          router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
+        } else {
+          router.push('/course-selection');
+        }
       }
     } catch (err) {
       setError('An error occurred during registration');

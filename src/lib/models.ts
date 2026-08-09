@@ -1,6 +1,15 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 // User (Student)
+export interface IFriendRequest {
+  requesterId: string;
+  requesterName: string;
+  requesterEmail: string;
+  requesterXp?: number;
+  status: 'pending' | 'accepted' | 'declined';
+  created_at?: Date;
+}
+
 export interface IUser extends Document {
   name: string;
   email: string;
@@ -11,7 +20,17 @@ export interface IUser extends Document {
   created_at: Date;
   account_email?: string;
   friends?: string[];
+  friendRequests?: IFriendRequest[];
 }
+
+const FriendRequestSchema = new Schema({
+  requesterId: { type: String, required: true },
+  requesterName: { type: String, required: true },
+  requesterEmail: { type: String, required: true },
+  requesterXp: { type: Number, default: 0 },
+  status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
+  created_at: { type: Date, default: Date.now },
+});
 
 const UserSchema = new Schema<IUser>({
   name: { type: String, required: true },
@@ -23,6 +42,7 @@ const UserSchema = new Schema<IUser>({
   created_at: { type: Date, default: Date.now },
   account_email: { type: String, default: null, lowercase: true },
   friends: [{ type: String }],
+  friendRequests: [FriendRequestSchema],
 });
 
 // Course

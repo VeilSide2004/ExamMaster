@@ -28,6 +28,18 @@ export default function LeaderboardPage() {
   const [inviteCode, setInviteCode] = useState<string>('');
   const [loadingFriends, setLoadingFriends] = useState(false);
 
+  // Pending Join Requests for Host User
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+
+  // Incoming Join Link Invite Modal State
+  const [joinModalInfo, setJoinModalInfo] = useState<{
+    show: boolean;
+    hostName: string;
+    joinCode: string;
+    status: 'can_request' | 'pending' | 'already_friends' | 'self';
+    sending?: boolean;
+  } | null>(null);
+
   // Share Modal State
   const [showShareModal, setShowShareModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -59,7 +71,7 @@ export default function LeaderboardPage() {
       .finally(() => setLoadingGlobal(false));
   }, []);
 
-  // Fetch Friends Leaderboard & Invite Code on mount & tab change
+  // Fetch Friends Leaderboard & Pending Requests & Invite Code
   const fetchFriendsLeaderboard = () => {
     setLoadingFriends(true);
     fetch('/api/leaderboard/friends')
@@ -67,6 +79,7 @@ export default function LeaderboardPage() {
       .then((data) => {
         if (data) {
           setFriendsList(data.friendsLeaderboard || []);
+          setPendingRequests(data.pendingRequests || []);
           if (data.inviteCode) setInviteCode(data.inviteCode);
         }
       })
@@ -77,6 +90,83 @@ export default function LeaderboardPage() {
   useEffect(() => {
     fetchFriendsLeaderboard();
   }, [activeTab]);
+
+  // Check URL joinCode search parameter on mount (handles incoming invite link)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('joinCode');
+    if (!code) return;
+
+    fetch(`/api/leaderboard/friends/request?joinCode=${encodeURIComponent(code)}`)
+      .then((res) => {
+        if (res.status === 401) {
+          router.push(`/register?joinCode=${encodeURIComponent(code)}`);
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!data || data.error) return;
+        if (data.status === 'unauthenticated') {
+          router.push(`/register?joinCode=${encodeURIComponent(code)}`);
+          return;
+        }
+        if (data.status === 'self') return; // User opened their own link
+
+        setJoinModalInfo({
+          show: true,
+          hostName: data.hostUser?.name || 'a fellow student',
+          joinCode: code,
+          status: data.status,
+        });
+      })
+      .catch(console.error);
+  }, []);
+
+  // Send Join Request Handler
+  const handleSendJoinRequest = async () => {
+    if (!joinModalInfo?.joinCode) return;
+    setJoinModalInfo((prev) => (prev ? { ...prev, sending: true } : null));
+    try {
+      const res = await fetch('/api/leaderboard/friends/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ joinCode: joinModalInfo.joinCode }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'Join request sent!');
+        setJoinModalInfo((prev) => (prev ? { ...prev, status: 'pending', sending: false } : null));
+      } else {
+        showToast(data.error || 'Failed to send join request');
+        setJoinModalInfo((prev) => (prev ? { ...prev, sending: false } : null));
+      }
+    } catch {
+      showToast('Error sending join request');
+      setJoinModalInfo((prev) => (prev ? { ...prev, sending: false } : null));
+    }
+  };
+
+  // Accept or Decline Join Request Action Handler for Host
+  const handleRequestAction = async (requesterId: string, action: 'accept' | 'decline') => {
+    try {
+      const res = await fetch('/api/leaderboard/friends/request/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requesterId, action }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || (action === 'accept' ? 'Accepted request!' : 'Declined request'));
+        fetchFriendsLeaderboard();
+      } else {
+        showToast(data.error || 'Action failed');
+      }
+    } catch {
+      showToast('Failed to perform action');
+    }
+  };
 
   // Remove Friend Handler
   const handleRemoveFriend = async (friendId: string, name: string) => {
@@ -358,6 +448,58 @@ export default function LeaderboardPage() {
         {/* TAB 2: CUSTOM FRIENDS ARENA */}
         {activeTab === 'friends' && (
           <div className="space-y-6">
+            
+            {/* Pending Join Requests Section for Host User */}
+            {pendingRequests.length > 0 && (
+              <div className="bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-5 space-y-3 shadow-xs animate-fade-in">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <h4 className="text-xs font-black text-amber-900 dark:text-amber-200 flex items-center gap-2 uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    Pending Arena Join Requests ({pendingRequests.length})
+                  </h4>
+                  <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                    Students requesting to join your custom arena
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {pendingRequests.map((req) => (
+                    <div
+                      key={req.requesterId}
+                      className="bg-white dark:bg-slate-900 border border-amber-200/60 dark:border-amber-900/40 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs"
+                    >
+                      <div>
+                        <h5 className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                          {req.name}
+                          <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold text-[10px]">
+                            {req.xp_total || 0} XP
+                          </span>
+                        </h5>
+                        <p className="text-[10px] text-slate-400 font-medium">{req.email}</p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                        <button
+                          type="button"
+                          onClick={() => handleRequestAction(req.requesterId, 'accept')}
+                          className="flex-1 sm:flex-none px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <Check className="w-3.5 h-3.5" /> Accept
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRequestAction(req.requesterId, 'decline')}
+                          className="flex-1 sm:flex-none px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" /> Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
               <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/40">
                 <div>
@@ -449,14 +591,14 @@ export default function LeaderboardPage() {
                               <button
                                 type="button"
                                 onClick={() => handleChallengeFriend(friend.name)}
-                                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:hover:bg-amber-900/60 rounded-xl font-bold text-[11px] transition-colors flex items-center gap-1 border border-amber-200 dark:border-amber-900"
+                                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:hover:bg-amber-900/60 rounded-xl font-bold text-[11px] transition-colors flex items-center gap-1 border border-amber-200 dark:border-amber-900 cursor-pointer"
                               >
                                 <Swords className="w-3.5 h-3.5" /> Challenge
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleRemoveFriend(friend.id, friend.name)}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -473,6 +615,57 @@ export default function LeaderboardPage() {
         )}
 
       </main>
+
+      {/* Incoming Join Request Modal for Recipient */}
+      {joinModalInfo?.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl space-y-6 text-center">
+            <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center border border-blue-200 dark:border-blue-900">
+              <Trophy className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 tracking-wider">
+                Arena Invitation
+              </span>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                Join <span className="text-blue-600 dark:text-blue-400">{joinModalInfo.hostName}</span>'s Arena?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Send a request to join their custom arena leaderboard to compete together and track XP rankings!
+              </p>
+            </div>
+
+            {joinModalInfo.status === 'already_friends' ? (
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 font-bold text-xs border border-emerald-200 dark:border-emerald-900">
+                ✅ You are already competing in {joinModalInfo.hostName}'s custom arena!
+              </div>
+            ) : joinModalInfo.status === 'pending' ? (
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-200 dark:border-amber-900">
+                ⏳ Your join request is pending approval by {joinModalInfo.hostName}.
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSendJoinRequest}
+                disabled={joinModalInfo.sending}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <Users className="w-4 h-4" />
+                {joinModalInfo.sending ? 'Sending Request...' : 'Send Request to Join Arena'}
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setJoinModalInfo(null)}
+              className="w-full py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Share Invite Link Modal */}
       {showShareModal && (
