@@ -4,6 +4,20 @@ import { User, Notification } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 
+const isRelevantForUser = (n: any, userId: string, courseId?: string | null) => {
+  const targetType = n.targetType || 'all';
+  if (targetType === 'user') {
+    return String(n.targetUserId || '') === String(userId);
+  }
+  if (targetType === 'course' && courseId) {
+    return String(n.targetCourseId || '') === String(courseId);
+  }
+  if (targetType === 'all') {
+    return true;
+  }
+  return false;
+};
+
 // GET: Fetch student notifications (Personal + Course + Broadcast 'all')
 export async function GET() {
   try {
@@ -15,41 +29,33 @@ export async function GET() {
 
     if (isMemoryMode) {
       const db = readSharedDb();
-      const currentUser = (db.users || []).find((u) => u._id === auth.userId);
+      const currentUser = (db.users || []).find((u) => String(u._id) === String(auth.userId));
       if (!currentUser) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
+      const currentUserId = String(currentUser._id);
       const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
 
-      // Filter notifications relevant to currentUser
+      // Filter notifications relevant to currentUser and not cleared by currentUser
       const allNotifs = (db.notifications || []).filter((n: any) => {
-        const clearedBy: string[] = n.clearedBy || [];
-        if (clearedBy.includes(currentUser._id)) return false;
+        const clearedBy = (n.clearedBy || []).map((id: any) => String(id));
+        if (clearedBy.includes(currentUserId)) return false;
 
-        if (n.targetType === 'user') {
-          return String(n.targetUserId) === String(currentUser._id);
-        }
-        if (n.targetType === 'course' && userCourseId) {
-          return String(n.targetCourseId) === userCourseId;
-        }
-        if (n.targetType === 'all') {
-          return true;
-        }
-        return false;
+        return isRelevantForUser(n, currentUserId, userCourseId);
       });
 
       // Sort newest first
       allNotifs.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
       const formatted = allNotifs.map((n: any) => {
-        const readBy: string[] = n.readBy || [];
+        const readBy = (n.readBy || []).map((id: any) => String(id));
         return {
-          id: n._id,
+          id: String(n._id),
           title: n.title,
           message: n.message,
           type: n.type || 'announcement',
-          isRead: readBy.includes(currentUser._id),
+          isRead: readBy.includes(currentUserId),
           created_at: n.created_at,
         };
       });
@@ -86,7 +92,7 @@ export async function GET() {
     const notifs = await Notification.find(query).sort({ created_at: -1 }).limit(30);
 
     const formatted = notifs.map((n) => {
-      const readBy: string[] = n.readBy || [];
+      const readBy = (n.readBy || []).map((id: any) => String(id));
       return {
         id: n._id.toString(),
         title: n.title,
@@ -124,36 +130,48 @@ export async function POST(request: Request) {
       const db = readSharedDb();
       if (!db.notifications) db.notifications = [];
 
-      const currentUserId = auth.userId;
+      const currentUser = (db.users || []).find((u) => String(u._id) === String(auth.userId));
+      if (!currentUser) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      const currentUserId = String(currentUser._id);
+      const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
 
       if (clearRead) {
         db.notifications.forEach((n: any) => {
+          if (!isRelevantForUser(n, currentUserId, userCourseId)) return;
           if (!n.clearedBy) n.clearedBy = [];
-          const readBy: string[] = n.readBy || [];
-          if (readBy.includes(currentUserId) && !n.clearedBy.includes(currentUserId)) {
+          const readBy = (n.readBy || []).map((id: any) => String(id));
+          const clearedBy = n.clearedBy.map((id: any) => String(id));
+          if (readBy.includes(currentUserId) && !clearedBy.includes(currentUserId)) {
             n.clearedBy.push(currentUserId);
           }
         });
       } else if (clearId) {
         const target = db.notifications.find((n: any) => String(n._id) === String(clearId));
-        if (target) {
+        if (target && isRelevantForUser(target, currentUserId, userCourseId)) {
           if (!target.clearedBy) target.clearedBy = [];
-          if (!target.clearedBy.includes(currentUserId)) {
+          const clearedBy = target.clearedBy.map((id: any) => String(id));
+          if (!clearedBy.includes(currentUserId)) {
             target.clearedBy.push(currentUserId);
           }
         }
       } else if (markAll) {
         db.notifications.forEach((n: any) => {
+          if (!isRelevantForUser(n, currentUserId, userCourseId)) return;
           if (!n.readBy) n.readBy = [];
-          if (!n.readBy.includes(currentUserId)) {
+          const readBy = n.readBy.map((id: any) => String(id));
+          if (!readBy.includes(currentUserId)) {
             n.readBy.push(currentUserId);
           }
         });
       } else if (notificationId) {
         const target = db.notifications.find((n: any) => String(n._id) === String(notificationId));
-        if (target) {
+        if (target && isRelevantForUser(target, currentUserId, userCourseId)) {
           if (!target.readBy) target.readBy = [];
-          if (!target.readBy.includes(currentUserId)) {
+          const readBy = target.readBy.map((id: any) => String(id));
+          if (!readBy.includes(currentUserId)) {
             target.readBy.push(currentUserId);
           }
         }
@@ -164,26 +182,51 @@ export async function POST(request: Request) {
     }
 
     // Mongoose Mode
-    const userIdStr = auth.userId;
+    const currentUser = await User.findById(auth.userId);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const userIdStr = currentUser._id.toString();
+    const userCourseId = currentUser.locked_course_id ? currentUser.locked_course_id.toString() : null;
+
+    const userTargetFilter: any = {
+      $or: [
+        { targetType: 'all' },
+        { targetType: 'user', targetUserId: userIdStr },
+      ],
+    };
+    if (userCourseId) {
+      userTargetFilter.$or.push({ targetType: 'course', targetCourseId: userCourseId });
+    }
 
     if (clearRead) {
       await Notification.updateMany(
-        { readBy: userIdStr, clearedBy: { $ne: userIdStr } },
+        {
+          ...userTargetFilter,
+          readBy: userIdStr,
+          clearedBy: { $ne: userIdStr },
+        },
         { $addToSet: { clearedBy: userIdStr } }
       );
     } else if (clearId) {
-      await Notification.findByIdAndUpdate(clearId, {
-        $addToSet: { clearedBy: userIdStr },
-      });
+      await Notification.updateOne(
+        { _id: clearId, ...userTargetFilter },
+        { $addToSet: { clearedBy: userIdStr } }
+      );
     } else if (markAll) {
       await Notification.updateMany(
-        { readBy: { $ne: userIdStr } },
+        {
+          ...userTargetFilter,
+          readBy: { $ne: userIdStr },
+        },
         { $addToSet: { readBy: userIdStr } }
       );
     } else if (notificationId) {
-      await Notification.findByIdAndUpdate(notificationId, {
-        $addToSet: { readBy: userIdStr },
-      });
+      await Notification.updateOne(
+        { _id: notificationId, ...userTargetFilter },
+        { $addToSet: { readBy: userIdStr } }
+      );
     }
 
     return NextResponse.json({ success: true, message: 'Notification action completed' });
