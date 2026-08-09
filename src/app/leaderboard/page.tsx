@@ -124,6 +124,26 @@ export default function LeaderboardPage() {
       .catch(console.error);
   }, []);
 
+  // Poll join request status while modal is open and status is 'pending'
+  useEffect(() => {
+    if (!joinModalInfo?.show || joinModalInfo.status !== 'pending' || !joinModalInfo.joinCode) return;
+
+    const interval = setInterval(() => {
+      fetch(`/api/leaderboard/friends/request?joinCode=${encodeURIComponent(joinModalInfo.joinCode)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.status === 'already_friends') {
+            setJoinModalInfo((prev) => (prev ? { ...prev, status: 'already_friends' } : null));
+            showToast(`🎉 ${data.hostUser?.name || 'Host'} accepted your join request!`);
+            fetchFriendsLeaderboard();
+          }
+        })
+        .catch(console.error);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [joinModalInfo?.show, joinModalInfo?.status, joinModalInfo?.joinCode]);
+
   // Send Join Request Handler
   const handleSendJoinRequest = async () => {
     if (!joinModalInfo?.joinCode) return;
@@ -637,12 +657,27 @@ export default function LeaderboardPage() {
             </div>
 
             {joinModalInfo.status === 'already_friends' ? (
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 font-bold text-xs border border-emerald-200 dark:border-emerald-900">
-                ✅ You are already competing in {joinModalInfo.hostName}'s custom arena!
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 font-bold text-xs border border-emerald-200 dark:border-emerald-900 flex items-center justify-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Request Accepted! You are now competing in <strong>{joinModalInfo.hostName}</strong>'s custom arena!</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('friends');
+                    setJoinModalInfo(null);
+                    fetchFriendsLeaderboard();
+                  }}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Users className="w-4 h-4" /> View Custom Arena Standings
+                </button>
               </div>
             ) : joinModalInfo.status === 'pending' ? (
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-200 dark:border-amber-900">
-                ⏳ Your join request is pending approval by {joinModalInfo.hostName}.
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-200 dark:border-amber-900 flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 animate-spin shrink-0" />
+                <span>Your join request is pending approval by <strong>{joinModalInfo.hostName}</strong>.</span>
               </div>
             ) : (
               <button
