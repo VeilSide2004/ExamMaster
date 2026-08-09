@@ -31,7 +31,16 @@ export default function CourseSelectionPage() {
           return;
         }
         if (meData.user?.lockedCourse) {
-          router.push('/dashboard');
+          const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+          const joinCode = urlParams?.get('joinCode');
+          const joinHostId = urlParams?.get('joinHostId');
+          if (joinCode) {
+            router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
+          } else if (joinHostId) {
+            router.push(`/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`);
+          } else {
+            router.push('/dashboard');
+          }
           return;
         }
         return fetch('/api/courses')
@@ -63,7 +72,16 @@ export default function CourseSelectionPage() {
         setError(data.error || 'Failed to lock course selection');
         setShowConfirmModal(false);
       } else {
-        router.push('/dashboard');
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const joinCode = urlParams?.get('joinCode');
+        const joinHostId = urlParams?.get('joinHostId');
+        if (joinCode) {
+          router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
+        } else if (joinHostId) {
+          router.push(`/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`);
+        } else {
+          router.push('/dashboard');
+        }
       }
     } catch (err) {
       setError('An error occurred');

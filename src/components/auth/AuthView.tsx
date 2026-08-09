@@ -121,9 +121,12 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       } else {
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
+        const joinHostId = urlParams?.get('joinHostId');
 
         if (joinCode) {
-          router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
+          router.push(`/course-selection?joinCode=${encodeURIComponent(joinCode)}`);
+        } else if (joinHostId) {
+          router.push(`/course-selection?joinHostId=${encodeURIComponent(joinHostId)}`);
         } else {
           router.push('/course-selection');
         }
@@ -162,8 +165,22 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
       const data = await res.json();
       if (res.ok) {
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const joinCode = urlParams?.get('joinCode');
+        const joinHostId = urlParams?.get('joinHostId');
+
         if (!data.user.lockedCourseId) {
-          router.push('/course-selection');
+          if (joinCode) {
+            router.push(`/course-selection?joinCode=${encodeURIComponent(joinCode)}`);
+          } else if (joinHostId) {
+            router.push(`/course-selection?joinHostId=${encodeURIComponent(joinHostId)}`);
+          } else {
+            router.push('/course-selection');
+          }
+        } else if (joinCode) {
+          router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
+        } else if (joinHostId) {
+          router.push(`/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`);
         } else {
           router.push('/dashboard');
         }
