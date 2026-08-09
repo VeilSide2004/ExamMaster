@@ -24,6 +24,10 @@ import {
   X,
   Lock,
   Sparkles,
+  Bell,
+  AlertTriangle,
+  CheckCircle2,
+  Megaphone,
 } from 'lucide-react';
 
 interface StudentHeaderProps {
@@ -60,6 +64,43 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const [newProfileName, setNewProfileName] = useState('');
   const [createError, setCreateError] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
+
+  // Notification State
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [showNotificationMenu, setShowNotificationMenu] = useState<boolean>(false);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/notifications');
+      const data = await res.json();
+      if (data && Array.isArray(data.notifications)) {
+        setNotifications(data.notifications);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (e) {
+      console.error('Error fetching notifications:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleMarkAsRead = async (id?: string) => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(id ? { notificationId: id } : { markAll: true }),
+      });
+      fetchNotifications();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchProfiles = async () => {
     try {
@@ -296,6 +337,110 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               >
                 A+
               </button>
+            </div>
+
+            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
+
+            {/* Notification Bell Button & Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  fetchNotifications();
+                  setShowNotificationMenu(!showNotificationMenu);
+                  setShowProfileMenu(false);
+                }}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center relative transition-all border border-slate-200/80 dark:border-slate-700 cursor-pointer"
+                title="Notifications"
+              >
+                <Bell className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-rose-600 text-white font-black text-[9px] min-w-[18px] text-center border-2 border-white dark:border-slate-900 animate-pulse">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Menu Dropdown */}
+              {showNotificationMenu && (
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
+                    <div className="flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Notifications ({notifications.length})
+                      </h4>
+                    </div>
+
+                    {unreadCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleMarkAsRead()}
+                        className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+                    {notifications.length === 0 ? (
+                      <div className="p-8 text-center space-y-2">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center">
+                          <Bell className="w-5 h-5" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">No notifications yet</p>
+                        <p className="text-[10px] text-slate-400">You're all caught up with your updates!</p>
+                      </div>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div
+                          key={notif.id}
+                          onClick={() => !notif.isRead && handleMarkAsRead(notif.id)}
+                          className={`p-4 transition-colors flex items-start gap-3 cursor-pointer ${
+                            notif.isRead
+                              ? 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                              : 'bg-blue-50/40 dark:bg-blue-950/20 hover:bg-blue-50/70 dark:hover:bg-blue-950/40'
+                          }`}
+                        >
+                          <div className={`p-2 rounded-xl shrink-0 mt-0.5 ${
+                            notif.type === 'alert' || notif.type === 'warning'
+                              ? 'bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400'
+                              : notif.type === 'success'
+                              ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400'
+                              : 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400'
+                          }`}>
+                            {notif.type === 'alert' || notif.type === 'warning' ? (
+                              <AlertTriangle className="w-4 h-4" />
+                            ) : notif.type === 'success' ? (
+                              <CheckCircle2 className="w-4 h-4" />
+                            ) : (
+                              <Sparkles className="w-4 h-4" />
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <h5 className={`text-xs ${notif.isRead ? 'font-bold text-slate-800 dark:text-slate-200' : 'font-black text-slate-900 dark:text-white'}`}>
+                                {notif.title}
+                              </h5>
+                              {!notif.isRead && (
+                                <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
+                              {notif.message}
+                            </p>
+                            <span className="text-[9px] font-bold text-slate-400 mt-1 block">
+                              {notif.created_at ? new Date(notif.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently'}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
