@@ -102,6 +102,19 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     }
   };
 
+  const handleClearReadNotifications = async (clearId?: string) => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clearId ? { clearId } : { clearRead: true }),
+      });
+      fetchNotifications();
+    } catch (e) {
+      console.error('Error clearing read notifications:', e);
+    }
+  };
+
   const fetchProfiles = async () => {
     try {
       const res = await fetch('/api/profile/list');
@@ -372,15 +385,27 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                       </h4>
                     </div>
 
-                    {unreadCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => handleMarkAsRead()}
-                        className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                      >
-                        Mark all as read
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2.5">
+                      {notifications.some((n) => n.isRead) && (
+                        <button
+                          type="button"
+                          onClick={() => handleClearReadNotifications()}
+                          className="text-[11px] font-extrabold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer flex items-center gap-1"
+                          title="Clear all read notifications"
+                        >
+                          <Trash2 className="w-3 h-3" /> Clear Read
+                        </button>
+                      )}
+                      {unreadCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleMarkAsRead()}
+                          className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                        >
+                          Mark all as read
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -397,7 +422,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                         <div
                           key={notif.id}
                           onClick={() => !notif.isRead && handleMarkAsRead(notif.id)}
-                          className={`p-4 transition-colors flex items-start gap-3 cursor-pointer ${
+                          className={`p-4 transition-colors flex items-start gap-3 cursor-pointer group ${
                             notif.isRead
                               ? 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                               : 'bg-blue-50/40 dark:bg-blue-950/20 hover:bg-blue-50/70 dark:hover:bg-blue-950/40'
@@ -424,9 +449,24 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                               <h5 className={`text-xs ${notif.isRead ? 'font-bold text-slate-800 dark:text-slate-200' : 'font-black text-slate-900 dark:text-white'}`}>
                                 {notif.title}
                               </h5>
-                              {!notif.isRead && (
-                                <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
-                              )}
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {!notif.isRead && (
+                                  <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" title="Unread" />
+                                )}
+                                {notif.isRead && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleClearReadNotifications(notif.id);
+                                    }}
+                                    className="p-1 text-slate-300 group-hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded transition-colors cursor-pointer"
+                                    title="Clear notification"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                             <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
                               {notif.message}

@@ -24,6 +24,9 @@ export async function GET() {
 
       // Filter notifications relevant to currentUser
       const allNotifs = (db.notifications || []).filter((n: any) => {
+        const clearedBy: string[] = n.clearedBy || [];
+        if (clearedBy.includes(currentUser._id)) return false;
+
         if (n.targetType === 'user') {
           return String(n.targetUserId) === String(currentUser._id);
         }
@@ -69,6 +72,7 @@ export async function GET() {
     const userCourseId = currentUser.locked_course_id ? currentUser.locked_course_id.toString() : null;
 
     const query: any = {
+      clearedBy: { $ne: userIdStr },
       $or: [
         { targetType: 'all' },
         { targetType: 'user', targetUserId: userIdStr },
@@ -104,7 +108,7 @@ export async function GET() {
   }
 }
 
-// POST: Mark notification(s) as read for current user
+// POST: Mark notification(s) as read or clear read notifications for current user
 export async function POST(request: Request) {
   try {
     const { isMemoryMode } = await dbConnect();
@@ -114,7 +118,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { notificationId, markAll } = body;
+    const { notificationId, markAll, clearRead, clearId } = body;
 
     if (isMemoryMode) {
       const db = readSharedDb();
@@ -122,7 +126,23 @@ export async function POST(request: Request) {
 
       const currentUserId = auth.userId;
 
-      if (markAll) {
+      if (clearRead) {
+        db.notifications.forEach((n: any) => {
+          if (!n.clearedBy) n.clearedBy = [];
+          const readBy: string[] = n.readBy || [];
+          if (readBy.includes(currentUserId) && !n.clearedBy.includes(currentUserId)) {
+            n.clearedBy.push(currentUserId);
+          }
+        });
+      } else if (clearId) {
+        const target = db.notifications.find((n: any) => String(n._id) === String(clearId));
+        if (target) {
+          if (!target.clearedBy) target.clearedBy = [];
+          if (!target.clearedBy.includes(currentUserId)) {
+            target.clearedBy.push(currentUserId);
+          }
+        }
+      } else if (markAll) {
         db.notifications.forEach((n: any) => {
           if (!n.readBy) n.readBy = [];
           if (!n.readBy.includes(currentUserId)) {
@@ -140,13 +160,22 @@ export async function POST(request: Request) {
       }
 
       writeSharedDb(db);
-      return NextResponse.json({ success: true, message: 'Notification marked as read' });
+      return NextResponse.json({ success: true, message: 'Notification action completed' });
     }
 
     // Mongoose Mode
     const userIdStr = auth.userId;
 
-    if (markAll) {
+    if (clearRead) {
+      await Notification.updateMany(
+        { readBy: userIdStr, clearedBy: { $ne: userIdStr } },
+        { $addToSet: { clearedBy: userIdStr } }
+      );
+    } else if (clearId) {
+      await Notification.findByIdAndUpdate(clearId, {
+        $addToSet: { clearedBy: userIdStr },
+      });
+    } else if (markAll) {
       await Notification.updateMany(
         { readBy: { $ne: userIdStr } },
         { $addToSet: { readBy: userIdStr } }
@@ -157,7 +186,7 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ success: true, message: 'Notification marked as read' });
+    return NextResponse.json({ success: true, message: 'Notification action completed' });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
