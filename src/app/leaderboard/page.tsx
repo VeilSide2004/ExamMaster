@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, UserPlus, Search, Check, Copy, Trash2, X, Swords, Share2, Sparkles
+  Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, Sparkles
 } from 'lucide-react';
 
 const getInitialLeaderboardCache = () => {
@@ -28,12 +28,8 @@ export default function LeaderboardPage() {
   const [inviteCode, setInviteCode] = useState<string>('');
   const [loadingFriends, setLoadingFriends] = useState(false);
 
-  // Invite Modal State
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [addingFriendId, setAddingFriendId] = useState<string | null>(null);
+  // Share Modal State
+  const [showShareModal, setShowShareModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
 
@@ -63,7 +59,7 @@ export default function LeaderboardPage() {
       .finally(() => setLoadingGlobal(false));
   }, []);
 
-  // Fetch Friends Leaderboard
+  // Fetch Friends Leaderboard & Invite Code on mount & tab change
   const fetchFriendsLeaderboard = () => {
     setLoadingFriends(true);
     fetch('/api/leaderboard/friends')
@@ -79,56 +75,8 @@ export default function LeaderboardPage() {
   };
 
   useEffect(() => {
-    if (activeTab === 'friends') {
-      fetchFriendsLeaderboard();
-    }
+    fetchFriendsLeaderboard();
   }, [activeTab]);
-
-  // Search Registered Students
-  useEffect(() => {
-    if (!searchQuery.trim() || !showInviteModal) {
-      setSearchResults([]);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setSearching(true);
-      fetch(`/api/leaderboard/friends?search=${encodeURIComponent(searchQuery)}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setSearchResults(data.searchResults || []);
-        })
-        .catch(console.error)
-        .finally(() => setSearching(false));
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, showInviteModal]);
-
-  // Add Friend Handler
-  const handleAddFriend = async (friendId: string) => {
-    setAddingFriendId(friendId);
-    try {
-      const res = await fetch('/api/leaderboard/friends', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ friendId }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        showToast(data.message || 'Friend added successfully!');
-        setSearchResults((prev) =>
-          prev.map((item) => (item.id === friendId ? { ...item, isAlreadyFriend: true } : item))
-        );
-        fetchFriendsLeaderboard();
-      } else {
-        showToast(data.error || 'Failed to add friend');
-      }
-    } catch {
-      showToast('Error adding friend');
-    } finally {
-      setAddingFriendId(null);
-    }
-  };
 
   // Remove Friend Handler
   const handleRemoveFriend = async (friendId: string, name: string) => {
@@ -153,6 +101,30 @@ export default function LeaderboardPage() {
     setCopiedLink(true);
     showToast('📋 Friend invite link copied to clipboard!');
     setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  // Social Share Handler (WhatsApp, X/Twitter, Telegram, LinkedIn, Native)
+  const handleSocialShare = (platform: 'whatsapp' | 'x' | 'telegram' | 'linkedin' | 'native') => {
+    const link = `${window.location.origin}/leaderboard?joinCode=${inviteCode || 'INVITE'}`;
+    const shareText = `Join me on ExamMaster Leaderboard! Compete together, track XP, and climb the standings:`;
+
+    if (platform === 'whatsapp') {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + link)}`, '_blank');
+    } else if (platform === 'x') {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(link)}`, '_blank');
+    } else if (platform === 'telegram') {
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`, '_blank');
+    } else if (platform === 'linkedin') {
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`, '_blank');
+    } else if (platform === 'native') {
+      if (typeof navigator !== 'undefined' && (navigator as any).share) {
+        (navigator as any).share({
+          title: 'ExamMaster Leaderboard',
+          text: shareText,
+          url: link,
+        }).catch(() => {});
+      }
+    }
   };
 
   // Challenge Friend Action
@@ -196,24 +168,15 @@ export default function LeaderboardPage() {
             </div>
           </div>
 
-          {/* Action CTA: Invite Friends Button */}
+          {/* Action CTA: Share Invite Link Button */}
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={handleCopyInviteLink}
-              className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-50 transition-all flex items-center gap-2 shadow-xs"
+              onClick={() => setShowShareModal(true)}
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs transition-all flex items-center gap-2 shadow-md shadow-blue-500/20 active:scale-95 cursor-pointer"
             >
-              {copiedLink ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4 text-blue-600" />}
-              {copiedLink ? 'Link Copied!' : 'Share Invite Link'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowInviteModal(true)}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs transition-all flex items-center gap-2 shadow-md shadow-blue-500/20 active:scale-95"
-            >
-              <UserPlus className="w-4 h-4" />
-              Invite Friends
+              <Share2 className="w-4 h-4" />
+              Share Invite Link
             </button>
           </div>
         </div>
@@ -242,7 +205,7 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {/* Navigation Tabs Switcher: Global Course vs Custom Friends Arena */}
+        {/* Navigation Tabs Switcher */}
         <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
           <button
             type="button"
@@ -260,7 +223,7 @@ export default function LeaderboardPage() {
           <button
             type="button"
             onClick={() => setActiveTab('friends')}
-            className={`px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center gap-2 cursor-pointer relative ${
+            className={`px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === 'friends'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -268,125 +231,101 @@ export default function LeaderboardPage() {
           >
             <Users className="w-4 h-4" />
             Custom Friends Arena
-            {friendsList.length > 1 && (
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                activeTab === 'friends' ? 'bg-white text-blue-700' : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-              }`}>
-                {friendsList.length - 1}
-              </span>
-            )}
           </button>
         </div>
 
-        {/* Tab 1: Global Course Leaderboard Table */}
-        {activeTab === 'global' && (
-          <div className="relative">
-            <div
-              className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs transition-all duration-500 ${
-                isLocked ? 'blur-sm pointer-events-none select-none' : ''
-              }`}
-              aria-hidden={isLocked}
+        {/* Locked Overlay Notification */}
+        {isLocked && (
+          <div className="rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 p-6 md:p-8 text-amber-900 dark:text-amber-200 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                <Lock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold">Complete Your First Exam to Rank!</h3>
+                <p className="text-xs text-amber-800/80 dark:text-amber-300/80 mt-1">
+                  You currently have 0 XP. Complete mock tests or practice exams to earn XP and unlock full position details.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push('/exams')}
+              className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl transition-all shadow-md shadow-amber-500/20 flex items-center gap-2 shrink-0 cursor-pointer"
             >
-              {loadingGlobal ? (
-                <div className="py-16 text-center text-xs font-bold text-slate-400">Loading course leaderboard...</div>
-              ) : leaderboard.length === 0 ? (
-                <div className="py-16 text-center text-xs font-bold text-slate-400">No student rankings recorded yet.</div>
-              ) : (
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    <tr>
-                      <th className="p-4 pl-6 w-20 text-center">Rank</th>
-                      <th className="p-4">Student Name</th>
-                      <th className="p-4 pr-6 text-right">Total XP Balance</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
-                    {leaderboard.map((student) => (
-                      <tr
-                        key={student.rank}
-                        className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
-                          student.isSelf ? 'bg-blue-50/60 dark:bg-blue-950/30 font-bold' : ''
-                        }`}
-                      >
-                        <td className="p-4 pl-6 text-center font-bold">
-                          {student.rank === 1 ? (
-                            <span className="w-7 h-7 mx-auto rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-xs">
-                              <Crown className="w-4 h-4 fill-current" />
-                            </span>
-                          ) : student.rank === 2 ? (
-                            <span className="w-7 h-7 mx-auto rounded-full bg-slate-300 text-slate-950 flex items-center justify-center font-black shadow-xs">
-                              2
-                            </span>
-                          ) : student.rank === 3 ? (
-                            <span className="w-7 h-7 mx-auto rounded-full bg-amber-700 text-white flex items-center justify-center font-black shadow-xs">
-                              3
-                            </span>
-                          ) : (
-                            <span className="font-extrabold text-slate-400">#{student.rank}</span>
-                          )}
-                        </td>
-                        <td className="p-4 font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          {student.name}
-                          {student.isSelf && (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+              Take An Exam Now <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* TAB 1: GLOBAL LEADERBOARD */}
+        {activeTab === 'global' && (
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+            {loadingGlobal ? (
+              <div className="py-20 text-center text-xs font-bold text-slate-400">Loading standings...</div>
+            ) : (
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="p-4 pl-6 w-20 text-center">Rank</th>
+                    <th className="p-4">Student Name</th>
+                    <th className="p-4 text-center">Total XP</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
+                  {leaderboard.map((item) => (
+                    <tr
+                      key={item.user_id || item.rank}
+                      className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                        item.isCurrentUser ? 'bg-blue-50/40 dark:bg-blue-950/20 font-bold' : ''
+                      }`}
+                    >
+                      <td className="p-4 pl-6 text-center font-black">
+                        {item.rank === 1 ? (
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
+                            <Crown className="w-4 h-4 fill-amber-500" />
+                          </span>
+                        ) : item.rank === 2 ? (
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            <Crown className="w-4 h-4 text-slate-400" />
+                          </span>
+                        ) : item.rank === 3 ? (
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-900/10 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                            <Crown className="w-4 h-4 text-amber-700" />
+                          </span>
+                        ) : (
+                          `#${item.rank}`
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            {item.name}
+                          </span>
+                          {item.isCurrentUser && (
+                            <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold">
                               YOU
                             </span>
                           )}
-                        </td>
-                        <td className="p-4 pr-6 text-right font-black text-slate-900 dark:text-white text-sm">
-                          {student.xp_total?.toLocaleString() || 0} XP
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-
-            {/* Locked Overlay for 0 XP Users */}
-            {isLocked && (
-              <div
-                className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl"
-                style={{ background: 'rgba(248,250,252,0.55)', backdropFilter: 'blur(2px)' }}
-              >
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center space-y-5">
-                  <div className="relative w-20 h-20 mx-auto">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-400/30">
-                      <Lock className="w-9 h-9 text-white" strokeWidth={2.5} />
-                    </div>
-                    <div className="absolute inset-0 rounded-full border-4 border-amber-400/40 animate-ping" />
-                  </div>
-
-                  <div>
-                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 tracking-wider">
-                      Leaderboard Locked
-                    </span>
-                    <h2 className="text-xl font-black text-slate-900 dark:text-white mt-3 leading-tight">
-                      Earn your first XP<br />to unlock rankings
-                    </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                      The leaderboard is only visible to students who have earned at least <span className="font-black text-amber-600">1 XP</span>.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => router.push('/practice')}
-                    className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-sm rounded-xl shadow-lg shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Zap className="w-4 h-4" /> Go Practice &amp; Earn XP <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-center font-extrabold text-slate-900 dark:text-white">
+                        <span className="inline-flex items-center gap-1">
+                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                          {item.xp_total?.toLocaleString() || 0} XP
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         )}
 
-        {/* Tab 2: Custom Friends Leaderboard Arena */}
+        {/* TAB 2: CUSTOM FRIENDS ARENA */}
         {activeTab === 'friends' && (
           <div className="space-y-6">
-            
-            {/* Friends Leaderboard Table */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
               <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/40">
                 <div>
@@ -401,17 +340,16 @@ export default function LeaderboardPage() {
 
                 <button
                   type="button"
-                  onClick={() => setShowInviteModal(true)}
-                  className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs"
+                  onClick={() => setShowShareModal(true)}
+                  className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
-                  <UserPlus className="w-3.5 h-3.5" /> Invite More Friends
+                  <Share2 className="w-3.5 h-3.5" /> Share Invite Link
                 </button>
               </div>
 
               {loadingFriends ? (
                 <div className="py-16 text-center text-xs font-bold text-slate-400">Loading custom friends arena...</div>
               ) : friendsList.length <= 1 ? (
-                /* Empty Friends Arena State */
                 <div className="p-12 text-center flex flex-col items-center justify-center space-y-4">
                   <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200 dark:border-blue-900">
                     <Users className="w-8 h-8 stroke-[1.5]" />
@@ -421,16 +359,16 @@ export default function LeaderboardPage() {
                       Your Custom Arena is empty!
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                      Invite your friends or classmates who have an account on ExamMaster to compete together, compare scores, and boost preparation!
+                      Share your invite link with friends or classmates so they can join your custom arena, compare scores, and compete together!
                     </p>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => setShowInviteModal(true)}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl flex items-center gap-2 shadow-md shadow-blue-500/20 active:scale-95 transition-all"
+                    onClick={() => setShowShareModal(true)}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl flex items-center gap-2 shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
                   >
-                    <UserPlus className="w-4 h-4" /> Invite First Friend Now
+                    <Share2 className="w-4 h-4" /> Share Invite Link
                   </button>
                 </div>
               ) : (
@@ -448,55 +386,43 @@ export default function LeaderboardPage() {
                       <tr
                         key={friend.id}
                         className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
-                          friend.isSelf ? 'bg-blue-50/60 dark:bg-blue-950/30 font-bold' : ''
+                          friend.isCurrentUser ? 'bg-blue-50/40 dark:bg-blue-950/20 font-bold' : ''
                         }`}
                       >
-                        <td className="p-4 pl-6 text-center font-bold">
-                          {friend.rank === 1 ? (
-                            <span className="w-7 h-7 mx-auto rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-xs">
-                              👑 1
-                            </span>
-                          ) : (
-                            <span className="font-extrabold text-slate-500">#{friend.rank}</span>
-                          )}
+                        <td className="p-4 pl-6 text-center font-black">
+                          #{friend.arenaRank}
                         </td>
-
                         <td className="p-4">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 dark:text-white">{friend.name}</span>
-                            {friend.isSelf ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+                            <span className="font-bold text-slate-900 dark:text-white">
+                              {friend.name}
+                            </span>
+                            {friend.isCurrentUser && (
+                              <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold">
                                 YOU
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                                FRIEND
                               </span>
                             )}
                           </div>
-                          <span className="text-[10px] text-slate-400 font-medium block mt-0.5">{friend.email}</span>
                         </td>
-
-                        <td className="p-4 text-center font-black text-slate-900 dark:text-white text-sm">
-                          {friend.xp_total?.toLocaleString() || 0} XP
+                        <td className="p-4 text-center font-extrabold text-slate-900 dark:text-white">
+                          <span className="inline-flex items-center gap-1">
+                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                            {friend.xp_total?.toLocaleString() || 0} XP
+                          </span>
                         </td>
-
                         <td className="p-4 pr-6 text-right">
-                          {friend.isSelf ? (
-                            <span className="text-[11px] text-slate-400 font-bold">Host</span>
-                          ) : (
+                          {!friend.isCurrentUser && (
                             <div className="flex items-center justify-end gap-2">
                               <button
                                 type="button"
                                 onClick={() => handleChallengeFriend(friend.name)}
-                                className="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 text-[11px] font-bold border border-amber-200 dark:border-amber-800 flex items-center gap-1 transition-colors"
+                                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:hover:bg-amber-900/60 rounded-xl font-bold text-[11px] transition-colors flex items-center gap-1 border border-amber-200 dark:border-amber-900"
                               >
                                 <Swords className="w-3.5 h-3.5" /> Challenge
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleRemoveFriend(friend.id, friend.name)}
-                                title="Remove friend from custom arena"
                                 className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -515,118 +441,129 @@ export default function LeaderboardPage() {
 
       </main>
 
-      {/* Invite Friends Modal */}
-      {showInviteModal && (
+      {/* Share Invite Link Modal */}
+      {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl space-y-6">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl space-y-6">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200 dark:border-blue-900">
-                  <UserPlus className="w-5 h-5" />
+                  <Share2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Invite Friends to Custom Arena</h3>
-                  <p className="text-[11px] text-slate-500">Add registered students or share invite link</p>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Share Invite Link</h3>
+                  <p className="text-[11px] text-slate-500">Invite friends to your custom arena standings</p>
                 </div>
               </div>
 
               <button
                 type="button"
-                onClick={() => setShowInviteModal(false)}
+                onClick={() => setShowShareModal(false)}
                 className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Search Input for Registered Users */}
+            {/* Direct Copy Link Box */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Search Registered Students (Name or Email)
-              </label>
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="e.g. Ram or student@gmail.com..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Search Results Container */}
-            {searching ? (
-              <div className="py-6 text-center text-xs font-bold text-slate-400">Searching students...</div>
-            ) : searchQuery.trim() && searchResults.length === 0 ? (
-              <div className="py-6 text-center text-xs font-semibold text-slate-400">
-                No matching student account found. Try searching by full email!
-              </div>
-            ) : searchResults.length > 0 ? (
-              <div className="max-h-48 overflow-y-auto space-y-2 border border-slate-100 dark:border-slate-800 rounded-2xl p-2 bg-slate-50/50 dark:bg-slate-800/30">
-                {searchResults.map((user) => (
-                  <div
-                    key={user.id}
-                    className="p-3 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700 flex items-center justify-between gap-3"
-                  >
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">{user.name}</h4>
-                      <p className="text-[10px] text-slate-400 font-medium">{user.email} · {user.xp_total} XP</p>
-                    </div>
-
-                    {user.isAlreadyFriend ? (
-                      <span className="px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold text-[11px] rounded-lg flex items-center gap-1">
-                        <Check className="w-3.5 h-3.5" /> Added
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleAddFriend(user.id)}
-                        disabled={addingFriendId === user.id}
-                        className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shrink-0"
-                      >
-                        <UserPlus className="w-3.5 h-3.5" />
-                        {addingFriendId === user.id ? 'Adding...' : 'Add Friend'}
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : null}
-
-            {/* Share Invite Code Section */}
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
-              <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
                 Shareable Arena Link
-              </span>
-              <p className="text-[11px] text-slate-500">
-                Send this link to friends so they can join your custom arena standings:
-              </p>
-              <div className="flex items-center gap-2 pt-1">
+              </label>
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   readOnly
-                  value={inviteCode ? `${window.location.origin}/leaderboard?joinCode=${inviteCode}` : 'Loading code...'}
-                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 select-all"
+                  value={inviteCode ? `${typeof window !== 'undefined' ? window.location.origin : ''}/leaderboard?joinCode=${inviteCode}` : 'Loading link...'}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-semibold text-slate-700 dark:text-slate-200 select-all focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={handleCopyInviteLink}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shrink-0 transition-colors"
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shrink-0 transition-colors shadow-xs cursor-pointer"
                 >
-                  <Copy className="w-3.5 h-3.5" /> Copy
+                  {copiedLink ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+                  {copiedLink ? 'Copied!' : 'Copy'}
                 </button>
               </div>
+            </div>
+
+            {/* Social Share Options */}
+            <div className="space-y-3 pt-2">
+              <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                Share directly via
+              </span>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {/* WhatsApp */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialShare('whatsapp')}
+                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] dark:text-[#25D366] font-bold text-xs border border-[#25D366]/30 transition-all active:scale-95 cursor-pointer"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984 0 1.762.459 3.48 1.332 5.001L2 22l5.14-1.336a9.972 9.972 0 0 0 4.869 1.267h.004c5.507 0 9.99-4.478 9.99-9.985 0-2.667-1.04-5.174-2.927-7.06A9.923 9.923 0 0 0 12.012 2zm0 18.312h-.003a8.31 8.31 0 0 1-4.24-1.166l-.305-.181-3.149.819.839-3.056-.198-.314A8.283 8.283 0 0 1 3.69 11.98c0-4.583 3.734-8.312 8.322-8.312 2.22 0 4.309.866 5.879 2.438a8.272 8.272 0 0 1 2.433 5.878c0 4.584-3.734 8.314-8.312 8.314zm4.562-6.223c-.25-.125-1.482-.731-1.712-.814-.23-.083-.397-.125-.564.125-.167.25-.647.814-.793.98-.146.167-.292.188-.542.063a6.868 6.868 0 0 1-2.011-1.242 7.58 7.58 0 0 1-1.392-1.734c-.146-.25-.015-.386.11-.51.112-.11.25-.292.375-.438.125-.146.167-.25.25-.417.083-.167.042-.313-.021-.438-.063-.125-.563-1.356-.772-1.856-.203-.487-.41-.421-.564-.429l-.48-.008c-.167 0-.438.063-.667.313s-.876.856-.876 2.086c0 1.23.897 2.418 1.022 2.585.125.167 1.764 2.695 4.274 3.777.597.257 1.064.41 1.427.526.6.19 1.146.163 1.577.099.481-.072 1.482-.605 1.69-1.189.208-.584.208-1.084.146-1.189-.063-.105-.23-.167-.48-.292z"/>
+                  </svg>
+                  WhatsApp
+                </button>
+
+                {/* X / Twitter */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialShare('x')}
+                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs border border-slate-300 dark:border-slate-700 transition-all active:scale-95 cursor-pointer"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  X (Twitter)
+                </button>
+
+                {/* Telegram */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialShare('telegram')}
+                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-[#0088cc]/10 hover:bg-[#0088cc]/20 text-[#0088cc] font-bold text-xs border border-[#0088cc]/30 transition-all active:scale-95 cursor-pointer"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                  </svg>
+                  Telegram
+                </button>
+
+                {/* LinkedIn */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialShare('linkedin')}
+                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 text-[#0A66C2] dark:text-[#388ee7] font-bold text-xs border border-[#0A66C2]/30 transition-all active:scale-95 cursor-pointer"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.75a1.47 1.47 0 1 0 0 2.94 1.47 1.47 0 0 0 0-2.94z"/>
+                  </svg>
+                  LinkedIn
+                </button>
+              </div>
+
+              {/* Native Web Share option if supported */}
+              {typeof navigator !== 'undefined' && (navigator as any).share && (
+                <button
+                  type="button"
+                  onClick={() => handleSocialShare('native')}
+                  className="w-full mt-2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Share2 className="w-4 h-4 text-blue-500" />
+                  More Share Apps...
+                </button>
+              )}
             </div>
 
             {/* Close Button */}
             <button
               type="button"
-              onClick={() => setShowInviteModal(false)}
-              className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              onClick={() => setShowShareModal(false)}
+              className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               Done
             </button>
