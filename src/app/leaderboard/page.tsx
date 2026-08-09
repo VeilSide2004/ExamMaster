@@ -94,43 +94,75 @@ export default function LeaderboardPage() {
     }
   };
 
-  // Copy Shareable Invite Link
+  // Helper to get current shareable URL
+  const getShareUrl = () => {
+    if (typeof window === 'undefined') return '';
+    return `${window.location.origin}/leaderboard?joinCode=${inviteCode || 'INVITE'}`;
+  };
+
+  const shareText = `Join me on ExamMaster Leaderboard! Compete together, track XP, and climb standings:`;
+
+  // Robust Copy helper with fallback
+  const copyToClipboard = (text: string) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).catch(() => {
+        fallbackCopyTextToClipboard(text);
+      });
+    } else {
+      fallbackCopyTextToClipboard(text);
+    }
+  };
+
+  const fallbackCopyTextToClipboard = (text: string) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+    }
+    document.body.removeChild(textArea);
+  };
+
+  // Copy Shareable Invite Link Button Action
   const handleCopyInviteLink = () => {
-    const link = `${window.location.origin}/leaderboard?joinCode=${inviteCode || 'INVITE'}`;
-    navigator.clipboard.writeText(link);
+    const link = getShareUrl();
+    copyToClipboard(link);
     setCopiedLink(true);
     showToast('📋 Friend invite link copied to clipboard!');
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
-  // Social Share Handler (WhatsApp, X/Twitter, Telegram, LinkedIn, Native)
-  const handleSocialShare = (platform: 'whatsapp' | 'x' | 'telegram' | 'linkedin' | 'native') => {
-    const link = `${window.location.origin}/leaderboard?joinCode=${inviteCode || 'INVITE'}`;
-    const shareText = `Join me on ExamMaster Leaderboard! Compete together, track XP, and climb the standings:`;
-
-    if (platform === 'whatsapp') {
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + link)}`, '_blank');
-    } else if (platform === 'x') {
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(link)}`, '_blank');
-    } else if (platform === 'telegram') {
-      window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`, '_blank');
-    } else if (platform === 'linkedin') {
-      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`, '_blank');
-    } else if (platform === 'native') {
-      if (typeof navigator !== 'undefined' && (navigator as any).share) {
-        (navigator as any).share({
-          title: 'ExamMaster Leaderboard',
-          text: shareText,
-          url: link,
-        }).catch(() => {});
+  // Native Web Share Action
+  const handleNativeShare = async () => {
+    const link = getShareUrl();
+    const shareData = {
+      title: 'ExamMaster Leaderboard',
+      text: shareText,
+      url: link,
+    };
+    if (typeof navigator !== 'undefined' && (navigator as any).share) {
+      try {
+        await (navigator as any).share(shareData);
+        showToast('Shared successfully!');
+      } catch {
+        // User cancelled or failed, fallback to copy link
+        handleCopyInviteLink();
       }
+    } else {
+      handleCopyInviteLink();
     }
   };
 
   // Challenge Friend Action
   const handleChallengeFriend = (friendName: string) => {
-    const challengeMsg = `Hey ${friendName}! I challenge you to compete on ExamMaster! Check my XP on our custom leaderboard: ${window.location.origin}/leaderboard`;
-    navigator.clipboard.writeText(challengeMsg);
+    const challengeMsg = `Hey ${friendName}! I challenge you to compete on ExamMaster! Check my XP on our custom leaderboard: ${getShareUrl()}`;
+    copyToClipboard(challengeMsg);
     showToast(`⚔️ Challenge link copied for ${friendName}! Send it to them now.`);
   };
 
@@ -350,6 +382,7 @@ export default function LeaderboardPage() {
               {loadingFriends ? (
                 <div className="py-16 text-center text-xs font-bold text-slate-400">Loading custom friends arena...</div>
               ) : friendsList.length <= 1 ? (
+                /* Empty Friends Arena State */
                 <div className="p-12 text-center flex flex-col items-center justify-center space-y-4">
                   <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200 dark:border-blue-900">
                     <Users className="w-8 h-8 stroke-[1.5]" />
@@ -476,7 +509,7 @@ export default function LeaderboardPage() {
                 <input
                   type="text"
                   readOnly
-                  value={inviteCode ? `${typeof window !== 'undefined' ? window.location.origin : ''}/leaderboard?joinCode=${inviteCode}` : 'Loading link...'}
+                  value={inviteCode ? getShareUrl() : 'Loading link...'}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-semibold text-slate-700 dark:text-slate-200 select-all focus:outline-none"
                 />
                 <button
@@ -498,65 +531,83 @@ export default function LeaderboardPage() {
               
               <div className="grid grid-cols-2 gap-3">
                 {/* WhatsApp */}
-                <button
-                  type="button"
-                  onClick={() => handleSocialShare('whatsapp')}
-                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] dark:text-[#25D366] font-bold text-xs border border-[#25D366]/30 transition-all active:scale-95 cursor-pointer"
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + getShareUrl())}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    copyToClipboard(getShareUrl());
+                    showToast('Opening WhatsApp... Link copied!');
+                  }}
+                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] dark:text-[#25D366] font-bold text-xs border border-[#25D366]/30 transition-all active:scale-95 cursor-pointer no-underline"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                     <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984 0 1.762.459 3.48 1.332 5.001L2 22l5.14-1.336a9.972 9.972 0 0 0 4.869 1.267h.004c5.507 0 9.99-4.478 9.99-9.985 0-2.667-1.04-5.174-2.927-7.06A9.923 9.923 0 0 0 12.012 2zm0 18.312h-.003a8.31 8.31 0 0 1-4.24-1.166l-.305-.181-3.149.819.839-3.056-.198-.314A8.283 8.283 0 0 1 3.69 11.98c0-4.583 3.734-8.312 8.322-8.312 2.22 0 4.309.866 5.879 2.438a8.272 8.272 0 0 1 2.433 5.878c0 4.584-3.734 8.314-8.312 8.314zm4.562-6.223c-.25-.125-1.482-.731-1.712-.814-.23-.083-.397-.125-.564.125-.167.25-.647.814-.793.98-.146.167-.292.188-.542.063a6.868 6.868 0 0 1-2.011-1.242 7.58 7.58 0 0 1-1.392-1.734c-.146-.25-.015-.386.11-.51.112-.11.25-.292.375-.438.125-.146.167-.25.25-.417.083-.167.042-.313-.021-.438-.063-.125-.563-1.356-.772-1.856-.203-.487-.41-.421-.564-.429l-.48-.008c-.167 0-.438.063-.667.313s-.876.856-.876 2.086c0 1.23.897 2.418 1.022 2.585.125.167 1.764 2.695 4.274 3.777.597.257 1.064.41 1.427.526.6.19 1.146.163 1.577.099.481-.072 1.482-.605 1.69-1.189.208-.584.208-1.084.146-1.189-.063-.105-.23-.167-.48-.292z"/>
                   </svg>
                   WhatsApp
-                </button>
+                </a>
 
                 {/* X / Twitter */}
-                <button
-                  type="button"
-                  onClick={() => handleSocialShare('x')}
-                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs border border-slate-300 dark:border-slate-700 transition-all active:scale-95 cursor-pointer"
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(getShareUrl())}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    copyToClipboard(getShareUrl());
+                    showToast('Opening X (Twitter)... Link copied!');
+                  }}
+                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs border border-slate-300 dark:border-slate-700 transition-all active:scale-95 cursor-pointer no-underline"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                   </svg>
                   X (Twitter)
-                </button>
+                </a>
 
                 {/* Telegram */}
-                <button
-                  type="button"
-                  onClick={() => handleSocialShare('telegram')}
-                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-[#0088cc]/10 hover:bg-[#0088cc]/20 text-[#0088cc] font-bold text-xs border border-[#0088cc]/30 transition-all active:scale-95 cursor-pointer"
+                <a
+                  href={`https://t.me/share/url?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(shareText)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    copyToClipboard(getShareUrl());
+                    showToast('Opening Telegram... Link copied!');
+                  }}
+                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-[#0088cc]/10 hover:bg-[#0088cc]/20 text-[#0088cc] font-bold text-xs border border-[#0088cc]/30 transition-all active:scale-95 cursor-pointer no-underline"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
                   </svg>
                   Telegram
-                </button>
+                </a>
 
                 {/* LinkedIn */}
-                <button
-                  type="button"
-                  onClick={() => handleSocialShare('linkedin')}
-                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 text-[#0A66C2] dark:text-[#388ee7] font-bold text-xs border border-[#0A66C2]/30 transition-all active:scale-95 cursor-pointer"
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getShareUrl())}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    copyToClipboard(getShareUrl());
+                    showToast('Opening LinkedIn... Link copied!');
+                  }}
+                  className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 text-[#0A66C2] dark:text-[#388ee7] font-bold text-xs border border-[#0A66C2]/30 transition-all active:scale-95 cursor-pointer no-underline"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                     <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.75a1.47 1.47 0 1 0 0 2.94 1.47 1.47 0 0 0 0-2.94z"/>
                   </svg>
                   LinkedIn
-                </button>
+                </a>
               </div>
 
-              {/* Native Web Share option if supported */}
-              {typeof navigator !== 'undefined' && (navigator as any).share && (
-                <button
-                  type="button"
-                  onClick={() => handleSocialShare('native')}
-                  className="w-full mt-2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Share2 className="w-4 h-4 text-blue-500" />
-                  More Share Apps...
-                </button>
-              )}
+              {/* Native Web Share option */}
+              <button
+                type="button"
+                onClick={handleNativeShare}
+                className="w-full mt-2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Share2 className="w-4 h-4 text-blue-500" />
+                More Share Apps...
+              </button>
             </div>
 
             {/* Close Button */}
