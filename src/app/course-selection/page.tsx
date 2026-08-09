@@ -79,7 +79,7 @@ export default function CourseSelectionPage() {
     const cat = String(c?.category || '').toLowerCase().trim();
     const name = String(c?.name || '').toLowerCase().trim();
     const str = `${cat} ${name}`;
-    return str.includes('school') || str.includes('class') || str.includes('6-12') || str.includes('board') || str.includes('grade');
+    return str.includes('school') || str.includes('class') || str.includes('3-12') || str.includes('6-12') || str.includes('board') || str.includes('grade');
   };
 
   const schoolCourses = courses.filter((c) => isSchoolCategory(c));
@@ -119,7 +119,7 @@ export default function CourseSelectionPage() {
             Select Your Preparation Track
           </h1>
           <p className="text-xs md:text-sm text-slate-500 max-w-lg mx-auto mt-2">
-            Choose your target track from our <strong className="text-slate-700 dark:text-slate-300">Competitive Exams</strong> or <strong className="text-slate-700 dark:text-slate-300">School Exams (Class 6-12)</strong> catalog. Once confirmed, this selection will be permanently locked.
+            Choose your target track from our <strong className="text-slate-700 dark:text-slate-300">Competitive Exams</strong> or <strong className="text-slate-700 dark:text-slate-300">School Exams (Class 3-12)</strong> catalog. Once confirmed, this selection will be permanently locked.
           </p>
         </div>
 
@@ -259,9 +259,9 @@ export default function CourseSelectionPage() {
                     </div>
                     <div>
                       <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                        School Exams (Class 6 to 12)
+                        School Exams (Class 3 to 12)
                       </h2>
-                      <p className="text-[11px] text-slate-500">Board exam prep, grade-wise science & maths tracks (Class 6 - 12)</p>
+                      <p className="text-[11px] text-slate-500">Board exam prep, grade-wise science & maths tracks (Class 3 - 12)</p>
                     </div>
                   </div>
 
@@ -312,7 +312,7 @@ export default function CourseSelectionPage() {
                           <div className="flex justify-between items-center mb-3">
                             <div className="flex flex-wrap items-center gap-1">
                               <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold flex items-center gap-1">
-                                <GraduationCap className="w-3 h-3" /> Class 6 - 12
+                                <GraduationCap className="w-3 h-3" /> Class 3 - 12
                               </span>
                               <span className="px-2 py-0.5 rounded-md bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-extrabold">
                                 🏫 {course.board || 'CBSE'}
