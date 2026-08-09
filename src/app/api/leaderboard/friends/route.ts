@@ -44,18 +44,25 @@ export async function GET(request: Request) {
         return NextResponse.json({ searchResults: matches.slice(0, 10) });
       }
 
-      // Return Friends Leaderboard (currentUser + friends)
+      // Return Friends Leaderboard for connected arena network
+      const groupIds = new Set<string>([currentUser._id, ...friendsIds]);
+      (db.users || []).forEach((u) => {
+        if (groupIds.has(u._id)) {
+          (u.friends || []).forEach((fid: string) => groupIds.add(fid));
+        }
+      });
+
       const allFriendsObjs = (db.users || [])
-        .filter((u) => u._id === currentUser._id || friendsIds.includes(u._id))
+        .filter((u) => groupIds.has(u._id))
         .sort((a, b) => (b.xp_total || 0) - (a.xp_total || 0));
 
       const leaderboard = allFriendsObjs.map((u, idx) => ({
-        rank: idx + 1,
+        arenaRank: idx + 1,
         id: u._id,
         name: u.name,
         email: u.email,
         xp_total: u.xp_total || 0,
-        isSelf: u._id === currentUser._id,
+        isCurrentUser: u._id === currentUser._id,
       }));
 
       const pendingRequests = (currentUser.friendRequests || [])
@@ -72,7 +79,7 @@ export async function GET(request: Request) {
         friendsLeaderboard: leaderboard,
         pendingRequests,
         inviteCode: currentUser._id.slice(0, 8).toUpperCase(),
-        totalFriends: friendsIds.length,
+        totalFriends: groupIds.size - 1,
       });
     }
 
@@ -106,19 +113,24 @@ export async function GET(request: Request) {
       return NextResponse.json({ searchResults });
     }
 
-    // Fetch currentUser + friends
-    const idsToFetch = [currentUser._id, ...friendsIds];
-    const friendUsers = await User.find({ _id: { $in: idsToFetch } })
+    // Fetch currentUser + friends + friends of friends (connected arena group)
+    const groupIds = new Set<string>([currentUser._id.toString(), ...friendsIds]);
+    const directFriendsObjs = await User.find({ _id: { $in: Array.from(groupIds) } }).select('friends');
+    directFriendsObjs.forEach((u) => {
+      (u.friends || []).forEach((fid: string) => groupIds.add(fid));
+    });
+
+    const friendUsers = await User.find({ _id: { $in: Array.from(groupIds) } })
       .sort({ xp_total: -1 })
       .select('name email xp_total');
 
     const leaderboard = friendUsers.map((u, idx) => ({
-      rank: idx + 1,
+      arenaRank: idx + 1,
       id: u._id.toString(),
       name: u.name,
       email: u.email,
       xp_total: u.xp_total || 0,
-      isSelf: u._id.toString() === currentUser._id.toString(),
+      isCurrentUser: u._id.toString() === currentUser._id.toString(),
     }));
 
     const pendingRequests = (currentUser.friendRequests || [])

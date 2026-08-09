@@ -34,21 +34,23 @@ export async function POST(request: Request) {
       db.users[hostIndex].friendRequests = hostRequests.filter((r) => r.requesterId !== requesterId);
 
       if (action === 'accept') {
-        // Add requesterId to host's friends list
-        const hostFriends: string[] = hostUser.friends || [];
-        if (!hostFriends.includes(requesterId)) {
-          hostFriends.push(requesterId);
-          db.users[hostIndex].friends = hostFriends;
+        // Collect all existing members of host's arena group
+        const currentArenaMembers = new Set<string>([hostUser._id, ...(hostUser.friends || []), requesterId]);
+
+        if (requesterIndex !== -1 && db.users[requesterIndex].friends) {
+          (db.users[requesterIndex].friends || []).forEach((fid: string) => currentArenaMembers.add(fid));
         }
 
-        // Also add hostId to requester's friends list if requester exists
-        if (requesterIndex !== -1) {
-          const requesterFriends: string[] = db.users[requesterIndex].friends || [];
-          if (!requesterFriends.includes(hostUser._id)) {
-            requesterFriends.push(hostUser._id);
-            db.users[requesterIndex].friends = requesterFriends;
+        const arenaMembersList = Array.from(currentArenaMembers);
+
+        // Update all members in this arena group so everyone has everyone else in their friends array
+        arenaMembersList.forEach((memberId) => {
+          const uIdx = db.users.findIndex((u) => u._id === memberId);
+          if (uIdx !== -1) {
+            const memberFriends = arenaMembersList.filter((id) => id !== memberId);
+            db.users[uIdx].friends = Array.from(new Set([...(db.users[uIdx].friends || []), ...memberFriends]));
           }
-        }
+        });
       }
 
       writeSharedDb(db);
@@ -74,19 +76,27 @@ export async function POST(request: Request) {
     );
 
     if (action === 'accept') {
-      const hostFriends: string[] = hostUser.friends || [];
-      if (!hostFriends.includes(requesterId)) {
-        hostFriends.push(requesterId);
-        hostUser.friends = hostFriends;
+      const currentArenaMembers = new Set<string>([
+        hostUser._id.toString(),
+        ...(hostUser.friends || []),
+        requesterId,
+      ]);
+
+      if (requesterUser && requesterUser.friends) {
+        requesterUser.friends.forEach((fid: string) => currentArenaMembers.add(fid));
       }
 
-      if (requesterUser) {
-        const reqFriends: string[] = requesterUser.friends || [];
-        if (!reqFriends.includes(hostUser._id.toString())) {
-          reqFriends.push(hostUser._id.toString());
-          requesterUser.friends = reqFriends;
-          await requesterUser.save();
-        }
+      const arenaMembersList = Array.from(currentArenaMembers);
+
+      // Update all members in this arena group so everyone has everyone else in their friends list
+      await User.updateMany(
+        { _id: { $in: arenaMembersList } },
+        { $addToSet: { friends: { $each: arenaMembersList } } }
+      );
+
+      // Remove self-referential IDs from friends array for all updated users
+      for (const mId of arenaMembersList) {
+        await User.updateOne({ _id: mId }, { $pull: { friends: mId } });
       }
     }
 
