@@ -227,12 +227,41 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 font-sans text-slate-900 dark:text-slate-100 select-none bg-slate-100 dark:bg-slate-950">
-      {/* Left Form Panel — Elevated */}
+      {/* Left Hero Image Column */}
+      <div className="hidden lg:block lg:col-span-7 relative overflow-hidden bg-slate-900">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-90"
+          style={{ backgroundImage: `url('/study_hero_bg.png')` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/60 via-slate-900/30 to-slate-950/50" />
+
+        {/* Glassmorphic Quote Card */}
+        <div className="absolute inset-0 flex items-center justify-center p-12">
+          <div className="bg-white/20 dark:bg-slate-900/50 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-3xl p-10 max-w-md shadow-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 dark:bg-slate-800/40 backdrop-blur-md text-white flex items-center justify-center mx-auto border border-white/30">
+              <Quote className="w-6 h-6 fill-white text-white" />
+            </div>
+            <p className="text-lg font-black text-white leading-relaxed tracking-tight drop-shadow-md">
+              "Precision in preparation leads to excellence in performance."
+            </p>
+            <div className="w-12 h-1 bg-blue-400 rounded-full mx-auto" />
+          </div>
+        </div>
+
+        {/* Pagination Dots */}
+        <div className="absolute bottom-8 left-8 flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs" />
+          <span className="w-2 h-2 rounded-full bg-white/40" />
+          <span className="w-2 h-2 rounded-full bg-white/40" />
+        </div>
+      </div>
+
+      {/* Right Form Panel — Elevated */}
       <div className="lg:col-span-5 xl:col-span-5 relative z-10 flex flex-col justify-between
         bg-white dark:bg-slate-900
         p-6 sm:p-10 lg:p-12
-        shadow-[8px_0_40px_0_rgba(0,0,0,0.18),16px_0_60px_-8px_rgba(0,0,0,0.14),2px_0_8px_0_rgba(0,0,0,0.10)]
-        dark:shadow-[8px_0_40px_0_rgba(0,0,0,0.60),16px_0_80px_-8px_rgba(0,0,0,0.55),2px_0_8px_0_rgba(0,0,0,0.40)]">
+        shadow-[-8px_0_40px_0_rgba(0,0,0,0.18),-16px_0_60px_-8px_rgba(0,0,0,0.14),-2px_0_8px_0_rgba(0,0,0,0.10)]
+        dark:shadow-[-8px_0_40px_0_rgba(0,0,0,0.60),-16px_0_80px_-8px_rgba(0,0,0,0.55),-2px_0_8px_0_rgba(0,0,0,0.40)]">
         <div>
           {/* Top Logo */}
           <div className="pt-2">
@@ -632,35 +661,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
             <span>•</span>
             <a href="#" className="hover:underline">Terms</a>
           </div>
-        </div>
-      </div>{/* end left form panel */}
-
-      {/* Right Hero Image Column */}
-      <div className="hidden lg:block lg:col-span-7 relative overflow-hidden bg-slate-900">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-90"
-          style={{ backgroundImage: `url('/study_hero_bg.png')` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/60 via-slate-900/30 to-slate-950/50" />
-
-        {/* Glassmorphic Quote Card */}
-        <div className="absolute inset-0 flex items-center justify-center p-12">
-          <div className="bg-white/20 dark:bg-slate-900/50 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-3xl p-10 max-w-md shadow-2xl text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 dark:bg-slate-800/40 backdrop-blur-md text-white flex items-center justify-center mx-auto border border-white/30">
-              <Quote className="w-6 h-6 fill-white text-white" />
-            </div>
-            <p className="text-lg font-black text-white leading-relaxed tracking-tight drop-shadow-md">
-              "Precision in preparation leads to excellence in performance."
-            </p>
-            <div className="w-12 h-1 bg-blue-400 rounded-full mx-auto" />
-          </div>
-        </div>
-
-        {/* Pagination Dots */}
-        <div className="absolute bottom-8 right-8 flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs" />
-          <span className="w-2 h-2 rounded-full bg-white/40" />
-          <span className="w-2 h-2 rounded-full bg-white/40" />
         </div>
       </div>
     </div>
