@@ -4,6 +4,9 @@ import { User, Notification } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const isRelevantForUser = (n: any, userId: string, courseId?: string | null) => {
   const targetType = n.targetType || 'all';
   if (targetType === 'user') {
@@ -36,11 +39,18 @@ export async function GET() {
 
       const currentUserId = String(currentUser._id);
       const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
+      const userCreatedAtTime = currentUser.created_at ? new Date(currentUser.created_at).getTime() : 0;
 
       // Filter notifications relevant to currentUser and not cleared by currentUser
       const allNotifs = (db.notifications || []).filter((n: any) => {
         const clearedBy = (n.clearedBy || []).map((id: any) => String(id));
         if (clearedBy.includes(currentUserId)) return false;
+
+        // New account or sub-profile does NOT receive notifications sent BEFORE their creation!
+        const notifTime = n.created_at ? new Date(n.created_at).getTime() : 0;
+        if (userCreatedAtTime > 0 && notifTime < userCreatedAtTime - 5000) {
+          return false;
+        }
 
         return isRelevantForUser(n, currentUserId, userCourseId);
       });
@@ -76,6 +86,7 @@ export async function GET() {
 
     const userIdStr = currentUser._id.toString();
     const userCourseId = currentUser.locked_course_id ? currentUser.locked_course_id.toString() : null;
+    const userCreatedAt = currentUser.created_at ? new Date(currentUser.created_at) : null;
 
     const query: any = {
       clearedBy: { $ne: userIdStr },
@@ -87,6 +98,11 @@ export async function GET() {
 
     if (userCourseId) {
       query.$or.push({ targetType: 'course', targetCourseId: userCourseId });
+    }
+
+    // New account or sub-profile does NOT receive notifications sent BEFORE their creation!
+    if (userCreatedAt) {
+      query.created_at = { $gte: new Date(userCreatedAt.getTime() - 5000) };
     }
 
     const notifs = await Notification.find(query).sort({ created_at: -1 }).limit(30);
