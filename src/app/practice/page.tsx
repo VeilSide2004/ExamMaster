@@ -672,7 +672,17 @@ export default function PracticeSetsPage() {
 
     let tag = rawTopicTag.trim();
 
-    // 1. Remove subject prefix if present (e.g. "Physics - Kinematics" -> "Kinematics")
+    // 1. Remove subject prefix if present (e.g. "Physics - Kinematics" -> "Kinematics", "Chemistry - Thermodynamics" -> "Thermodynamics")
+    const knownSubjectPrefixes = ['chemistry', 'physics', 'mathematics', 'math', 'biology', 'science', 'social studies'];
+    for (const subPrefix of knownSubjectPrefixes) {
+      if (tag.toLowerCase().startsWith(subPrefix)) {
+        const remaining = tag.slice(subPrefix.length).trim();
+        if (remaining.startsWith('-') || remaining.startsWith(':') || remaining.startsWith('.')) {
+          tag = remaining.slice(1).trim();
+          break;
+        }
+      }
+    }
     if (currentSubject && tag.toLowerCase().startsWith(currentSubject.toLowerCase())) {
       const remaining = tag.slice(currentSubject.length).trim();
       if (remaining.startsWith('-') || remaining.startsWith(':') || remaining.startsWith('.')) {
