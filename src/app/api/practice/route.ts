@@ -79,13 +79,25 @@ export async function GET(req: Request) {
           if (isValidSubjectName(s)) subjectSet.add(s.trim());
         });
       }
+
+      const hasScience = Array.from(subjectSet).some((s) => s.toLowerCase().trim() === 'science');
+
       questions.forEach((q: any) => {
+        let subName = '';
         if (q.subject && isValidSubjectName(q.subject)) {
-          subjectSet.add(q.subject.trim());
+          subName = q.subject.trim();
         } else if (q.topic_tag && typeof q.topic_tag === 'string') {
           const parts = q.topic_tag.split('-').map((p: string) => p.trim());
           if (parts.length > 1 && isValidSubjectName(parts[0])) {
-            subjectSet.add(parts[0]);
+            subName = parts[0];
+          }
+        }
+        if (subName) {
+          const subLower = subName.toLowerCase();
+          if (hasScience && ['physics', 'chemistry', 'biology', 'botany', 'zoology'].includes(subLower)) {
+            // Keep physics/chemistry/biology inside Science for school tracks
+          } else {
+            subjectSet.add(subName);
           }
         }
       });
@@ -204,13 +216,25 @@ export async function GET(req: Request) {
         if (isValidSubjectName(s)) subjectSet.add(s.trim());
       });
     }
+
+    const hasScience = Array.from(subjectSet).some((s) => s.toLowerCase().trim() === 'science');
+
     questions.forEach((q: any) => {
+      let subName = '';
       if (q.subject && isValidSubjectName(q.subject)) {
-        subjectSet.add(q.subject.trim());
+        subName = q.subject.trim();
       } else if (q.topic_tag && typeof q.topic_tag === 'string') {
         const parts = q.topic_tag.split('-').map((p: string) => p.trim());
         if (parts.length > 1 && isValidSubjectName(parts[0])) {
-          subjectSet.add(parts[0]);
+          subName = parts[0];
+        }
+      }
+      if (subName) {
+        const subLower = subName.toLowerCase();
+        if (hasScience && ['physics', 'chemistry', 'biology', 'botany', 'zoology'].includes(subLower)) {
+          // Keep physics/chemistry/biology inside Science for school tracks
+        } else {
+          subjectSet.add(subName);
         }
       }
     });

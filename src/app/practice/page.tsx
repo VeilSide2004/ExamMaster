@@ -591,26 +591,48 @@ export default function PracticeSetsPage() {
     const qSubLower = qSub.toLowerCase();
     const tagLower = (q.topic_tag || '').toString().toLowerCase().trim();
 
-    // 1. Direct match on q.subject if valid string (not numeric like "1")
+    // 0. Explicit subject check if q.subject is specified:
     if (qSubLower && !/^\d+$/.test(qSubLower)) {
-      if (qSubLower === sLower || qSubLower.includes(sLower) || sLower.includes(qSubLower)) {
+      if (sLower.includes('science')) {
+        if (['science', 'physics', 'chemistry', 'biology', 'botany', 'zoology'].some((k) => qSubLower.includes(k) || tagLower.includes(k))) {
+          return true;
+        }
+      }
+      if (qSubLower === sLower || qSubLower.startsWith(sLower) || sLower.startsWith(qSubLower)) {
         return true;
+      }
+      // If q.subject explicitly names another subject (e.g. 'chemistry' when target is 'physics'), reject!
+      const knownSubjects = ['physics', 'chemistry', 'mathematics', 'math', 'biology', 'science', 'social studies'];
+      const explicitQSub = knownSubjects.find((k) => qSubLower.includes(k));
+      if (explicitQSub && !sLower.includes(explicitQSub)) {
+        if (!(sLower.includes('science') && ['physics', 'chemistry', 'biology'].includes(explicitQSub))) {
+          return false;
+        }
       }
     }
 
-    // 2. Exact or Prefix match on q.topic_tag
+    // 1. Prefix check on topic_tag (e.g. "Chemistry - Thermodynamics", "Physics - Mechanics")
     if (tagLower) {
+      if (tagLower.startsWith('chem') && !sLower.includes('chem') && !sLower.includes('science')) return false;
+      if (tagLower.startsWith('phys') && !sLower.includes('phys') && !sLower.includes('science')) return false;
+      if (tagLower.startsWith('math') && !sLower.includes('math')) return false;
+      if (tagLower.startsWith('bio') && !sLower.includes('bio') && !sLower.includes('science')) return false;
+
       if (tagLower === sLower) return true;
       if (tagLower.startsWith(sLower + ' ') || tagLower.startsWith(sLower + '-') || tagLower.startsWith(sLower + ':')) return true;
 
       const firstPart = tagLower.split('-')[0].trim();
       if (firstPart === sLower) return true;
-
-      if (tagLower.includes(sLower)) return true;
     }
 
-    // 3. Smart Topic Keyword Classification
-    const physicsKeywords = ['physics', 'mechanics', 'kinematics', 'dynamics', 'magnetism', 'gravitation', 'optics', 'waves', 'thermodynamics', 'electricity', 'electrostatics', 'work', 'energy', 'rotational', 'momentum', 'fluid', 'oscillation', 'sound', 'light', 'atomic', 'nuclear', 'semiconductor'];
+    // 2. Science catch-all
+    if (sLower.includes('science')) {
+      const scienceKeywords = ['science', 'physics', 'chemistry', 'biology', 'botany', 'zoology', 'chemical', 'mechanics', 'optics', 'waves', 'thermodynamics', 'acid', 'base', 'reaction', 'cell', 'plant', 'animal'];
+      if (scienceKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+    }
+
+    // 3. Specific Subject Keyword Classification
+    const physicsKeywords = ['physics', 'mechanics', 'kinematics', 'dynamics', 'magnetism', 'gravitation', 'optics', 'waves', 'electricity', 'electrostatics', 'rotational', 'momentum', 'fluid', 'oscillation', 'sound', 'light', 'semiconductor'];
     const chemistryKeywords = ['chemistry', 'chemical', 'acid', 'base', 'reaction', 'organic', 'inorganic', 'physical chemistry', 'alkane', 'alkene', 'thermodynamics', 'thermochemistry', 'electrochemistry', 'environmental chemistry', 'periodic', 'bonding', 'solution', 'equilibrium', 'mole', 'gas', 'solid state'];
     const mathKeywords = ['math', 'mathematics', 'calculus', 'algebra', 'vector', 'matrix', 'matrices', 'determinant', 'integral', 'integration', 'derivative', 'differentiation', 'trigonometry', 'geometry', 'probability', 'statistics', 'permutation', 'combination', 'complex number', 'relation', 'function'];
     const biologyKeywords = ['biology', 'botany', 'zoology', 'cell', 'genetics', 'evolution', 'anatomy', 'physiology', 'plant', 'animal', 'ecology', 'reproduction', 'biotechnology', 'organism'];
@@ -626,27 +648,6 @@ export default function PracticeSetsPage() {
     }
     if (sLower.includes('bio')) {
       if (biologyKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
-    }
-
-    // 4. Fallback for unclassified questions (e.g. q.subject is numeric or empty):
-    // Assign to the primary course subject (Physics) if no other valid subject explicitly claims it!
-    const isClaimedByAnother = (allSubjects || []).some((otherSub) => {
-      const oLower = otherSub.toLowerCase().trim();
-      if (oLower === sLower) return false;
-
-      if (qSubLower && !/^\d+$/.test(qSubLower) && qSubLower === oLower) return true;
-      if (tagLower && (tagLower.includes(oLower) || tagLower.startsWith(oLower))) return true;
-
-      if (oLower.includes('chem') && chemistryKeywords.some((k) => tagLower.includes(k))) return true;
-      if (oLower.includes('math') && mathKeywords.some((k) => tagLower.includes(k))) return true;
-      if (oLower.includes('bio') && biologyKeywords.some((k) => tagLower.includes(k))) return true;
-      if (oLower.includes('physics') && physicsKeywords.some((k) => tagLower.includes(k))) return true;
-
-      return false;
-    });
-
-    if (!isClaimedByAnother && allSubjects.length > 0 && allSubjects[0].toLowerCase().trim() === sLower) {
-      return true;
     }
 
     return false;
