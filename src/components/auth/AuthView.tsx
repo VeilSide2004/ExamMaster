@@ -138,29 +138,29 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     }
   };
 
-  const handleGoogleAuth = async () => {
+  // Load Google Identity Services SDK script on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const scriptId = 'google-gsi-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  const processGoogleAuth = async (payload: { email?: string; name?: string; credential?: string }) => {
     setError('');
     setGoogleAuthLoading(true);
     try {
       await fetch('/api/seed');
-      let googleEmail = email;
-      let googleName = name;
-      if (!googleEmail) {
-        const input = prompt('Enter your Google Account Email:', 'aarav@exammaster.com');
-        if (!input) {
-          setGoogleAuthLoading(false);
-          return;
-        }
-        googleEmail = input;
-      }
-      if (!googleName) {
-        googleName = googleEmail.split('@')[0];
-      }
-
       const res = await fetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: googleEmail, name: googleName }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -187,10 +187,47 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       } else {
         setError(data.error || 'Google authentication failed');
       }
-    } catch (err: any) {
-      setError('Error signing in with Google');
+    } catch (err) {
+      setError('An error occurred during Google sign-in');
     } finally {
       setGoogleAuthLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    const clientId =
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+      '342748712178-h3b3ab5teiqcc0trkrhkql8o7ols4gk1.apps.googleusercontent.com';
+
+    if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+      (window as any).google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response: any) => {
+          if (response.credential) {
+            await processGoogleAuth({ credential: response.credential });
+          }
+        },
+      });
+
+      (window as any).google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          let googleEmail = email;
+          if (!googleEmail) {
+            const input = prompt('Enter your Google Account Email:', 'aarav@exammaster.com');
+            if (!input) return;
+            googleEmail = input;
+          }
+          processGoogleAuth({ email: googleEmail, name: name || googleEmail.split('@')[0] });
+        }
+      });
+    } else {
+      let googleEmail = email;
+      if (!googleEmail) {
+        const input = prompt('Enter your Google Account Email:', 'aarav@exammaster.com');
+        if (!input) return;
+        googleEmail = input;
+      }
+      processGoogleAuth({ email: googleEmail, name: name || googleEmail.split('@')[0] });
     }
   };
 

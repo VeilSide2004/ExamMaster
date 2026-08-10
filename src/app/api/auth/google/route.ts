@@ -4,11 +4,38 @@ import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
 
+function parseJwtPayload(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const email = (body.email || 'student.google@exammaster.com').toLowerCase();
-    const name = body.name || email.split('@')[0];
+    let email = body.email;
+    let name = body.name;
+
+    if (body.credential) {
+      const payload = parseJwtPayload(body.credential);
+      if (payload && payload.email) {
+        email = payload.email;
+        name = payload.name || payload.email.split('@')[0];
+      }
+    }
+
+    email = (email || 'student.google@exammaster.com').toLowerCase();
+    name = name || email.split('@')[0];
 
     const { isMemoryMode } = await dbConnect();
 
