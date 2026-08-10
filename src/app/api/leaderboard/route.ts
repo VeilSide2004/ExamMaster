@@ -25,20 +25,25 @@ export async function GET() {
 
       let userRank = 1;
       const formattedList = students.map((s, idx) => {
-        if (s._id === user._id) {
+        const isSelf = String(s._id) === String(user._id);
+        if (isSelf) {
           userRank = idx + 1;
         }
         return {
+          id: String(s._id),
+          user_id: String(s._id),
           rank: idx + 1,
           name: s.name,
           xp_total: s.xp_total || 0,
-          isSelf: s._id === user._id,
+          isSelf,
+          isCurrentUser: isSelf,
         };
       });
 
       return NextResponse.json({
         leaderboard: formattedList.slice(0, 20),
         userRank: {
+          user_id: String(user._id),
           rank: userRank,
           name: user.name,
           xp_total: user.xp_total || 0,
@@ -61,20 +66,25 @@ export async function GET() {
 
     let userRank = 1;
     const formattedList = students.map((s, idx) => {
-      if (s._id.toString() === user._id.toString()) {
+      const isSelf = s._id.toString() === user._id.toString();
+      if (isSelf) {
         userRank = idx + 1;
       }
       return {
+        id: s._id.toString(),
+        user_id: s._id.toString(),
         rank: idx + 1,
         name: s.name,
         xp_total: s.xp_total || 0,
-        isSelf: s._id.toString() === user._id.toString(),
+        isSelf,
+        isCurrentUser: isSelf,
       };
     });
 
     return NextResponse.json({
       leaderboard: formattedList.slice(0, 20),
       userRank: {
+        user_id: user._id.toString(),
         rank: userRank,
         name: user.name,
         xp_total: user.xp_total || 0,

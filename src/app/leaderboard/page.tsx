@@ -432,65 +432,82 @@ export default function LeaderboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
-                      {leaderboard.map((item) => (
-                        <tr
-                          key={item.user_id || item.rank}
-                          className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
-                            item.isCurrentUser ? 'bg-blue-50/40 dark:bg-blue-950/20 font-bold' : ''
-                          }`}
-                        >
-                          <td className="p-4 pl-6 text-center font-black">
-                            {item.rank === 1 ? (
-                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
-                                <Crown className="w-4 h-4 fill-amber-500" />
+                      {leaderboard.map((item) => {
+                        const isSelf = item.isSelf || item.isCurrentUser;
+                        const studentId = item.id || item.user_id || item._id;
+
+                        return (
+                          <tr
+                            key={studentId || item.rank}
+                            className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                              isSelf ? 'bg-blue-50/40 dark:bg-blue-950/20 font-bold' : ''
+                            }`}
+                          >
+                            <td className="p-4 pl-6 text-center font-black">
+                              {item.rank === 1 ? (
+                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
+                                  <Crown className="w-4 h-4 fill-amber-500" />
+                                </span>
+                              ) : item.rank === 2 ? (
+                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                  <Crown className="w-4 h-4 text-slate-400" />
+                                </span>
+                              ) : item.rank === 3 ? (
+                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-900/10 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                                  <Crown className="w-4 h-4 text-amber-700" />
+                                </span>
+                              ) : (
+                                `#${item.rank}`
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                {!isSelf ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedStudentStatsId(studentId)}
+                                    className="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5 cursor-pointer text-left"
+                                    title="Click to view student performance statistics"
+                                  >
+                                    <span>{item.name}</span>
+                                    <BarChart2 className="w-3.5 h-3.5 text-blue-500 opacity-60 hover:opacity-100" />
+                                  </button>
+                                ) : (
+                                  <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                    <span>{item.name}</span>
+                                  </span>
+                                )}
+                                {isSelf && (
+                                  <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold">
+                                    YOU
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-4 text-center font-extrabold text-slate-900 dark:text-white">
+                              <span className="inline-flex items-center gap-1">
+                                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                                {item.xp_total?.toLocaleString() || 0} XP
                               </span>
-                            ) : item.rank === 2 ? (
-                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                <Crown className="w-4 h-4 text-slate-400" />
-                              </span>
-                            ) : item.rank === 3 ? (
-                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-900/10 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
-                                <Crown className="w-4 h-4 text-amber-700" />
-                              </span>
-                            ) : (
-                              `#${item.rank}`
-                            )}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setSelectedStudentStatsId(item.user_id || item.id || item._id)}
-                                className="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5 cursor-pointer text-left"
-                                title="Click to view student statistics"
-                              >
-                                <span>{item.name}</span>
-                                <BarChart2 className="w-3.5 h-3.5 text-blue-500 opacity-60 hover:opacity-100" />
-                              </button>
-                              {item.isCurrentUser && (
-                                <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold">
-                                  YOU
+                            </td>
+                            <td className="p-4 pr-6 text-right">
+                              {!isSelf ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedStudentStatsId(studentId)}
+                                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 font-extrabold text-[11px] rounded-xl transition-all border border-blue-200 dark:border-blue-800 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                >
+                                  <BarChart2 className="w-3.5 h-3.5" /> View Stats
+                                </button>
+                              ) : (
+                                <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 italic">
+                                  Your Account (View on Profile)
                                 </span>
                               )}
-                            </div>
-                          </td>
-                          <td className="p-4 text-center font-extrabold text-slate-900 dark:text-white">
-                            <span className="inline-flex items-center gap-1">
-                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                              {item.xp_total?.toLocaleString() || 0} XP
-                            </span>
-                          </td>
-                          <td className="p-4 pr-6 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedStudentStatsId(item.user_id || item.id || item._id)}
-                              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 font-extrabold text-[11px] rounded-xl transition-all border border-blue-200 dark:border-blue-800 inline-flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <BarChart2 className="w-3.5 h-3.5" /> View Stats
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 )}
@@ -609,62 +626,82 @@ export default function LeaderboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
-                    {friendsList.map((friend) => (
-                      <tr
-                        key={friend.id}
-                        className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
-                          friend.isCurrentUser ? 'bg-blue-50/40 dark:bg-blue-950/20 font-bold' : ''
-                        }`}
-                      >
-                        <td className="p-4 pl-6 text-center font-black">
-                          #{friend.arenaRank}
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedStudentStatsId(friend.id || friend.user_id || friend._id)}
-                              className="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5 cursor-pointer text-left"
-                              title="Click to view student statistics"
-                            >
-                              <span>{friend.name}</span>
-                              <BarChart2 className="w-3.5 h-3.5 text-blue-500 opacity-60 hover:opacity-100" />
-                            </button>
-                            {friend.isCurrentUser && (
-                              <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold">
-                                YOU
+                    {friendsList.map((friend) => {
+                      const friendId = friend.id || friend.user_id || friend._id;
+                      return (
+                        <tr
+                          key={friendId}
+                          className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                            friend.isCurrentUser ? 'bg-blue-50/40 dark:bg-blue-950/20 font-bold' : ''
+                          }`}
+                        >
+                          <td className="p-4 pl-6 text-center font-black">
+                            #{friend.arenaRank}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              {!friend.isCurrentUser ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedStudentStatsId(friendId)}
+                                  className="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5 cursor-pointer text-left"
+                                  title="Click to view student performance statistics"
+                                >
+                                  <span>{friend.name}</span>
+                                  <BarChart2 className="w-3.5 h-3.5 text-blue-500 opacity-60 hover:opacity-100" />
+                                </button>
+                              ) : (
+                                <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                  <span>{friend.name}</span>
+                                </span>
+                              )}
+                              {friend.isCurrentUser && (
+                                <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold">
+                                  YOU
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 text-center font-extrabold text-slate-900 dark:text-white">
+                            <span className="inline-flex items-center gap-1">
+                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                              {friend.xp_total?.toLocaleString() || 0} XP
+                            </span>
+                          </td>
+                          <td className="p-4 pr-6 text-right">
+                            {!friend.isCurrentUser ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedStudentStatsId(friendId)}
+                                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 font-extrabold text-[11px] rounded-xl transition-all border border-blue-200 dark:border-blue-800 flex items-center gap-1 cursor-pointer"
+                                >
+                                  <BarChart2 className="w-3.5 h-3.5" /> View Stats
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleChallengeFriend(friend.name)}
+                                  className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:hover:bg-amber-900/60 rounded-xl font-bold text-[11px] transition-colors flex items-center gap-1 border border-amber-200 dark:border-amber-900 cursor-pointer"
+                                >
+                                  <Swords className="w-3.5 h-3.5" /> Challenge
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFriend(friend.id, friend.name)}
+                                  className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 italic">
+                                Your Account (View on Profile)
                               </span>
                             )}
-                          </div>
-                        </td>
-                        <td className="p-4 text-center font-extrabold text-slate-900 dark:text-white">
-                          <span className="inline-flex items-center gap-1">
-                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                            {friend.xp_total?.toLocaleString() || 0} XP
-                          </span>
-                        </td>
-                        <td className="p-4 pr-6 text-right">
-                          {!friend.isCurrentUser && (
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleChallengeFriend(friend.name)}
-                                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:hover:bg-amber-900/60 rounded-xl font-bold text-[11px] transition-colors flex items-center gap-1 border border-amber-200 dark:border-amber-900 cursor-pointer"
-                              >
-                                <Swords className="w-3.5 h-3.5" /> Challenge
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveFriend(friend.id, friend.name)}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}
