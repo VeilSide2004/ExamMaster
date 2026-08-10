@@ -538,11 +538,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                   {activeTab === 'signin' ? 'Sign Up' : 'Sign In'}
                 </button>
               </p>
-              {activeTab === 'signin' && (
-                <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-500 dark:text-slate-400 shadow-xs">
-                  Demo Student: <span className="font-mono font-bold text-slate-800 dark:text-slate-200">aarav@exammaster.com</span> / <span className="font-mono font-bold text-slate-800 dark:text-slate-200">Student@123</span>
-                </div>
-              )}
             </div>
           </div>
         </div>
