@@ -280,7 +280,7 @@ export default function PracticeSetsPage() {
         if (qList.length > 0) return qList;
       }
     }
-    return questions || [];
+    return [];
   };
 
   const hasCourseWeeklyDpp = useMemo(() => {
