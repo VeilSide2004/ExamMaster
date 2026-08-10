@@ -519,6 +519,7 @@ export default function PracticeSetsPage() {
           answers: answersArray,
           topicTag: selectedTopic ? `${selectedSubject} - ${selectedTopic}` : selectedSubject || 'All Topics',
           type: isWeeklySession ? 'weekly' : 'practice',
+          timeSpentSeconds: timerSeconds,
         }),
       });
 

@@ -12,7 +12,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { answers, topicTag, type } = await req.json();
+    const { answers, topicTag, type, timeSpentSeconds } = await req.json();
+    const durationSeconds = Number(timeSpentSeconds || 0);
 
     if (isMemoryMode) {
       const db = readSharedDb();
@@ -53,6 +54,8 @@ export async function POST(req: Request) {
         responses: processedResponses,
         score: correctCount,
         accuracy: accuracyPercent,
+        questions_count: totalQuestions,
+        time_spent_seconds: durationSeconds,
         submission_type: 'manual',
         created_at: new Date().toISOString(),
       };
@@ -128,6 +131,8 @@ export async function POST(req: Request) {
       responses: processedResponses,
       score: correctCount,
       accuracy: accuracyPercent,
+      questions_count: totalQuestions,
+      time_spent_seconds: durationSeconds,
       submission_type: 'manual',
       started_at: new Date(),
       submitted_at: new Date(),
