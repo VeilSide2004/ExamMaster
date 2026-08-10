@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { User as UserIcon, Lock, Mail, BookOpen, Save, ShieldCheck, Sun, Sparkles, RotateCcw, GraduationCap } from 'lucide-react';
+import { User as UserIcon, Lock, Mail, BookOpen, Save, ShieldCheck, Sun, Sparkles, RotateCcw, GraduationCap, BarChart2, Activity, TrendingUp } from 'lucide-react';
+import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
 
 export default function ProfilePage() {
   const [userData, setUserData] = useState<any>(null);
@@ -10,6 +11,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [showMyStatsModal, setShowMyStatsModal] = useState(false);
 
   // Class Promotion & Rollback State
   const [promoteInfo, setPromoteInfo] = useState<{
@@ -207,6 +209,34 @@ export default function ProfilePage() {
           </span>
         </div>
 
+        {/* My Performance Analytics & Stats Card */}
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden">
+          <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/20 shadow-md">
+              <BarChart2 className="w-7 h-7" />
+            </div>
+            <div>
+              <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase bg-white/20 text-white tracking-wider border border-white/20">
+                Personal Analytics
+              </span>
+              <h2 className="text-xl font-black tracking-tight mt-1">My Performance & Statistics</h2>
+              <p className="text-xs text-blue-100 mt-1 leading-relaxed max-w-xl font-medium">
+                View your overall accuracy benchmark, average practice speed per question, topic completion progress, and complete mock test attempt history.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowMyStatsModal(true)}
+            className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-blue-50 text-blue-900 font-extrabold text-xs rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+          >
+            <Activity className="w-4 h-4 text-blue-600" />
+            View My Stats
+          </button>
+        </div>
+
         {/* Profile Info Form */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs">
           <form onSubmit={handleSaveProfile} className="space-y-5">
@@ -272,6 +302,14 @@ export default function ProfilePage() {
           </form>
         </div>
       </main>
+
+      {/* Student Stats Modal for Current Logged-In User */}
+      {showMyStatsModal && (
+        <StudentStatsModal
+          studentId={userData?._id || userData?.id}
+          onClose={() => setShowMyStatsModal(false)}
+        />
+      )}
     </div>
   );
 }

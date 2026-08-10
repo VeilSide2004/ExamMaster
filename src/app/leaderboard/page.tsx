@@ -349,129 +349,153 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {/* Navigation Tabs Switcher */}
-        <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab('global')}
-            className={`px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center gap-2 cursor-pointer ${
-              activeTab === 'global'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Trophy className="w-4 h-4" />
-            Course Standings (Global)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('friends')}
-            className={`px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center gap-2 cursor-pointer ${
-              activeTab === 'friends'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            Custom Friends Arena
-          </button>
-        </div>
-
-        {/* Locked Overlay Notification */}
-        {isLocked && (
-          <div className="rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 p-6 md:p-8 text-amber-900 dark:text-amber-200 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0">
-                <Lock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div>
-                <h3 className="text-base font-extrabold">Complete Your First Exam to Rank!</h3>
-                <p className="text-xs text-amber-800/80 dark:text-amber-300/80 mt-1">
-                  You currently have 0 XP. Complete mock tests or practice exams to earn XP and unlock full position details.
-                </p>
-              </div>
+        {/* Locked Overlay Screen (When Student has 0 XP) */}
+        {isLocked ? (
+          <div className="rounded-3xl bg-white dark:bg-slate-900 border-2 border-amber-200/80 dark:border-amber-900/60 p-8 md:p-12 text-center max-w-2xl mx-auto space-y-6 shadow-xl my-6 animate-fade-in">
+            <div className="w-20 h-20 rounded-3xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-200 dark:border-amber-800 shadow-md">
+              <Lock className="w-10 h-10 stroke-[2]" />
             </div>
-            <button
-              type="button"
-              onClick={() => router.push('/exams')}
-              className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl transition-all shadow-md shadow-amber-500/20 flex items-center gap-2 shrink-0 cursor-pointer"
-            >
-              Take An Exam Now <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
 
-        {/* TAB 1: GLOBAL LEADERBOARD */}
-        {activeTab === 'global' && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
-            {loadingGlobal ? (
-              <div className="py-20 text-center text-xs font-bold text-slate-400">Loading standings...</div>
-            ) : (
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                  <tr>
-                    <th className="p-4 pl-6 w-20 text-center">Rank</th>
-                    <th className="p-4">Student Name</th>
-                    <th className="p-4 text-center">Total XP</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
-                  {leaderboard.map((item) => (
-                    <tr
-                      key={item.user_id || item.rank}
-                      className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
-                        item.isCurrentUser ? 'bg-blue-50/40 dark:bg-blue-950/20 font-bold' : ''
-                      }`}
-                    >
-                      <td className="p-4 pl-6 text-center font-black">
-                        {item.rank === 1 ? (
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
-                            <Crown className="w-4 h-4 fill-amber-500" />
-                          </span>
-                        ) : item.rank === 2 ? (
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                            <Crown className="w-4 h-4 text-slate-400" />
-                          </span>
-                        ) : item.rank === 3 ? (
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-900/10 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
-                            <Crown className="w-4 h-4 text-amber-700" />
-                          </span>
-                        ) : (
-                          `#${item.rank}`
-                        )}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedStudentStatsId(item.user_id || item.id || item._id)}
-                            className="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5 cursor-pointer text-left"
-                            title="Click to view student statistics"
-                          >
-                            <span>{item.name}</span>
-                            <BarChart2 className="w-3.5 h-3.5 text-blue-500 opacity-60 hover:opacity-100" />
-                          </button>
-                          {item.isCurrentUser && (
-                            <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold">
-                              YOU
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 text-center font-extrabold text-slate-900 dark:text-white">
-                        <span className="inline-flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                          {item.xp_total?.toLocaleString() || 0} XP
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+            <div className="space-y-2">
+              <span className="px-3.5 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 tracking-wider border border-amber-200 dark:border-amber-800">
+                Leaderboard Locked • 0 XP Earned
+              </span>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Earn Your First XP to Unlock Standings!
+              </h2>
+              <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-md mx-auto">
+                You currently have 0 XP. Complete your first practice set or mock test to earn XP, unlock your official course ranking, and compare performance stats with other students!
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.push('/practice')}
+                className="w-full sm:w-auto px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Zap className="w-4 h-4 fill-current" /> Start Daily Practice
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push('/mock-tests')}
+                className="w-full sm:w-auto px-6 py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-black text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Take A Mock Test <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Navigation Tabs Switcher */}
+            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('global')}
+                className={`px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center gap-2 cursor-pointer ${
+                  activeTab === 'global'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Trophy className="w-4 h-4" />
+                Course Standings (Global)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('friends')}
+                className={`px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all flex items-center gap-2 cursor-pointer ${
+                  activeTab === 'friends'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                Custom Friends Arena
+              </button>
+            </div>
+
+            {/* TAB 1: GLOBAL LEADERBOARD */}
+            {activeTab === 'global' && (
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+                {loadingGlobal ? (
+                  <div className="py-20 text-center text-xs font-bold text-slate-400">Loading standings...</div>
+                ) : (
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                      <tr>
+                        <th className="p-4 pl-6 w-20 text-center">Rank</th>
+                        <th className="p-4">Student Name</th>
+                        <th className="p-4 text-center">Total XP</th>
+                        <th className="p-4 pr-6 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
+                      {leaderboard.map((item) => (
+                        <tr
+                          key={item.user_id || item.rank}
+                          className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                            item.isCurrentUser ? 'bg-blue-50/40 dark:bg-blue-950/20 font-bold' : ''
+                          }`}
+                        >
+                          <td className="p-4 pl-6 text-center font-black">
+                            {item.rank === 1 ? (
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
+                                <Crown className="w-4 h-4 fill-amber-500" />
+                              </span>
+                            ) : item.rank === 2 ? (
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                <Crown className="w-4 h-4 text-slate-400" />
+                              </span>
+                            ) : item.rank === 3 ? (
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-900/10 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                                <Crown className="w-4 h-4 text-amber-700" />
+                              </span>
+                            ) : (
+                              `#${item.rank}`
+                            )}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedStudentStatsId(item.user_id || item.id || item._id)}
+                                className="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5 cursor-pointer text-left"
+                                title="Click to view student statistics"
+                              >
+                                <span>{item.name}</span>
+                                <BarChart2 className="w-3.5 h-3.5 text-blue-500 opacity-60 hover:opacity-100" />
+                              </button>
+                              {item.isCurrentUser && (
+                                <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold">
+                                  YOU
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 text-center font-extrabold text-slate-900 dark:text-white">
+                            <span className="inline-flex items-center gap-1">
+                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                              {item.xp_total?.toLocaleString() || 0} XP
+                            </span>
+                          </td>
+                          <td className="p-4 pr-6 text-right">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedStudentStatsId(item.user_id || item.id || item._id)}
+                              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 font-extrabold text-[11px] rounded-xl transition-all border border-blue-200 dark:border-blue-800 inline-flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <BarChart2 className="w-3.5 h-3.5" /> View Stats
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
 
         {/* TAB 2: CUSTOM FRIENDS ARENA */}
         {activeTab === 'friends' && (
@@ -647,8 +671,10 @@ export default function LeaderboardPage() {
             </div>
           </div>
         )}
+      </>
+    )}
 
-      </main>
+  </main>
 
       {/* Incoming Join Request Modal for Recipient */}
       {joinModalInfo?.show && (
