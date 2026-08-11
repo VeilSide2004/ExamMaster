@@ -199,36 +199,81 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
       '342748712178-h3b3ab5teiqcc0trkrhkql8o7ols4gk1.apps.googleusercontent.com';
 
-    if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
-      (window as any).google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async (response: any) => {
-          if (response.credential) {
-            await processGoogleAuth({ credential: response.credential });
-          }
-        },
-      });
-
-      (window as any).google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          let googleEmail = email;
-          if (!googleEmail) {
-            const input = prompt('Enter your Google Account Email:', 'aarav@exammaster.com');
-            if (!input) return;
-            googleEmail = input;
-          }
-          processGoogleAuth({ email: googleEmail, name: name || googleEmail.split('@')[0] });
+    // Wait for Google Identity Services SDK to load
+    const waitForGoogle = (): Promise<boolean> => {
+      return new Promise((resolve) => {
+        if (typeof window !== 'undefined' && (window as any).google?.accounts) {
+          resolve(true);
+          return;
         }
+        // Poll for up to 3 seconds
+        let attempts = 0;
+        const interval = setInterval(() => {
+          attempts++;
+          if (typeof window !== 'undefined' && (window as any).google?.accounts) {
+            clearInterval(interval);
+            resolve(true);
+          } else if (attempts >= 30) {
+            clearInterval(interval);
+            resolve(false);
+          }
+        }, 100);
       });
-    } else {
-      let googleEmail = email;
-      if (!googleEmail) {
-        const input = prompt('Enter your Google Account Email:', 'aarav@exammaster.com');
-        if (!input) return;
-        googleEmail = input;
-      }
-      processGoogleAuth({ email: googleEmail, name: name || googleEmail.split('@')[0] });
+    };
+
+    const googleReady = await waitForGoogle();
+
+    if (!googleReady) {
+      setError('Google sign-in is not available. Please refresh and try again.');
+      return;
     }
+
+    const google = (window as any).google;
+
+    // Try One Tap first
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: async (response: any) => {
+        if (response.credential) {
+          await processGoogleAuth({ credential: response.credential });
+        }
+      },
+    });
+
+    google.accounts.id.prompt((notification: any) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // Fallback: Use Google OAuth2 popup (the real Google sign-in window)
+        const tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: 'email profile',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse.access_token) {
+              try {
+                setGoogleAuthLoading(true);
+                // Fetch user info from Google using the access token
+                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const userInfo = await res.json();
+                if (userInfo.email) {
+                  await processGoogleAuth({
+                    email: userInfo.email,
+                    name: userInfo.name || userInfo.email.split('@')[0],
+                  });
+                } else {
+                  setError('Could not retrieve your Google account info.');
+                  setGoogleAuthLoading(false);
+                }
+              } catch {
+                setError('Failed to authenticate with Google.');
+                setGoogleAuthLoading(false);
+              }
+            }
+          },
+        });
+        tokenClient.requestAccessToken({ prompt: 'select_account' });
+      }
+    });
   };
 
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
