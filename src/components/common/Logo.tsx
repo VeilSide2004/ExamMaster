@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import { BookOpen } from 'lucide-react';
 
 interface LogoProps {
@@ -7,17 +6,15 @@ interface LogoProps {
   size?: number;
   showText?: boolean;
   subtitle?: string;
-  disableLink?: boolean;
 }
 
 export const Logo: React.FC<LogoProps> = ({
   className = '',
   size = 36,
   showText = true,
-  disableLink = false,
 }) => {
-  const content = (
-    <div className={`flex items-center gap-2.5 cursor-pointer group ${className}`}>
+  return (
+    <div className={`flex items-center gap-2.5 group ${className}`}>
       <div
         style={{ width: size, height: size }}
         className="rounded-xl bg-blue-600 group-hover:bg-blue-700 transition-colors flex items-center justify-center shadow-xs shrink-0 border border-blue-500/30 text-white"
@@ -32,10 +29,4 @@ export const Logo: React.FC<LogoProps> = ({
       )}
     </div>
   );
-
-  if (disableLink) {
-    return content;
-  }
-
-  return <Link href="/">{content}</Link>;
 };

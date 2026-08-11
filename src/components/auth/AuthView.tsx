@@ -347,7 +347,9 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         <div>
           {/* Top Logo & Back to Home Link */}
           <div className="pt-2 flex items-center justify-between">
-            <Logo size={40} subtitle="ACADEMIC PRECISION" />
+            <Link href="/" className="cursor-pointer">
+              <Logo size={40} subtitle="ACADEMIC PRECISION" />
+            </Link>
             <Link
               href="/"
               className="text-xs font-extrabold text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
