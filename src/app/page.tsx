@@ -24,7 +24,7 @@ const TYPEWRITER_PHRASES = [
   'Academic Precision',
   'Topic-Wise DPPs',
   'Full Mock Tests',
-  'National Leaderboards',
+  'Weekly DPP',
   'Performance Analytics',
 ];
 
