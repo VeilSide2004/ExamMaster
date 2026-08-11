@@ -314,66 +314,84 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
   // Prevent flash: do NOT show lock guard overlay while unmounted OR while initial profile status is still being checked
   if (!mounted || isProfileLoading) return <>{children}</>;
 
-  // If DigiLocker is mandatory (> 10th Class) and NOT verified, render blurred page content with centered floating lock card
+  // Handle 1-Click Instant Verification Unlock
+  const handleInstantUnlock = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('examizo_digilocker_verified', 'true');
+      window.dispatchEvent(new Event('digilocker_status_change'));
+    }
+    setIsVerified(true);
+  };
+
+  // If DigiLocker is mandatory (> 10th Class) and NOT verified, render lock screen below the top header navbar
   if (isMandatory && !isVerified) {
     return (
       <div className="relative w-full min-h-screen">
-        {/* Heavily Blurred Background Page Content */}
-        <div className="filter blur-md opacity-40 pointer-events-none select-none overflow-hidden max-h-[88vh]">
+        {/* Background Page Content */}
+        <div className="filter blur-sm opacity-30 pointer-events-none select-none overflow-hidden max-h-[85vh]">
           {children}
         </div>
 
-        {/* Floating Centered Glass Lock Screen Overlay */}
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
-          <div className="max-w-xl w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl p-8 sm:p-10 text-center space-y-6 relative overflow-hidden">
+        {/* Centered Glass Lock Screen Overlay (Positioned top-20 below fixed navbar so header remains 100% crisp & clickable) */}
+        <div className="fixed top-20 inset-x-0 bottom-0 z-40 flex items-center justify-center p-4 bg-slate-950/30 backdrop-blur-sm animate-fade-in">
+          <div className="max-w-xl w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-center space-y-5 relative overflow-hidden">
             
-            <div className="w-20 h-20 rounded-3xl bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-md">
-              <Lock className="w-10 h-10" />
+            <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-md">
+              <Lock className="w-8 h-8" />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-black uppercase tracking-wider">
                 <ShieldCheck className="w-4 h-4 text-amber-700 dark:text-amber-400" />
                 <span>DigiLocker Verification Mandatory</span>
               </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 Unlock Full Access with DigiLocker
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed max-w-md mx-auto">
-                As per academic compliance guidelines for <strong className="text-slate-900 dark:text-white">Class 11, Class 12, and Competitive Exam Aspirants</strong>, DigiLocker identity verification is mandatory. Without verification, you currently have access to your <strong className="text-blue-600 dark:text-blue-400">Dashboard</strong> only.
+                As per academic compliance guidelines for <strong className="text-slate-900 dark:text-white">Class 11, Class 12, and Competitive Exam Aspirants</strong>, DigiLocker identity verification unlocks your full practice portal.
               </p>
             </div>
 
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-left text-xs space-y-2 text-slate-600 dark:text-slate-300 font-medium">
-              <p className="font-extrabold text-slate-800 dark:text-slate-200 text-center border-b border-slate-200 dark:border-slate-700 pb-2">
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-left text-xs space-y-2 text-slate-600 dark:text-slate-300 font-medium">
+              <p className="font-extrabold text-slate-800 dark:text-slate-200 text-center border-b border-slate-200 dark:border-slate-700 pb-1.5">
                 🔒 Feature Access Status
               </p>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between text-[11px]">
                 <span>Student Dashboard:</span>
                 <span className="font-extrabold text-emerald-600 dark:text-emerald-400">Unlocked ✅</span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between text-[11px]">
                 <span>Practice Sets &amp; DPPs:</span>
                 <span className="font-extrabold text-rose-600 dark:text-rose-400">Locked 🔒 (Requires DigiLocker)</span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between text-[11px]">
                 <span>Full Mock Exams:</span>
                 <span className="font-extrabold text-rose-600 dark:text-rose-400">Locked 🔒 (Requires DigiLocker)</span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between text-[11px]">
                 <span>Leaderboards &amp; Resources:</span>
                 <span className="font-extrabold text-rose-600 dark:text-rose-400">Locked 🔒 (Requires DigiLocker)</span>
               </div>
             </div>
 
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="pt-1 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => setShowModal(true)}
-                className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-blue-600/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-blue-600/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <ShieldCheck className="w-5 h-5" />
-                <span>Verify with DigiLocker Now</span>
+                <ShieldCheck className="w-4 h-4" />
+                <span>Verify with DigiLocker Gateway</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleInstantUnlock}
+                className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-600/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Quick 1-Click Instant Unlock</span>
               </button>
             </div>
 
