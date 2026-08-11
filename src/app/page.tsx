@@ -20,14 +20,6 @@ import {
   GraduationCap
 } from 'lucide-react';
 
-const DEFAULT_COMPETITIVE_EXAMS = [
-  { name: 'JEE Main & Advanced', icon: GraduationCap, count: '3,500+ Qs', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
-  { name: 'NEET UG', icon: BookOpen, count: '4,200+ Qs', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  { name: 'GATE Exam', icon: Zap, count: '2,800+ Qs', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
-  { name: 'UPSC CSE', icon: Award, count: '1,900+ Qs', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
-  { name: 'SSC CGL', icon: Target, count: '3,100+ Qs', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
-];
-
 export default function LandingPage() {
   const [courses, setCourses] = useState<any[]>([]);
 
@@ -51,10 +43,8 @@ export default function LandingPage() {
       .catch(console.error);
   }, []);
 
-  // Determine top 5 competitive items to display (using API data or fallback defaults)
+  // Purely dynamic competitive courses from Admin DB (up to 5 max, no dummy data)
   const displayCompetitive = React.useMemo(() => {
-    if (courses.length === 0) return DEFAULT_COMPETITIVE_EXAMS;
-
     const badges = [
       'bg-blue-50 text-blue-700 border-blue-200',
       'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -65,22 +55,13 @@ export default function LandingPage() {
 
     const icons = [GraduationCap, BookOpen, Zap, Award, Target];
 
-    const mapped = courses.slice(0, 5).map((c, idx) => ({
+    return courses.slice(0, 5).map((c, idx) => ({
+      id: c._id || idx,
       name: c.name,
+      description: c.description || 'Comprehensive exam preparation track.',
       icon: icons[idx % icons.length],
-      count: c.description || '2,500+ Qs',
       badge: badges[idx % badges.length],
     }));
-
-    // If fewer than 5 from API, pad with defaults up to 5
-    if (mapped.length < 5) {
-      const remaining = DEFAULT_COMPETITIVE_EXAMS.filter(
-        d => !mapped.some(m => m.name.toLowerCase().includes(d.name.toLowerCase().split(' ')[0]))
-      );
-      return [...mapped, ...remaining].slice(0, 5);
-    }
-
-    return mapped.slice(0, 5);
   }, [courses]);
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden">
@@ -355,23 +336,36 @@ export default function LandingPage() {
               <p className="text-slate-600 text-sm font-medium">Dynamically updated competitive courses & test series aligned with latest syllabi.</p>
             </div>
 
-            {/* Exactly 5 Competitive Course Cards Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-              {displayCompetitive.map((exam, i) => (
-                <div
-                  key={i}
-                  className="p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-400 text-center space-y-3 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all group"
-                >
-                  <exam.icon className="w-8 h-8 mx-auto text-blue-600 group-hover:scale-110 transition-transform" />
-                  <div>
-                    <p className="text-sm font-extrabold text-slate-900 line-clamp-1">{exam.name}</p>
-                    <span className={`inline-block mt-2 px-2.5 py-0.5 rounded-md text-[10px] font-extrabold border ${exam.badge}`}>
-                      {exam.count}
-                    </span>
+            {/* Dynamic Self-Adjusting Competitive Courses Flex Layout */}
+            {displayCompetitive.length > 0 ? (
+              <div className="flex flex-wrap items-stretch justify-center gap-5 max-w-6xl mx-auto">
+                {displayCompetitive.map((exam, i) => (
+                  <div
+                    key={exam.id || i}
+                    className="flex-1 min-w-[240px] max-w-[300px] p-6 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-400 text-center space-y-3.5 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all group flex flex-col justify-between"
+                  >
+                    <div className="space-y-3">
+                      <exam.icon className="w-9 h-9 mx-auto text-blue-600 group-hover:scale-110 transition-transform" />
+                      <div>
+                        <p className="text-base font-black text-slate-900">{exam.name}</p>
+                        <p className="text-xs font-medium text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                          {exam.description}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="pt-2">
+                      <span className={`inline-block px-3 py-1 rounded-lg text-[11px] font-extrabold border ${exam.badge}`}>
+                        Full Course & Test Series
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-slate-500 font-semibold text-sm">
+                Loading active competitive courses...
+              </div>
+            )}
 
             {/* Classes 3 to 12 Foundation & Board Mention Banner */}
             <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-slate-50 border border-blue-200/80 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
