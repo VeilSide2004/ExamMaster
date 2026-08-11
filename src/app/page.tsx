@@ -187,17 +187,17 @@ export default function LandingPage() {
             <div
               key={src}
               className={`absolute inset-0 bg-cover bg-center transition-opacity duration-700 ease-in-out ${
-                idx === heroImgIndex ? 'opacity-40 scale-105 transition-transform duration-[3000ms]' : 'opacity-0 scale-100'
+                idx === heroImgIndex ? 'opacity-90 scale-105 transition-transform duration-[3000ms]' : 'opacity-0 scale-100'
               }`}
               style={{ backgroundImage: `url(${src})` }}
             />
           ))}
           
-          {/* Light Translucent Overlay for crisp text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/85 to-[#F8FAFC] dark:from-slate-950/70 dark:via-slate-950/85 dark:to-slate-950" />
+          {/* Subtle Light Overlay for text contrast without washing out the photo */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-white/40 to-white/70 dark:from-slate-950/40 dark:via-slate-950/60 dark:to-slate-950/90" />
 
-          {/* Bottom Gradient Fade Mask into Page Background Color */}
-          <div className="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/90 to-transparent" />
+          {/* Bottom Gradient Fade Mask into Main Page Background Color (#F8FAFC) */}
+          <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/85 to-transparent" />
         </div>
 
         {/* 2. HERO SECTION CONTENT */}
