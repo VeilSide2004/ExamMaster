@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import { FileText, PlayCircle, Sparkles, AlertTriangle, ShieldAlert, RotateCcw, X } from 'lucide-react';
+import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 
 const getInitialMockTestsCache = () => {
   if (typeof window !== 'undefined' && (window as any).__MOCK_TESTS_CACHE__) {
@@ -62,7 +63,8 @@ export default function MockTestsListPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+    <DigiLockerGuard>
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-page-in pb-24 lg:pb-0">
         
         {/* Page Banner Header */}
@@ -300,5 +302,6 @@ export default function MockTestsListPage() {
         </div>
       )}
     </div>
+    </DigiLockerGuard>
   );
 }

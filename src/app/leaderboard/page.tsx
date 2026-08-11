@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
+import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 import {
   Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, Sparkles, BarChart2, Eye
 } from 'lucide-react';
@@ -282,7 +283,8 @@ export default function LeaderboardPage() {
   const isLocked = !loadingGlobal && userRank !== null && (userRank.xp_total === 0 || !userRank.xp_total);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans relative">
+    <DigiLockerGuard>
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans relative">
       
       {/* Toast Notification */}
       {toastMessage && (
@@ -936,5 +938,6 @@ export default function LeaderboardPage() {
         />
       )}
     </div>
+    </DigiLockerGuard>
   );
 }
