@@ -29,6 +29,13 @@ const TYPEWRITER_PHRASES = [
   'Performance Analytics',
 ];
 
+const HERO_IMAGES = [
+  '/images/exam_hall_1.jpg',
+  '/images/exam_hall_2.jpg',
+  '/images/exam_hall_3.jpg',
+  '/images/exam_hall_4.jpg',
+];
+
 export default function LandingPage() {
   const [courses, setCourses] = useState<any[]>([]);
   
@@ -36,6 +43,16 @@ export default function LandingPage() {
   const [textIndex, setTextIndex] = useState(0);
   const [currentText, setCurrentText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Background Hero Image Carousel State
+  const [heroImgIndex, setHeroImgIndex] = useState(0);
+
+  useEffect(() => {
+    const heroTimer = setInterval(() => {
+      setHeroImgIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+    }, 4500);
+    return () => clearInterval(heroTimer);
+  }, []);
 
   useEffect(() => {
     const targetWord = TYPEWRITER_PHRASES[textIndex];
@@ -154,9 +171,29 @@ export default function LandingPage() {
       {/* MAIN CONTENT (pt-20 compensates for fixed header) */}
       <main className="relative z-10 flex-1 pt-20">
         
-        {/* 2. HERO SECTION */}
-        <section className="relative pt-14 pb-20 lg:pt-20 lg:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          <div className="text-center space-y-7 max-w-4xl mx-auto">
+        {/* 2. HERO SECTION WITH BACKGROUND IMAGE SLIDESHOW & BOTTOM COLOR FADE */}
+        <section className="relative pt-14 pb-20 lg:pt-20 lg:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto rounded-3xl overflow-hidden mb-8 border border-slate-200/50 shadow-xs">
+          
+          {/* Background Image Carousel with Smooth Transitions */}
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-3xl">
+            {HERO_IMAGES.map((src, idx) => (
+              <div
+                key={src}
+                className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${
+                  idx === heroImgIndex ? 'opacity-35 scale-105 transition-transform duration-[4500ms]' : 'opacity-0 scale-100'
+                }`}
+                style={{ backgroundImage: `url(${src})` }}
+              />
+            ))}
+            
+            {/* Soft Light Overlay for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/75 via-white/85 to-[#F8FAFC] dark:from-slate-950/75 dark:via-slate-950/85 dark:to-slate-950" />
+
+            {/* Bottom Color Fade Gradient Mask to Match Main BG Color */}
+            <div className="absolute bottom-0 inset-x-0 h-36 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/90 to-transparent" />
+          </div>
+
+          <div className="relative z-10 text-center space-y-7 max-w-4xl mx-auto">
             
 
 
