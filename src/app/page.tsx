@@ -17,7 +17,9 @@ import {
   Award,
   Users,
   Brain,
-  GraduationCap
+  GraduationCap,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 const TYPEWRITER_PHRASES = [
@@ -50,9 +52,17 @@ export default function LandingPage() {
   useEffect(() => {
     const heroTimer = setInterval(() => {
       setHeroImgIndex((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 4500);
+    }, 3000);
     return () => clearInterval(heroTimer);
   }, []);
+
+  const handlePrevSlide = () => {
+    setHeroImgIndex((prev) => (prev === 0 ? HERO_IMAGES.length - 1 : prev - 1));
+  };
+
+  const handleNextSlide = () => {
+    setHeroImgIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+  };
 
   useEffect(() => {
     const targetWord = TYPEWRITER_PHRASES[textIndex];
@@ -171,29 +181,51 @@ export default function LandingPage() {
       {/* MAIN CONTENT (pt-20 compensates for fixed header) */}
       <main className="relative z-10 flex-1 pt-20">
         
-        {/* 2. HERO SECTION WITH BACKGROUND IMAGE SLIDESHOW & BOTTOM COLOR FADE */}
-        <section className="relative pt-14 pb-20 lg:pt-20 lg:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto rounded-3xl overflow-hidden mb-8 border border-slate-200/50 shadow-xs">
+        {/* FULL-WIDTH EDGE-TO-EDGE HERO BACKGROUND SLIDESHOW CONTAINER (Extends across entire screen width) */}
+        <div className="absolute top-0 inset-x-0 w-full h-[620px] sm:h-[660px] lg:h-[700px] z-0 overflow-hidden pointer-events-none">
+          {HERO_IMAGES.map((src, idx) => (
+            <div
+              key={src}
+              className={`absolute inset-0 bg-cover bg-center transition-opacity duration-700 ease-in-out ${
+                idx === heroImgIndex ? 'opacity-40 scale-105 transition-transform duration-[3000ms]' : 'opacity-0 scale-100'
+              }`}
+              style={{ backgroundImage: `url(${src})` }}
+            />
+          ))}
           
-          {/* Background Image Carousel with Smooth Transitions */}
-          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-3xl">
-            {HERO_IMAGES.map((src, idx) => (
-              <div
-                key={src}
-                className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${
-                  idx === heroImgIndex ? 'opacity-35 scale-105 transition-transform duration-[4500ms]' : 'opacity-0 scale-100'
-                }`}
-                style={{ backgroundImage: `url(${src})` }}
-              />
-            ))}
-            
-            {/* Soft Light Overlay for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/75 via-white/85 to-[#F8FAFC] dark:from-slate-950/75 dark:via-slate-950/85 dark:to-slate-950" />
+          {/* Light Translucent Overlay for crisp text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/85 to-[#F8FAFC] dark:from-slate-950/70 dark:via-slate-950/85 dark:to-slate-950" />
 
-            {/* Bottom Color Fade Gradient Mask to Match Main BG Color */}
-            <div className="absolute bottom-0 inset-x-0 h-36 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/90 to-transparent" />
-          </div>
+          {/* Bottom Gradient Fade Mask into Page Background Color */}
+          <div className="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/90 to-transparent" />
+        </div>
 
-          <div className="relative z-10 text-center space-y-7 max-w-4xl mx-auto">
+        {/* 2. HERO SECTION CONTENT */}
+        <section className="relative z-10 pt-12 pb-16 lg:pt-18 lg:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          
+          {/* Left `<` Floating Slide Control Button */}
+          <button
+            type="button"
+            onClick={handlePrevSlide}
+            className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white shadow-xl flex items-center justify-center transition-all cursor-pointer group active:scale-90"
+            title="Previous Image"
+            aria-label="Previous Slide Image"
+          >
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
+          </button>
+
+          {/* Right `>` Floating Slide Control Button */}
+          <button
+            type="button"
+            onClick={handleNextSlide}
+            className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white shadow-xl flex items-center justify-center transition-all cursor-pointer group active:scale-90"
+            title="Next Image"
+            aria-label="Next Slide Image"
+          >
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5] group-hover:translate-x-0.5 transition-transform" />
+          </button>
+
+          <div className="text-center space-y-7 max-w-4xl mx-auto">
             
 
 
