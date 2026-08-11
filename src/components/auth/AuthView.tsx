@@ -338,12 +338,12 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         </div>
       </div>
 
-      {/* Right Form Panel — Elevated */}
+      {/* Right Form Panel — High-Intensity Deep Drop Shadow */}
       <div className="lg:col-span-5 xl:col-span-5 relative z-10 flex flex-col justify-between
         bg-white dark:bg-slate-900
         p-6 sm:p-10 lg:p-12
-        shadow-[-8px_0_40px_0_rgba(0,0,0,0.18),-16px_0_60px_-8px_rgba(0,0,0,0.14),-2px_0_8px_0_rgba(0,0,0,0.10)]
-        dark:shadow-[-8px_0_40px_0_rgba(0,0,0,0.60),-16px_0_80px_-8px_rgba(0,0,0,0.55),-2px_0_8px_0_rgba(0,0,0,0.40)]">
+        shadow-[-20px_0_60px_0_rgba(0,0,0,0.40),-40px_0_100px_0_rgba(0,0,0,0.30),-4px_0_16px_0_rgba(0,0,0,0.25)]
+        dark:shadow-[-20px_0_60px_0_rgba(0,0,0,0.85),-40px_0_100px_0_rgba(0,0,0,0.75),-4px_0_16px_0_rgba(0,0,0,0.60)]">
         <div>
           {/* Top Logo */}
           <div className="pt-2">
