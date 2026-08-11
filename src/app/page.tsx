@@ -113,8 +113,8 @@ export default function LandingPage() {
         <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-sky-200/40 rounded-full blur-[128px]" />
       </div>
 
-      {/* 1. FIXED HEADER NAVBAR WITH GLASS EFFECT */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/75 backdrop-blur-xl border-b border-slate-200/70 shadow-sm shadow-slate-900/5 transition-all duration-300">
+      {/* 1. FIXED HEADER NAVBAR WITH FROSTED GLASS EFFECT */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/60 dark:bg-slate-950/60 backdrop-blur-2xl backdrop-saturate-180 border-b border-slate-200/50 dark:border-white/10 shadow-md shadow-slate-900/5 transition-all duration-300">
         <div className="w-full px-4 sm:px-8 lg:px-12 h-18 sm:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <Logo size={38} />

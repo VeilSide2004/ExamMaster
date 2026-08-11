@@ -272,7 +272,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/92 dark:bg-slate-900/92 backdrop-blur-md px-4 sm:px-10 shadow-xs transition-all w-full h-16 flex items-center">
+      <header className="fixed top-0 left-0 right-0 z-40 border-b border-slate-200/60 dark:border-slate-800/60 bg-white/65 dark:bg-slate-900/65 backdrop-blur-2xl backdrop-saturate-180 px-4 sm:px-10 shadow-sm shadow-slate-900/5 transition-all w-full h-16 flex items-center">
         <div className="w-full flex items-center justify-between h-16 relative">
           
           {/* Far Left: Brand Logo + Back Button */}
