@@ -15,9 +15,23 @@ export default function ProfilePage() {
   const [showMyStatsModal, setShowMyStatsModal] = useState(false);
   const [showDigiLockerModal, setShowDigiLockerModal] = useState(false);
   const [isDigiLockerVerified, setIsDigiLockerVerified] = useState(false);
+  const [isSubProfile, setIsSubProfile] = useState(false);
 
   useEffect(() => {
     setIsDigiLockerVerified(getDigiLockerStatus());
+
+    fetch('/api/profile/list')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.profiles && Array.isArray(data.profiles)) {
+          const activeProf = data.profiles.find((p: any) => p.isActive);
+          if (activeProf && activeProf.isPrimary === false) {
+            setIsSubProfile(true);
+          }
+        }
+      })
+      .catch(console.error);
+
     const handleStorage = () => setIsDigiLockerVerified(getDigiLockerStatus());
     window.addEventListener('storage', handleStorage);
     window.addEventListener('digilocker_status_change', handleStorage);
@@ -231,7 +245,12 @@ export default function ProfilePage() {
                   <Building2 className="w-3 h-3 text-blue-400" />
                   <span>Govt. of India DigiLocker Integration</span>
                 </span>
-                {isAbove10thClass(userData?.lockedCourse?.name) ? (
+                {isSubProfile ? (
+                  <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    <span>Sub-Profile Exempt from DigiLocker</span>
+                  </span>
+                ) : isAbove10thClass(userData?.lockedCourse?.name) ? (
                   <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
                     <Lock className="w-3 h-3 text-amber-400" />
                     <span>Mandatory Verification (Class 11+ & Competitive)</span>
@@ -245,20 +264,22 @@ export default function ProfilePage() {
 
               <h2 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-2">
                 <span>DigiLocker Academic Verification</span>
-                {isDigiLockerVerified && (
+                {(isDigiLockerVerified || isSubProfile) && (
                   <CheckCircle2 className="w-6 h-6 text-emerald-400" />
                 )}
               </h2>
 
               <p className="text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
-                {isDigiLockerVerified
+                {isSubProfile
+                  ? 'DigiLocker verification applies only to the Main Primary Profile. As a sub-profile, your account is automatically exempt and has unrestricted access to all practice sets, tests, and leaderboards.'
+                  : isDigiLockerVerified
                   ? 'Your primary account is officially verified with DigiLocker. You have unrestricted full access to all practice sets, mock tests, resources, and leaderboards.'
                   : isAbove10thClass(userData?.lockedCourse?.name)
-                  ? 'DigiLocker identity verification is mandatory for Class 11, Class 12, and Competitive Exam aspirants. Unverified accounts have access to the Dashboard only.'
+                  ? 'DigiLocker identity verification is mandatory for Class 11, Class 12, and Competitive Exam aspirants. Unverified main accounts have access to the Dashboard only.'
                   : 'Link your Govt. of India DigiLocker account to verify your student identity and unlock verified academic credentials.'}
               </p>
 
-              {isDigiLockerVerified && (
+              {isDigiLockerVerified && !isSubProfile && (
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs font-mono font-bold">
                   <span>Ref: DL-2026-EXAMIZO-9842</span>
                   <span>•</span>
@@ -268,7 +289,12 @@ export default function ProfilePage() {
             </div>
 
             <div className="w-full sm:w-auto shrink-0">
-              {isDigiLockerVerified ? (
+              {isSubProfile ? (
+                <div className="px-6 py-3.5 bg-slate-800 border border-slate-700 text-emerald-400 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>Exempt (Sub-Profile)</span>
+                </div>
+              ) : isDigiLockerVerified ? (
                 <div className="px-6 py-3.5 bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   <span>Verified with DigiLocker ✅</span>

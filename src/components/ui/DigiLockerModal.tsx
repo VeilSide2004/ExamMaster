@@ -260,10 +260,9 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
   studentName,
 }) => {
   const [isVerified, setIsVerified] = useState<boolean>(true);
+  const [isSubProfileUser, setIsSubProfileUser] = useState<boolean>(false);
   const [showModal, setShowModal] = useState(false);
   const [mounted, setMounted] = useState(false);
-
-  const isMandatory = isAbove10thClass(courseName);
 
   const checkStatus = () => {
     setIsVerified(getDigiLockerStatus());
@@ -273,6 +272,19 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
     setMounted(true);
     checkStatus();
 
+    // Check if current active profile is a sub-profile (sub-profiles do NOT require DigiLocker)
+    fetch('/api/profile/list')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.profiles && Array.isArray(data.profiles)) {
+          const activeProf = data.profiles.find((p: any) => p.isActive);
+          if (activeProf && activeProf.isPrimary === false) {
+            setIsSubProfileUser(true);
+          }
+        }
+      })
+      .catch(console.error);
+
     const handleStorage = () => checkStatus();
     window.addEventListener('storage', handleStorage);
     window.addEventListener('digilocker_status_change', handleStorage);
@@ -281,6 +293,9 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
       window.removeEventListener('digilocker_status_change', handleStorage);
     };
   }, []);
+
+  // Sub-profiles are EXEMPT from DigiLocker verification requirements
+  const isMandatory = isAbove10thClass(courseName) && !isSubProfileUser;
 
   if (!mounted) return <>{children}</>;
 
