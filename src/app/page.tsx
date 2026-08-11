@@ -119,12 +119,23 @@ export default function LandingPage() {
             <Logo size={38} />
           </Link>
 
-          {/* Nav Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-            <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
-            <a href="#exams" className="hover:text-blue-600 transition-colors">Exams Covered</a>
-            <a href="#how-it-works" className="hover:text-blue-600 transition-colors">How It Works</a>
-            <a href="#leaderboard-preview" className="hover:text-blue-600 transition-colors">Leaderboard</a>
+          {/* Animated Nav Links */}
+          <nav className="hidden md:flex items-center gap-1.5 text-sm font-semibold">
+            {[
+              { name: 'Features', href: '#features' },
+              { name: 'Exams Covered', href: '#exams' },
+              { name: 'How It Works', href: '#how-it-works' },
+              { name: 'Leaderboard', href: '#leaderboard-preview' },
+            ].map((link, i) => (
+              <a
+                key={i}
+                href={link.href}
+                className="relative px-4 py-2 rounded-xl text-slate-600 font-bold text-sm hover:text-blue-600 hover:bg-blue-50/80 transition-all duration-200 group flex items-center justify-center overflow-hidden"
+              >
+                <span className="relative z-10 group-hover:scale-105 transition-transform duration-200">{link.name}</span>
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2.5px] bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300 group-hover:w-3/4" />
+              </a>
+            ))}
           </nav>
 
           {/* Action Button - Get Started Only */}

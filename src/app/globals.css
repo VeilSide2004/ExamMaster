@@ -5,6 +5,7 @@
 html {
   overflow-x: hidden;
   max-width: 100vw;
+  scroll-behavior: smooth;
 }
 
 /* Only reserve scrollbar space on screens that have a scrollbar (non-mobile) */
