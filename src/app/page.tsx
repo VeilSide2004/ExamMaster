@@ -199,13 +199,12 @@ export default function LandingPage() {
 
         {/* 2. HERO SECTION CONTENT (Occupies 100% of First Viewport Screen Height) */}
         <section className="relative z-10 h-[calc(100vh-80px)] min-h-[620px] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          {/* Frosted Glass Hero Card Container for High Contrast & Ultra-Modern Aesthetics */}
-          <div className="w-full max-w-4xl mx-auto text-center space-y-7 p-6 sm:p-10 lg:p-12 rounded-3xl bg-white/75 dark:bg-slate-950/75 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 dark:border-slate-800/80 shadow-2xl shadow-slate-900/10">
+          <div className="w-full max-w-4xl mx-auto text-center space-y-7">
             {/* Animated Headline with Smaller Dynamic Sub-phrase & Blinking Cursor */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.2]">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 dark:text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] leading-[1.2]">
               <span>Master Competitive Exams with</span>
               <span className="block mt-3 text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-normal min-h-[1.3em]">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 drop-shadow-sm">
                   {currentText || '\u00A0'}
                 </span>
                 <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-blue-600 ml-2 rounded-full animate-cursor-blink align-baseline shadow-xs shadow-blue-500/50" />
@@ -213,7 +212,7 @@ export default function LandingPage() {
             </h1>
 
             {/* Subheadline */}
-            <p className="text-base sm:text-xl text-slate-700 dark:text-slate-200 max-w-2xl mx-auto font-semibold leading-relaxed">
+            <p className="text-base sm:text-xl text-slate-800 dark:text-slate-100 font-bold max-w-2xl mx-auto leading-relaxed drop-shadow-[0_1px_8px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_1px_8px_rgba(0,0,0,0.9)]">
               Examizo provides topic-wise practice sets, full-length timed mock tests, instant analytics, and national leaderboards engineered for top aspirants.
             </p>
 
@@ -235,16 +234,16 @@ export default function LandingPage() {
             </div>
 
             {/* Trust Badges */}
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-extrabold text-slate-700 dark:text-slate-200">
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-xs">
+            <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs font-black text-slate-900 dark:text-white drop-shadow-[0_1px_6px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]">
+              <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 <span>Free Registration</span>
               </div>
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-xs">
+              <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 <span>Full Pattern Mock Exams</span>
               </div>
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-xs">
+              <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 <span>Instant Score & Rank Analytics</span>
               </div>
