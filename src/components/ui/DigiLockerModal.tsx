@@ -254,15 +254,24 @@ interface DigiLockerGuardProps {
   studentName?: string;
 }
 
+const getCachedIsSubProfile = (): boolean => {
+  if (typeof window !== 'undefined') {
+    const cached = sessionStorage.getItem('examizo_is_sub_profile');
+    if (cached !== null) return cached === 'true';
+  }
+  return false;
+};
+
 export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
   children,
   courseName,
   studentName,
 }) => {
-  const [isVerified, setIsVerified] = useState<boolean>(true);
-  const [isSubProfileUser, setIsSubProfileUser] = useState<boolean>(false);
+  const [isVerified, setIsVerified] = useState<boolean>(getDigiLockerStatus());
+  const [isSubProfileUser, setIsSubProfileUser] = useState<boolean>(getCachedIsSubProfile());
   const [showModal, setShowModal] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState<boolean>(true);
 
   const checkStatus = () => {
     setIsVerified(getDigiLockerStatus());
@@ -278,12 +287,17 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
       .then((data) => {
         if (data.profiles && Array.isArray(data.profiles)) {
           const activeProf = data.profiles.find((p: any) => p.isActive);
-          if (activeProf && activeProf.isPrimary === false) {
-            setIsSubProfileUser(true);
+          const isSub = activeProf && activeProf.isPrimary === false;
+          setIsSubProfileUser(Boolean(isSub));
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('examizo_is_sub_profile', isSub ? 'true' : 'false');
           }
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => {
+        setIsProfileLoading(false);
+      });
 
     const handleStorage = () => checkStatus();
     window.addEventListener('storage', handleStorage);
@@ -297,7 +311,8 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
   // Sub-profiles are EXEMPT from DigiLocker verification requirements
   const isMandatory = isAbove10thClass(courseName) && !isSubProfileUser;
 
-  if (!mounted) return <>{children}</>;
+  // Prevent flash: do NOT show lock guard overlay while unmounted OR while initial profile status is still being checked
+  if (!mounted || isProfileLoading) return <>{children}</>;
 
   // If DigiLocker is mandatory (> 10th Class) and NOT verified, render blurred page content with centered floating lock card
   if (isMandatory && !isVerified) {
