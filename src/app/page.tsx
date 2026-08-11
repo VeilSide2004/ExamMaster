@@ -141,7 +141,7 @@ export default function LandingPage() {
       </div>
 
       {/* 1. FIXED HEADER NAVBAR WITH FROSTED GLASS EFFECT */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/60 dark:bg-slate-950/60 backdrop-blur-2xl backdrop-saturate-180 border-b border-slate-200/50 dark:border-white/10 shadow-md shadow-slate-900/5 transition-all duration-300">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/55 dark:bg-slate-950/55 backdrop-blur-xl backdrop-saturate-150 border-b border-white/40 dark:border-white/10 shadow-sm shadow-slate-900/5 transition-all duration-300">
         <div className="w-full px-4 sm:px-8 lg:px-12 h-18 sm:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <Logo size={38} />
@@ -157,7 +157,7 @@ export default function LandingPage() {
               <a
                 key={i}
                 href={link.href}
-                className="relative px-4 py-2 rounded-xl text-slate-600 font-bold text-sm hover:text-blue-600 hover:bg-blue-50/80 transition-all duration-200 group flex items-center justify-center overflow-hidden"
+                className="relative px-4 py-2 rounded-xl text-slate-700 dark:text-slate-200 font-bold text-sm hover:text-blue-600 hover:bg-blue-50/80 dark:hover:bg-slate-800/80 transition-all duration-200 group flex items-center justify-center overflow-hidden"
               >
                 <span className="relative z-10 group-hover:scale-105 transition-transform duration-200">{link.name}</span>
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2.5px] bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300 group-hover:w-3/4" />
@@ -181,8 +181,8 @@ export default function LandingPage() {
       {/* MAIN CONTENT (pt-20 compensates for fixed header) */}
       <main className="relative z-10 flex-1 pt-20">
         
-        {/* FULL-WIDTH EDGE-TO-EDGE HERO BACKGROUND SLIDESHOW CONTAINER (Extends across entire screen width) */}
-        <div className="absolute top-0 inset-x-0 w-full h-[620px] sm:h-[660px] lg:h-[700px] z-0 overflow-hidden pointer-events-none">
+        {/* FULL-WIDTH EDGE-TO-EDGE HERO BACKGROUND SLIDESHOW CONTAINER (Extends to top-0 behind navbar) */}
+        <div className="absolute -top-20 inset-x-0 w-full h-[700px] sm:h-[740px] lg:h-[780px] z-0 overflow-hidden pointer-events-none">
           {HERO_IMAGES.map((src, idx) => (
             <div
               key={src}
@@ -193,8 +193,8 @@ export default function LandingPage() {
             />
           ))}
           
-          {/* Subtle Light Overlay for text contrast without washing out the photo */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-white/40 to-white/70 dark:from-slate-950/40 dark:via-slate-950/60 dark:to-slate-950/90" />
+          {/* Subtle Light Glass Overlay for text contrast without washing out the photo */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/35 to-white/75 dark:from-slate-950/35 dark:via-slate-950/55 dark:to-slate-950/95" />
 
           {/* Bottom Gradient Fade Mask into Main Page Background Color (#F8FAFC) */}
           <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/85 to-transparent" />
