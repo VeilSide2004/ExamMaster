@@ -46,12 +46,25 @@ export default function LandingPage() {
 
   // Background Hero Image Carousel State
   const [heroImgIndex, setHeroImgIndex] = useState(0);
+  const [scrollOpacity, setScrollOpacity] = useState(1);
 
   useEffect(() => {
     const heroTimer = setInterval(() => {
       setHeroImgIndex((prev) => (prev + 1) % HERO_IMAGES.length);
     }, 3000);
     return () => clearInterval(heroTimer);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      // Smoothly fade out hero background image from 1 to 0 as user scrolls down
+      const opacity = Math.max(0, 1 - scrollY / 420);
+      setScrollOpacity(opacity);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handlePrevSlide = () => {
@@ -179,8 +192,11 @@ export default function LandingPage() {
       {/* MAIN CONTENT (pt-20 compensates for fixed header) */}
       <main className="relative z-10 flex-1 pt-20">
         
-        {/* FULL-WIDTH EDGE-TO-EDGE HERO BACKGROUND SLIDING CAROUSEL (Extends to top-0 behind navbar) */}
-        <div className="absolute -top-20 inset-x-0 w-full h-[700px] sm:h-[740px] lg:h-[780px] z-0 overflow-hidden pointer-events-none">
+        {/* FULL-WIDTH EDGE-TO-EDGE HERO BACKGROUND SLIDING CAROUSEL (Scroll-driven fade effect) */}
+        <div
+          className="absolute -top-20 inset-x-0 w-full h-[700px] sm:h-[740px] lg:h-[780px] z-0 overflow-hidden pointer-events-none transition-opacity duration-150 ease-out"
+          style={{ opacity: scrollOpacity }}
+        >
           {/* Horizontal Sliding Track */}
           <div
             className="flex w-full h-full transition-transform duration-700 ease-out"
