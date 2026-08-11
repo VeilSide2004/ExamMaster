@@ -17,9 +17,7 @@ import {
   Award,
   Users,
   Brain,
-  GraduationCap,
-  ChevronLeft,
-  ChevronRight
+  GraduationCap
 } from 'lucide-react';
 
 const TYPEWRITER_PHRASES = [
@@ -206,33 +204,7 @@ export default function LandingPage() {
 
         {/* 2. HERO SECTION CONTENT */}
         <section className="relative z-10 pt-12 pb-16 lg:pt-18 lg:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          
-          {/* Left `<` Floating Slide Control Button */}
-          <button
-            type="button"
-            onClick={handlePrevSlide}
-            className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white shadow-xl flex items-center justify-center transition-all cursor-pointer group active:scale-90"
-            title="Previous Image"
-            aria-label="Previous Slide Image"
-          >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
-          </button>
-
-          {/* Right `>` Floating Slide Control Button */}
-          <button
-            type="button"
-            onClick={handleNextSlide}
-            className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white shadow-xl flex items-center justify-center transition-all cursor-pointer group active:scale-90"
-            title="Next Image"
-            aria-label="Next Slide Image"
-          >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5] group-hover:translate-x-0.5 transition-transform" />
-          </button>
-
           <div className="text-center space-y-7 max-w-4xl mx-auto">
-            
-
-
             {/* Animated Headline with Smaller Dynamic Sub-phrase & Blinking Cursor */}
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.2]">
               <span>Master Competitive Exams with</span>
@@ -283,8 +255,8 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Student Portal UI Mockup Preview */}
-          <div className="mt-14 max-w-5xl mx-auto">
+          {/* Student Portal UI Mockup Preview (Added Generous Breathing Space) */}
+          <div className="mt-24 sm:mt-32 max-w-5xl mx-auto">
             <div className="relative bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-2xl shadow-slate-200/60 overflow-hidden">
               
               {/* Fake Window Header Bar */}
