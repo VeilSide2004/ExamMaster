@@ -212,7 +212,7 @@ export default function LeaderboardPage() {
     return `${window.location.origin}/leaderboard?joinCode=${inviteCode || 'INVITE'}`;
   };
 
-  const shareText = `Join me on ExamMaster Leaderboard! Compete together, track XP, and climb standings:`;
+  const shareText = `Join me on Examizo Leaderboard! Compete together, track XP, and climb standings:`;
 
   // Robust Copy helper with fallback
   const copyToClipboard = (text: string) => {
@@ -254,7 +254,7 @@ export default function LeaderboardPage() {
   const handleNativeShare = async () => {
     const link = getShareUrl();
     const shareData = {
-      title: 'ExamMaster Leaderboard',
+      title: 'Examizo Leaderboard',
       text: shareText,
       url: link,
     };
@@ -273,7 +273,7 @@ export default function LeaderboardPage() {
 
   // Challenge Friend Action
   const handleChallengeFriend = (friendName: string) => {
-    const challengeMsg = `Hey ${friendName}! I challenge you to compete on ExamMaster! Check my XP on our custom leaderboard: ${getShareUrl()}`;
+    const challengeMsg = `Hey ${friendName}! I challenge you to compete on Examizo! Check my XP on our custom leaderboard: ${getShareUrl()}`;
     copyToClipboard(challengeMsg);
     showToast(`⚔️ Challenge link copied for ${friendName}! Send it to them now.`);
   };

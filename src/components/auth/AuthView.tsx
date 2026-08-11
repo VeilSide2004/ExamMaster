@@ -687,7 +687,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
         {/* Footer */}
         <div className="pt-6 mt-6 text-[11px] text-slate-400 font-semibold flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
-          <span>© 2026 ExamMaster. All rights reserved.</span>
+          <span>© 2026 Examizo. All rights reserved.</span>
           <div className="flex gap-3">
             <a href="#" className="hover:underline">Privacy</a>
             <span>•</span>

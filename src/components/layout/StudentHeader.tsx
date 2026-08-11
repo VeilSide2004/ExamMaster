@@ -294,7 +294,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 <BookOpen className="w-5 h-5 fill-current stroke-[1.5]" />
               </div>
               <span className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
-                ExamMaster
+                Examizo
               </span>
             </Link>
           </div>
