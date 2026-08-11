@@ -77,7 +77,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
       sessionStorage.clear();
       localStorage.removeItem('examizo_is_sub_profile');
     } catch (e) {}
-    window.location.replace('/');
+    window.location.replace('/login');
   };
 
   const SidebarContent = () => (

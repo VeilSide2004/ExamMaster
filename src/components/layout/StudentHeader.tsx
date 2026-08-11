@@ -188,7 +188,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       sessionStorage.clear();
       localStorage.removeItem('examizo_is_sub_profile');
     } catch (e) {}
-    window.location.replace('/');
+    window.location.replace('/login');
   };
 
   const handleSwitchProfile = async (profile: ProfileItem) => {
