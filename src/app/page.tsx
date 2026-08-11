@@ -199,12 +199,13 @@ export default function LandingPage() {
 
         {/* 2. HERO SECTION CONTENT (Occupies 100% of First Viewport Screen Height) */}
         <section className="relative z-10 h-[calc(100vh-80px)] min-h-[620px] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          <div className="text-center space-y-7 max-w-4xl mx-auto">
+          {/* Frosted Glass Hero Card Container for High Contrast & Ultra-Modern Aesthetics */}
+          <div className="w-full max-w-4xl mx-auto text-center space-y-7 p-6 sm:p-10 lg:p-12 rounded-3xl bg-white/75 dark:bg-slate-950/75 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 dark:border-slate-800/80 shadow-2xl shadow-slate-900/10">
             {/* Animated Headline with Smaller Dynamic Sub-phrase & Blinking Cursor */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.2]">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.2]">
               <span>Master Competitive Exams with</span>
               <span className="block mt-3 text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-normal min-h-[1.3em]">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500">
                   {currentText || '\u00A0'}
                 </span>
                 <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-blue-600 ml-2 rounded-full animate-cursor-blink align-baseline shadow-xs shadow-blue-500/50" />
@@ -212,7 +213,7 @@ export default function LandingPage() {
             </h1>
 
             {/* Subheadline */}
-            <p className="text-base sm:text-xl text-slate-600 max-w-2xl mx-auto font-medium leading-relaxed">
+            <p className="text-base sm:text-xl text-slate-700 dark:text-slate-200 max-w-2xl mx-auto font-semibold leading-relaxed">
               Examizo provides topic-wise practice sets, full-length timed mock tests, instant analytics, and national leaderboards engineered for top aspirants.
             </p>
 
@@ -220,30 +221,30 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-3">
               <Link
                 href="/register"
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-base shadow-xl shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-base shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
               >
                 <span>Start Free Practice Now</span>
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
                 href="/login"
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 font-extrabold text-base border border-slate-200/90 shadow-sm transition-all flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-base border border-slate-700 shadow-md transition-all flex items-center justify-center gap-2"
               >
                 <span>Sign In to Account</span>
               </Link>
             </div>
 
             {/* Trust Badges */}
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs font-bold text-slate-500">
-              <div className="flex items-center gap-2">
+            <div className="pt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-extrabold text-slate-700 dark:text-slate-200">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-xs">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 <span>Free Registration</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-xs">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 <span>Full Pattern Mock Exams</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-xs">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 <span>Instant Score & Rank Analytics</span>
               </div>
