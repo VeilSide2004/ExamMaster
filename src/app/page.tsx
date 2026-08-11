@@ -126,7 +126,6 @@ export default function LandingPage() {
               { name: 'Features', href: '#features' },
               { name: 'Exams Covered', href: '#exams' },
               { name: 'How It Works', href: '#how-it-works' },
-              { name: 'Leaderboard', href: '#leaderboard-preview' },
             ].map((link, i) => (
               <a
                 key={i}
