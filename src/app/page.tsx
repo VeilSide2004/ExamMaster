@@ -20,8 +20,47 @@ import {
   GraduationCap
 } from 'lucide-react';
 
+const TYPEWRITER_PHRASES = [
+  'Academic Precision',
+  'Unmatched Confidence',
+  'Real-Time Mock Tests',
+  'AI Rank Predictions',
+  'Top Percentile Mastery',
+];
+
 export default function LandingPage() {
   const [courses, setCourses] = useState<any[]>([]);
+  
+  // Typewriter + Backspacing animation state
+  const [textIndex, setTextIndex] = useState(0);
+  const [currentText, setCurrentText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const targetWord = TYPEWRITER_PHRASES[textIndex];
+    let timer: NodeJS.Timeout;
+
+    if (!isDeleting && currentText === targetWord) {
+      // Pause at full word for 2.2 seconds before backspacing
+      timer = setTimeout(() => setIsDeleting(true), 2200);
+    } else if (isDeleting && currentText === '') {
+      // Switch to next phrase after backspacing is complete
+      setIsDeleting(false);
+      setTextIndex((prev) => (prev + 1) % TYPEWRITER_PHRASES.length);
+    } else {
+      // Character typing (80ms) and deleting (40ms) speed
+      const speed = isDeleting ? 40 : 80;
+      timer = setTimeout(() => {
+        setCurrentText(
+          isDeleting
+            ? targetWord.substring(0, currentText.length - 1)
+            : targetWord.substring(0, currentText.length + 1)
+        );
+      }, speed);
+    }
+
+    return () => clearTimeout(timer);
+  }, [currentText, isDeleting, textIndex]);
 
   useEffect(() => {
     fetch('/api/courses', { cache: 'no-store' })
@@ -114,11 +153,14 @@ export default function LandingPage() {
               <span>Next-Gen Competitive Exam Portal</span>
             </div>
 
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.1]">
-              Master Competitive Exams with{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700">
-                Academic Precision
+            {/* Animated Headline with Typewriter + Backspacing */}
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.15] min-h-[2.4em] sm:min-h-[2.2em] flex flex-wrap items-center justify-center gap-x-3">
+              <span>Master Competitive Exams with</span>
+              <span className="inline-flex items-center">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700">
+                  {currentText || 'Academic Precision'}
+                </span>
+                <span className="inline-block w-1.5 h-[0.85em] bg-blue-600 ml-1 rounded-full animate-pulse shadow-sm shadow-blue-500" />
               </span>
             </h1>
 
