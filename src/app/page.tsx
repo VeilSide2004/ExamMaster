@@ -197,8 +197,8 @@ export default function LandingPage() {
           <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/80 to-transparent" />
         </div>
 
-        {/* 2. HERO SECTION CONTENT (Full Visible Screen Height) */}
-        <section className="relative z-10 min-h-[calc(100vh-100px)] flex flex-col justify-center items-center pt-8 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        {/* 2. HERO SECTION CONTENT (Occupies 100% of First Viewport Screen Height) */}
+        <section className="relative z-10 h-[calc(100vh-80px)] min-h-[620px] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="text-center space-y-7 max-w-4xl mx-auto">
             {/* Animated Headline with Smaller Dynamic Sub-phrase & Blinking Cursor */}
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.2]">
@@ -249,10 +249,11 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+        </section>
 
-          {/* Student Portal UI Mockup Preview (Added Generous Breathing Space) */}
-          <div className="mt-24 sm:mt-32 max-w-5xl mx-auto">
-            <div className="relative bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-2xl shadow-slate-200/60 overflow-hidden">
+        {/* 3. STUDENT PORTAL UI MOCKUP PREVIEW (Hidden Below First Screen Fold, Visible Only On Scroll) */}
+        <section className="relative z-10 pt-16 pb-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+          <div className="relative bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-2xl shadow-slate-200/60 overflow-hidden">
               
               {/* Fake Window Header Bar */}
               <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
@@ -331,7 +332,6 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
         </section>
 
         {/* 4. KEY FEATURES SECTION */}
