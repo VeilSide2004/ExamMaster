@@ -153,14 +153,14 @@ export default function LandingPage() {
               <span>Next-Gen Competitive Exam Portal</span>
             </div>
 
-            {/* Animated Headline with Typewriter + Backspacing */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.15] min-h-[2.4em] sm:min-h-[2.2em] flex flex-wrap items-center justify-center gap-x-3">
+            {/* Animated Headline with Zero Layout Shift */}
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.2]">
               <span>Master Competitive Exams with</span>
-              <span className="inline-flex items-center">
+              <span className="block mt-2 min-h-[1.25em]">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700">
-                  {currentText || 'Academic Precision'}
+                  {currentText || '\u00A0'}
                 </span>
-                <span className="inline-block w-1.5 h-[0.85em] bg-blue-600 ml-1 rounded-full animate-pulse shadow-sm shadow-blue-500" />
+                <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-blue-600 ml-1.5 rounded-full animate-pulse align-middle" />
               </span>
             </h1>
 
