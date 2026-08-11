@@ -190,11 +190,11 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Minimal Translucent Tint Overlay for Crisp Text Legibility without washing out photos */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/15 to-[#F8FAFC]/90 dark:from-slate-950/20 dark:via-slate-950/40 dark:to-slate-950" />
+          {/* Subtle Light Tint Overlay for Crisp Text Contrast without washing out photos */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent dark:from-slate-950/30 dark:via-transparent dark:to-transparent" />
 
-          {/* Bottom Gradient Fade Mask into Main Page Background Color (#F8FAFC) */}
-          <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/80 to-transparent" />
+          {/* Fade Strictly at the Very Bottom End of the Screen Fold into Main Page Background Color (#F8FAFC) */}
+          <div className="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/70 to-transparent" />
         </div>
 
         {/* 2. HERO SECTION CONTENT (Occupies 100% of First Viewport Screen Height) */}
