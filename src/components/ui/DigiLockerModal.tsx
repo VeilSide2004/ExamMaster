@@ -284,69 +284,77 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
 
   if (!mounted) return <>{children}</>;
 
-  // If DigiLocker is mandatory (> 10th Class) and NOT verified, block access with Lock Overlay
+  // If DigiLocker is mandatory (> 10th Class) and NOT verified, render blurred page content with centered floating lock card
   if (isMandatory && !isVerified) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center p-4 sm:p-8">
-        <div className="max-w-xl w-full bg-white rounded-3xl border border-slate-200/90 shadow-2xl p-8 sm:p-10 text-center space-y-6 relative overflow-hidden">
-          
-          <div className="w-20 h-20 rounded-3xl bg-amber-50 border-2 border-amber-200 text-amber-600 flex items-center justify-center mx-auto shadow-md">
-            <Lock className="w-10 h-10" />
-          </div>
+      <div className="relative w-full min-h-screen">
+        {/* Heavily Blurred Background Page Content */}
+        <div className="filter blur-md opacity-40 pointer-events-none select-none overflow-hidden max-h-[88vh]">
+          {children}
+        </div>
 
-          <div className="space-y-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4 text-amber-700" />
-              <span>DigiLocker Verification Mandatory</span>
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Unlock Full Access with DigiLocker
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-md mx-auto">
-              As per academic compliance guidelines for <strong className="text-slate-900">Class 11, Class 12, and Competitive Exam Aspirants</strong>, DigiLocker identity verification is mandatory. Without verification, you currently have access to your <strong className="text-blue-600">Dashboard</strong> only.
-            </p>
-          </div>
+        {/* Floating Centered Glass Lock Screen Overlay */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-fade-in">
+          <div className="max-w-xl w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl p-8 sm:p-10 text-center space-y-6 relative overflow-hidden">
+            
+            <div className="w-20 h-20 rounded-3xl bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-md">
+              <Lock className="w-10 h-10" />
+            </div>
 
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-left text-xs space-y-2 text-slate-600 font-medium">
-            <p className="font-extrabold text-slate-800 text-center border-b border-slate-200 pb-2">
-              🔒 Feature Access Status
-            </p>
-            <div className="flex items-center justify-between">
-              <span>Student Dashboard:</span>
-              <span className="font-extrabold text-emerald-600">Unlocked ✅</span>
+            <div className="space-y-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-black uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+                <span>DigiLocker Verification Mandatory</span>
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                Unlock Full Access with DigiLocker
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed max-w-md mx-auto">
+                As per academic compliance guidelines for <strong className="text-slate-900 dark:text-white">Class 11, Class 12, and Competitive Exam Aspirants</strong>, DigiLocker identity verification is mandatory. Without verification, you currently have access to your <strong className="text-blue-600 dark:text-blue-400">Dashboard</strong> only.
+              </p>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Practice Sets & DPPs:</span>
-              <span className="font-extrabold text-rose-600">Locked 🔒 (Requires DigiLocker)</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Full Mock Exams:</span>
-              <span className="font-extrabold text-rose-600">Locked 🔒 (Requires DigiLocker)</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Leaderboards & Resources:</span>
-              <span className="font-extrabold text-rose-600">Locked 🔒 (Requires DigiLocker)</span>
-            </div>
-          </div>
 
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => setShowModal(true)}
-              className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-blue-600/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <ShieldCheck className="w-5 h-5" />
-              <span>Verify with DigiLocker Now</span>
-            </button>
-          </div>
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-left text-xs space-y-2 text-slate-600 dark:text-slate-300 font-medium">
+              <p className="font-extrabold text-slate-800 dark:text-slate-200 text-center border-b border-slate-200 dark:border-slate-700 pb-2">
+                🔒 Feature Access Status
+              </p>
+              <div className="flex items-center justify-between">
+                <span>Student Dashboard:</span>
+                <span className="font-extrabold text-emerald-600 dark:text-emerald-400">Unlocked ✅</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Practice Sets &amp; DPPs:</span>
+                <span className="font-extrabold text-rose-600 dark:text-rose-400">Locked 🔒 (Requires DigiLocker)</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Full Mock Exams:</span>
+                <span className="font-extrabold text-rose-600 dark:text-rose-400">Locked 🔒 (Requires DigiLocker)</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Leaderboards &amp; Resources:</span>
+                <span className="font-extrabold text-rose-600 dark:text-rose-400">Locked 🔒 (Requires DigiLocker)</span>
+              </div>
+            </div>
 
-          <DigiLockerModal
-            isOpen={showModal}
-            onClose={() => setShowModal(false)}
-            onSuccess={() => setIsVerified(true)}
-            studentName={studentName}
-            courseName={courseName}
-          />
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowModal(true)}
+                className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-blue-600/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <ShieldCheck className="w-5 h-5" />
+                <span>Verify with DigiLocker Now</span>
+              </button>
+            </div>
+
+            <DigiLockerModal
+              isOpen={showModal}
+              onClose={() => setShowModal(false)}
+              onSuccess={() => setIsVerified(true)}
+              studentName={studentName}
+              courseName={courseName}
+            />
+          </div>
         </div>
       </div>
     );
