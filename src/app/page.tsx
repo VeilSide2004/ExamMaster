@@ -46,7 +46,6 @@ export default function LandingPage() {
 
   // Background Hero Image Carousel State
   const [heroImgIndex, setHeroImgIndex] = useState(0);
-  const [scrollOpacity, setScrollOpacity] = useState(1);
 
   useEffect(() => {
     const heroTimer = setInterval(() => {
@@ -55,25 +54,6 @@ export default function LandingPage() {
     return () => clearInterval(heroTimer);
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      // Smoothly fade out hero background image from 1 to 0 as user scrolls down
-      const opacity = Math.max(0, 1 - scrollY / 420);
-      setScrollOpacity(opacity);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handlePrevSlide = () => {
-    setHeroImgIndex((prev) => (prev === 0 ? HERO_IMAGES.length - 1 : prev - 1));
-  };
-
-  const handleNextSlide = () => {
-    setHeroImgIndex((prev) => (prev + 1) % HERO_IMAGES.length);
-  };
 
   useEffect(() => {
     const targetWord = TYPEWRITER_PHRASES[textIndex];
@@ -192,10 +172,9 @@ export default function LandingPage() {
       {/* MAIN CONTENT (pt-20 compensates for fixed header) */}
       <main className="relative z-10 flex-1 pt-20">
         
-        {/* FULL-WIDTH EDGE-TO-EDGE HERO BACKGROUND SLIDING CAROUSEL (Scroll-driven fade effect) */}
+        {/* FULL-WIDTH EDGE-TO-EDGE HERO BACKGROUND SLIDING CAROUSEL (Full Screen Height 100vh) */}
         <div
-          className="absolute -top-20 inset-x-0 w-full h-[700px] sm:h-[740px] lg:h-[780px] z-0 overflow-hidden pointer-events-none transition-opacity duration-150 ease-out"
-          style={{ opacity: scrollOpacity }}
+          className="absolute -top-20 inset-x-0 w-full h-[calc(100vh+80px)] min-h-[750px] z-0 overflow-hidden pointer-events-none"
         >
           {/* Horizontal Sliding Track */}
           <div
@@ -215,11 +194,11 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/15 to-[#F8FAFC]/90 dark:from-slate-950/20 dark:via-slate-950/40 dark:to-slate-950" />
 
           {/* Bottom Gradient Fade Mask into Main Page Background Color (#F8FAFC) */}
-          <div className="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/80 to-transparent" />
+          <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/80 to-transparent" />
         </div>
 
-        {/* 2. HERO SECTION CONTENT */}
-        <section className="relative z-10 pt-12 pb-16 lg:pt-18 lg:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        {/* 2. HERO SECTION CONTENT (Full Visible Screen Height) */}
+        <section className="relative z-10 min-h-[calc(100vh-100px)] flex flex-col justify-center items-center pt-8 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="text-center space-y-7 max-w-4xl mx-auto">
             {/* Animated Headline with Smaller Dynamic Sub-phrase & Blinking Cursor */}
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.2]">
