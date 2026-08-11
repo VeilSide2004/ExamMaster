@@ -114,7 +114,7 @@ export default function LandingPage() {
 
       {/* 1. FIXED HEADER NAVBAR WITH GLASS EFFECT */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/75 backdrop-blur-xl border-b border-slate-200/70 shadow-sm shadow-slate-900/5 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
+        <div className="w-full px-4 sm:px-8 lg:px-12 h-18 sm:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <Logo size={38} />
           </Link>
