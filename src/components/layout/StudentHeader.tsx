@@ -656,7 +656,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-slate-900 dark:text-white">Create New User Profile</h3>
-                  <p className="text-[11px] text-slate-500">Netflix-style profile under account {currentUserEmail}</p>
                 </div>
               </div>
               <button
