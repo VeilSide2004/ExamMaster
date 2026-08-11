@@ -181,23 +181,27 @@ export default function LandingPage() {
       {/* MAIN CONTENT (pt-20 compensates for fixed header) */}
       <main className="relative z-10 flex-1 pt-20">
         
-        {/* FULL-WIDTH EDGE-TO-EDGE HERO BACKGROUND SLIDESHOW CONTAINER (Extends to top-0 behind navbar) */}
+        {/* FULL-WIDTH EDGE-TO-EDGE HERO BACKGROUND SLIDING CAROUSEL (Extends to top-0 behind navbar) */}
         <div className="absolute -top-20 inset-x-0 w-full h-[700px] sm:h-[740px] lg:h-[780px] z-0 overflow-hidden pointer-events-none">
-          {HERO_IMAGES.map((src, idx) => (
-            <div
-              key={src}
-              className={`absolute inset-0 bg-cover bg-center transition-opacity duration-700 ease-in-out ${
-                idx === heroImgIndex ? 'opacity-90 scale-105 transition-transform duration-[3000ms]' : 'opacity-0 scale-100'
-              }`}
-              style={{ backgroundImage: `url(${src})` }}
-            />
-          ))}
-          
-          {/* Subtle Light Glass Overlay for text contrast without washing out the photo */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/35 to-white/75 dark:from-slate-950/35 dark:via-slate-950/55 dark:to-slate-950/95" />
+          {/* Horizontal Sliding Track */}
+          <div
+            className="flex w-full h-full transition-transform duration-700 ease-out"
+            style={{ transform: `translateX(-${heroImgIndex * 100}%)` }}
+          >
+            {HERO_IMAGES.map((src) => (
+              <div
+                key={src}
+                className="w-full h-full shrink-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${src})` }}
+              />
+            ))}
+          </div>
+
+          {/* Minimal Translucent Tint Overlay for Crisp Text Legibility without washing out photos */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/15 to-[#F8FAFC]/90 dark:from-slate-950/20 dark:via-slate-950/40 dark:to-slate-950" />
 
           {/* Bottom Gradient Fade Mask into Main Page Background Color (#F8FAFC) */}
-          <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/85 to-transparent" />
+          <div className="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/80 to-transparent" />
         </div>
 
         {/* 2. HERO SECTION CONTENT */}
