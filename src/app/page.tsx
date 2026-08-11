@@ -25,6 +25,7 @@ const TYPEWRITER_PHRASES = [
   'Topic-Wise DPPs',
   'Full Mock Tests',
   'Weekly DPP',
+  'Course-Wise Leaderboard',
   'Performance Analytics',
 ];
 
