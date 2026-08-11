@@ -165,14 +165,14 @@ export default function LandingPage() {
               <span>Next-Gen Competitive Exam Portal</span>
             </div>
 
-            {/* Animated Headline with Zero Layout Shift */}
+            {/* Animated Headline with Smaller Dynamic Sub-phrase & Blinking Cursor */}
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.2]">
               <span>Master Competitive Exams with</span>
-              <span className="block mt-2 min-h-[1.25em]">
+              <span className="block mt-3 text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-normal min-h-[1.3em]">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700">
                   {currentText || '\u00A0'}
                 </span>
-                <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-blue-600 ml-1.5 rounded-full animate-pulse align-middle" />
+                <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-blue-600 ml-2 rounded-full animate-cursor-blink align-baseline shadow-xs shadow-blue-500/50" />
               </span>
             </h1>
 

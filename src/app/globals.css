@@ -61,6 +61,16 @@ body, div, header, nav, main, section, article, button, input, select, textarea,
   }
 }
 
+/* Crisp Typewriter Cursor Blink Keyframe */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-cursor-blink {
+  animation: cursorBlink 0.85s infinite ease-in-out;
+}
+
 .animate-page-in {
   animation: pageSlideIn 0.34s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: opacity, transform;
