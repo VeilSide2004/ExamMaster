@@ -279,7 +279,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
               <Quote className="w-6 h-6 fill-white text-white" />
             </div>
             <p className="text-lg font-black text-white leading-relaxed tracking-tight drop-shadow-md">
-              "Precision in preparation leads to excellence in performance."
+              "Examizo — where every practice set sharpens your edge and every mock test brings you closer to the top."
             </p>
             <div className="w-12 h-1 bg-blue-400 rounded-full mx-auto" />
           </div>
