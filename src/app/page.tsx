@@ -29,8 +29,8 @@ export default function LandingPage() {
         <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-sky-200/40 rounded-full blur-[128px]" />
       </div>
 
-      {/* 1. HEADER NAVBAR WITH GLASS EFFECT */}
-      <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-xs shadow-slate-900/5">
+      {/* 1. FIXED HEADER NAVBAR WITH GLASS EFFECT */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/75 backdrop-blur-xl border-b border-slate-200/70 shadow-sm shadow-slate-900/5 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <Logo size={38} />
@@ -57,8 +57,8 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
-      <main className="relative z-10 flex-1">
+      {/* MAIN CONTENT (pt-20 compensates for fixed header) */}
+      <main className="relative z-10 flex-1 pt-20">
         
         {/* 2. HERO SECTION */}
         <section className="relative pt-14 pb-20 lg:pt-20 lg:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
