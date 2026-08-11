@@ -201,28 +201,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 3. STATS STRIP (Matching Student Portal Crisp White Cards) */}
-        <section className="border-y border-slate-200/80 bg-white py-12 shadow-2xs">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div className="space-y-1">
-              <p className="text-3xl sm:text-4xl font-black text-slate-900">50,000+</p>
-              <p className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Active Aspirants</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-3xl sm:text-4xl font-black text-blue-600">10,000+</p>
-              <p className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Curated Questions</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-3xl sm:text-4xl font-black text-indigo-600">500+</p>
-              <p className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Full Mock Exams</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-3xl sm:text-4xl font-black text-emerald-600">98.4%</p>
-              <p className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Pass Success Rate</p>
-            </div>
-          </div>
-        </section>
-
         {/* 4. KEY FEATURES SECTION */}
         <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-16">
           <div className="text-center space-y-3.5 max-w-3xl mx-auto">
