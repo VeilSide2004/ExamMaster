@@ -201,10 +201,10 @@ export default function LandingPage() {
         <section className="relative z-10 h-[calc(100vh-80px)] min-h-[620px] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="w-full max-w-4xl mx-auto text-center space-y-7">
             {/* Animated Headline with Smaller Dynamic Sub-phrase & Blinking Cursor */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 dark:text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] leading-[1.2]">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.2]">
               <span>Master Competitive Exams with</span>
-              <span className="block mt-3 text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-normal min-h-[1.3em]">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 drop-shadow-sm">
+              <span className="block mt-3 text-2xl sm:text-4xl lg:text-5xl font-black tracking-normal min-h-[1.3em]">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 font-black">
                   {currentText || '\u00A0'}
                 </span>
                 <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-blue-600 ml-2 rounded-full animate-cursor-blink align-baseline shadow-xs shadow-blue-500/50" />
@@ -212,7 +212,7 @@ export default function LandingPage() {
             </h1>
 
             {/* Subheadline */}
-            <p className="text-base sm:text-xl text-slate-800 dark:text-slate-100 font-bold max-w-2xl mx-auto leading-relaxed drop-shadow-[0_1px_8px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_1px_8px_rgba(0,0,0,0.9)]">
+            <p className="text-base sm:text-xl text-slate-900 font-extrabold max-w-2xl mx-auto leading-relaxed">
               Examizo provides topic-wise practice sets, full-length timed mock tests, instant analytics, and national leaderboards engineered for top aspirants.
             </p>
 
@@ -220,31 +220,31 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-3">
               <Link
                 href="/register"
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-base shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-base shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
               >
                 <span>Start Free Practice Now</span>
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
                 href="/login"
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-base border border-slate-700 shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-base border border-slate-700 shadow-md transition-all flex items-center justify-center gap-2"
               >
                 <span>Sign In to Account</span>
               </Link>
             </div>
 
             {/* Trust Badges */}
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs font-black text-slate-900 dark:text-white drop-shadow-[0_1px_6px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]">
+            <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs font-black text-slate-900">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
                 <span>Free Registration</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
                 <span>Full Pattern Mock Exams</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
                 <span>Instant Score & Rank Analytics</span>
               </div>
             </div>
