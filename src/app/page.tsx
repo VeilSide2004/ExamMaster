@@ -158,11 +158,7 @@ export default function LandingPage() {
         <section className="relative pt-14 pb-20 lg:pt-20 lg:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="text-center space-y-7 max-w-4xl mx-auto">
             
-            {/* Top Tag Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-extrabold uppercase tracking-wider shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              <span>Next-Gen Competitive Exam Portal</span>
-            </div>
+
 
             {/* Animated Headline with Smaller Dynamic Sub-phrase & Blinking Cursor */}
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.2]">
