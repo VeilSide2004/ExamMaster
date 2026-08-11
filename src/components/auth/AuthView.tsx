@@ -36,6 +36,15 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
   const [resetStatus, setResetStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [resetLoading, setResetLoading] = useState(false);
 
+  useEffect(() => {
+    const handlePopState = () => {
+      window.location.href = '/';
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const handleTabSwitch = (mode: 'signin' | 'register') => {
     if (mode === activeTab) return;
     setError('');
@@ -347,11 +356,22 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         <div>
           {/* Top Logo & Back to Home Link */}
           <div className="pt-2 flex items-center justify-between">
-            <Link href="/" className="cursor-pointer">
+            <Link
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.href = '/';
+              }}
+              className="cursor-pointer"
+            >
               <Logo size={40} subtitle="ACADEMIC PRECISION" />
             </Link>
             <Link
               href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.href = '/';
+              }}
               className="text-xs font-extrabold text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <span>← Back to Home</span>

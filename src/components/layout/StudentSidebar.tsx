@@ -70,8 +70,14 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
   ];
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    try {
+      sessionStorage.clear();
+      localStorage.removeItem('examizo_is_sub_profile');
+    } catch (e) {}
+    window.location.replace('/');
   };
 
   const SidebarContent = () => (

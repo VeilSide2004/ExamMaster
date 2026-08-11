@@ -184,7 +184,11 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (e) {}
-    router.push('/login');
+    try {
+      sessionStorage.clear();
+      localStorage.removeItem('examizo_is_sub_profile');
+    } catch (e) {}
+    window.location.replace('/');
   };
 
   const handleSwitchProfile = async (profile: ProfileItem) => {
@@ -268,7 +272,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   ];
 
-  const profileColors = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
+  const profileColors = ['bg-[#044B3B]', 'bg-[#0F766E]', 'bg-[#15803D]', 'bg-[#1e293b]'];
 
   return (
     <>
@@ -277,17 +281,21 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           
           {/* Far Left: Brand Logo + Back Button */}
           <div className="flex items-center gap-4">
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="w-9 h-9 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center shadow-xs group"
-                title="Back"
-                aria-label="Go Back"
-              >
-                <ArrowLeft className="w-4 h-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white group-hover:-translate-x-0.5 transition-transform" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (onBack) {
+                  onBack();
+                } else {
+                  window.location.href = '/';
+                }
+              }}
+              className="w-9 h-9 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center shadow-xs group cursor-pointer"
+              title="Back to Home"
+              aria-label="Go Back to Home"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white group-hover:-translate-x-0.5 transition-transform" />
+            </button>
 
             <Link href="/dashboard" prefetch={true} className="flex items-center gap-2.5 group">
               <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
