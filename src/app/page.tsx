@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/common/Logo';
 import { 
@@ -18,7 +20,68 @@ import {
   GraduationCap
 } from 'lucide-react';
 
+const DEFAULT_COMPETITIVE_EXAMS = [
+  { name: 'JEE Main & Advanced', icon: GraduationCap, count: '3,500+ Qs', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { name: 'NEET UG', icon: BookOpen, count: '4,200+ Qs', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  { name: 'GATE Exam', icon: Zap, count: '2,800+ Qs', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { name: 'UPSC CSE', icon: Award, count: '1,900+ Qs', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { name: 'SSC CGL', icon: Target, count: '3,100+ Qs', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
+];
+
 export default function LandingPage() {
+  const [courses, setCourses] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/courses', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.courses && Array.isArray(data.courses)) {
+          // Filter out school / K-12 courses (Class 3 to 12)
+          const isSchoolCourse = (name: string, category?: string) => {
+            if (category === 'school') return true;
+            const lower = (name || '').toLowerCase();
+            return /\b(class|grade|cbse|icse|board|school|3rd|4th|5th|6th|7th|8th|9th|10th|11th|12th)\b/.test(lower) ||
+                   /\bclass\s*(3|4|5|6|7|8|9|10|11|12)\b/.test(lower);
+          };
+
+          const competitive = data.courses.filter((c: any) => !isSchoolCourse(c.name, c.category));
+          setCourses(competitive);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  // Determine top 5 competitive items to display (using API data or fallback defaults)
+  const displayCompetitive = React.useMemo(() => {
+    if (courses.length === 0) return DEFAULT_COMPETITIVE_EXAMS;
+
+    const badges = [
+      'bg-blue-50 text-blue-700 border-blue-200',
+      'bg-emerald-50 text-emerald-700 border-emerald-200',
+      'bg-purple-50 text-purple-700 border-purple-200',
+      'bg-amber-50 text-amber-700 border-amber-200',
+      'bg-rose-50 text-rose-700 border-rose-200',
+    ];
+
+    const icons = [GraduationCap, BookOpen, Zap, Award, Target];
+
+    const mapped = courses.slice(0, 5).map((c, idx) => ({
+      name: c.name,
+      icon: icons[idx % icons.length],
+      count: c.description || '2,500+ Qs',
+      badge: badges[idx % badges.length],
+    }));
+
+    // If fewer than 5 from API, pad with defaults up to 5
+    if (mapped.length < 5) {
+      const remaining = DEFAULT_COMPETITIVE_EXAMS.filter(
+        d => !mapped.some(m => m.name.toLowerCase().includes(d.name.toLowerCase().split(' ')[0]))
+      );
+      return [...mapped, ...remaining].slice(0, 5);
+    }
+
+    return mapped.slice(0, 5);
+  }, [courses]);
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden">
       
@@ -286,34 +349,50 @@ export default function LandingPage() {
 
         {/* 5. EXAMS COVERED SECTION */}
         <section id="exams" className="py-20 bg-white border-y border-slate-200/80 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto space-y-12">
+          <div className="max-w-7xl mx-auto space-y-10">
             <div className="text-center space-y-3">
               <h2 className="text-3xl font-black text-slate-900">Targeted Exam Preparation</h2>
-              <p className="text-slate-600 text-sm font-medium">Comprehensive question banks aligned with current exam syllabi.</p>
+              <p className="text-slate-600 text-sm font-medium">Dynamically updated competitive courses & test series aligned with latest syllabi.</p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {[
-                { name: 'JEE Main & Adv', icon: GraduationCap, count: '3,500+ Qs', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
-                { name: 'NEET UG', icon: BookOpen, count: '4,200+ Qs', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-                { name: 'GATE', icon: Zap, count: '2,800+ Qs', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
-                { name: 'UPSC CSE', icon: Award, count: '1,900+ Qs', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
-                { name: 'SSC CGL', icon: Target, count: '3,100+ Qs', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
-                { name: 'Banking (IBPS)', icon: Users, count: '2,500+ Qs', badge: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-              ].map((exam, i) => (
+            {/* Exactly 5 Competitive Course Cards Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              {displayCompetitive.map((exam, i) => (
                 <div
                   key={i}
-                  className="p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-300 text-center space-y-3 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all"
+                  className="p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-400 text-center space-y-3 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all group"
                 >
-                  <exam.icon className="w-7 h-7 mx-auto text-blue-600" />
+                  <exam.icon className="w-8 h-8 mx-auto text-blue-600 group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="text-sm font-extrabold text-slate-900">{exam.name}</p>
-                    <span className={`inline-block mt-2 px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${exam.badge}`}>
+                    <p className="text-sm font-extrabold text-slate-900 line-clamp-1">{exam.name}</p>
+                    <span className={`inline-block mt-2 px-2.5 py-0.5 rounded-md text-[10px] font-extrabold border ${exam.badge}`}>
                       {exam.count}
                     </span>
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Classes 3 to 12 Foundation & Board Mention Banner */}
+            <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-slate-50 border border-blue-200/80 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/25">
+                  <GraduationCap className="w-7 h-7" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900">Classes 3 to 12 School & Board Preparation</h3>
+                  <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
+                    We also offer complete practice sets, chapter DPPs, and board test series for <strong className="text-slate-800">Classes 3 through 12</strong> (CBSE, ICSE & State Boards).
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/register"
+                className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 hover:shadow-blue-600/35 transition-all shrink-0 text-center flex items-center justify-center gap-2"
+              >
+                <span>Explore School Courses</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
         </section>
