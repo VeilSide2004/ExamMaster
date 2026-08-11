@@ -22,10 +22,10 @@ import {
 
 const TYPEWRITER_PHRASES = [
   'Academic Precision',
-  'Unmatched Confidence',
-  'Real-Time Mock Tests',
-  'AI Rank Predictions',
-  'Top Percentile Mastery',
+  'Topic-Wise DPPs',
+  'Full Mock Tests',
+  'National Leaderboards',
+  'Performance Analytics',
 ];
 
 export default function LandingPage() {
